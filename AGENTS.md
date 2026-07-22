@@ -559,7 +559,7 @@ Ask if unsure.
 
 ## Linting and Validation
 
-Run:
+Run: Always use bun only not npm or yarn to avoid package management conflicts
 
 ```bash
 bun run lint
