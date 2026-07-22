@@ -7,17 +7,19 @@ export type AuthBackButtonProps = {
   /**
    * Where to navigate on back press.
    * - `"welcome"` → goes to Welcome screen
+   * - `"identity"` → goes to Provide Your Identity screen
    * - `"sign-in"` → goes to sign-in screen
    * - Custom function for full control
    */
-  goBack: "welcome" | "sign-in" | (() => void);
+  goBack: "welcome" | "identity" | "sign-in" | (() => void);
 };
 
 /**
  * Consistent back button for auth screens.
  *
  * Positioned absolute top-left with staggered entrance animation.
- * Back navigation logic always includes a fallback route.
+ * Uses explicit route replacement so behavior is predictable even
+ * when there is no navigation stack history.
  */
 export function AuthBackButton({ opacity, goBack }: AuthBackButtonProps) {
   const handlePress = () => {
@@ -26,17 +28,13 @@ export function AuthBackButton({ opacity, goBack }: AuthBackButtonProps) {
       return;
     }
 
-    // Try back first - slides from left when there IS a navigation stack
-    try {
-      router.back();
-    } catch {
-      // Fallback: route explicitly to welcome or sign-in
-      if (goBack === "welcome") {
-        router.replace("/(onboarding)/welcome" as Href);
-      } else {
-        router.replace("/(auth)/sign-in" as Href);
-      }
-    }
+    const target = goBack === "welcome"
+      ? "/(onboarding)/welcome"
+      : goBack === "identity"
+        ? "/(onboarding)/driver-identity"
+        : "/(auth)/sign-in";
+
+    router.replace(target as Href);
   };
 
   return (

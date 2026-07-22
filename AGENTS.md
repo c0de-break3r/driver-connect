@@ -478,6 +478,18 @@ The onboarding order is fixed, built in three acts. Do not reorder these stages:
 
 Full structured profile detail (license numbers, vehicle documents, police clearance, national ID, etc.) happens **after** onboarding, inside the dashboard, via the "Complete your profile" banner — not during the 21-step flow above. Onboarding's own questions (steps 6 and 9) are lightweight personalization, not document collection.
 
+### Auth Back-Navigation Rule (VERY IMPORTANT)
+
+Auth back-button behavior depends on where the user entered auth from:
+
+- **From `/(onboarding)/driver-identity`** → back must return to `/(onboarding)/driver-identity`, **not** Welcome.
+- **From `/(onboarding)/welcome` or other onboarding screens** → back may return to the immediate prior onboarding screen.
+- Do **not** hardcode all auth back buttons to `welcome`. Use explicit route replacement or route params so the origin is preserved.
+
+Implementation notes:
+- Pass the origin screen as a route param when navigating to auth, e.g. `?from=driver-identity`.
+- Read that param in the auth screen and pass the correct `goBack` value to `AuthBackButton`.
+
 ### Persistent rules
 
 - Do not mix role logic into shared screens — route role-specific content into `(driver)`, `(owner)`, `(client)`, `(corporate)` groups.
@@ -495,6 +507,35 @@ Full structured profile detail (license numbers, vehicle documents, police clear
 - Use fade-in animations for reflection screens (line-by-line reveal, per the question bank's final reflection screen) and for permission-request screens, so functional screens still feel paced and intentional rather than dumped on the user.
 - Use good, consistent icons (lucide-react-native or a matching icon set already in the project) — never mix icon styles across screens.
 - Loading animations used for perceived personalization (step 15) should be short (1-3 seconds) and purely visual — do not fake a progress percentage that implies real backend computation is happening if none is.
+
+### Shared Animation Patterns
+
+Prefer reusable animation helpers in `src/hooks/` instead of per-screen `Animated` duplication.
+
+Recommended hook for onboarding entry effects:
+
+- `useSlideEntrance` in `src/hooks/useSlideEntrance.ts`
+- Defaults: slide from left, `initialDelay: 120ms`, `staggerDelay: 80ms`, `duration: 420ms`
+- Applies opacity + horizontal translation with `Easing.out(Easing.quad)`
+- Trigger once on focus via `useFocusEffect`
+
+```ts
+const { anims, start } = useSlideEntrance({ count: items.length, direction: "left" });
+useFocusEffect(useCallback(() => { start(); }, [start]));
+
+{items.map((item, i) => (
+  <Animated.View style={{ opacity: anims[i].opacity, transform: [{ translateX: anims[i].translate }] }}>
+    ...
+  </Animated.View>
+))}
+```
+
+Allowed animation directions:
+- `"left"` — slides in from the left
+- `"right"` — slides in from the right
+- `"up"` — slides in from the bottom
+
+Use `StyleSheet` or inline styles for animated values and component-specific props that NativeWind cannot express.
 
 ---
 
@@ -559,7 +600,7 @@ Ask if unsure.
 
 ## Linting and Validation
 
-Run: Always use bun only not npm or yarn to avoid package management conflicts
+Run: Always use bun only not npm or yarn to avoid package conflicts and when ever you spot package-lock.json delete it and keep the bun.lock
 
 ```bash
 bun run lint
@@ -588,6 +629,24 @@ Use:
 - Zustand for state
 - AsyncStorage for persistence
 - backend only for secure operations (secrets, payments, matching)
+
+## Dependency Management Rules
+
+- Use **bun** only; do not use npm or yarn to avoid package management conflicts.
+- Always commit `bun.lock` to version control.
+- Never commit `package-lock.json`, `yarn.lock`, or equivalent lockfiles from other package managers.
+- Before installing dependencies, remove any existing non-bun lockfile from the working tree to avoid accidental cross-manager commits.
+
+## Security Rules
+
+- Do not leave loopholes in the app system for hackers to exploit.
+- Treat all user input as untrusted; validate and sanitize on both client and server.
+- Never expose API keys, secrets, or backend-only logic in the mobile bundle.
+- Use HTTPS everywhere; never downgrade to HTTP for API calls or asset loading.
+- Prefer server-side enforcement for sensitive operations: payments, matching, document verification, and role permissions.
+- Keep auth flows on vetted providers only (e.g. Clerk); do not roll custom authentication.
+- Log security-relevant events on the backend, not only on the client.
+- Review third-party dependencies for known vulnerabilities before upgrading.
 
 ---
 

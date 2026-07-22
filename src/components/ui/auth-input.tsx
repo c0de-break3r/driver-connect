@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -29,6 +28,8 @@ export type AuthInputProps = {
   error?: string | null;
   /** Extra bottom margin (overrides default 20) */
   marginBottom?: number;
+  /** Optional icon element rendered inside the input */
+  icon?: React.ReactNode;
 };
 
 /**
@@ -36,9 +37,10 @@ export type AuthInputProps = {
  *
  * Includes:
  * - Floating label above the input
+ * - Optional left icon inside a rounded container
  * - Optional password visibility toggle (eye icon)
  * - Error message below the input
- * - Consistent styling across all auth screens
+ * - Consistent styling matching the identity form design
  *
  * Uses StyleSheet per AGENTS.md exception rules for TextInput.
  */
@@ -55,6 +57,7 @@ export function AuthInput({
   editable = true,
   error,
   marginBottom,
+  icon,
 }: AuthInputProps) {
   const [showText, setShowText] = useState(false);
 
@@ -67,6 +70,7 @@ export function AuthInput({
           marginBottom !== undefined ? { marginBottom } : undefined,
         ]}
       >
+        {icon && <View style={styles.inputIcon}>{icon}</View>}
         <TextInput
           style={styles.input}
           value={value}
@@ -96,25 +100,34 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#A0AAB4",
+    color: "#2C3E5B",
     marginBottom: 8,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E0E5EA",
-    borderRadius: 12,
+    borderColor: "#EAE1D9",
+    borderRadius: 999,
     paddingHorizontal: 16,
-    marginBottom: 20,
+    height: 56,
+    gap: 12,
+  },
+  inputIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#F5ECE5",
+    alignItems: "center",
+    justifyContent: "center",
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "500",
     color: "#2C3E5B",
-    paddingVertical: Platform.OS === "ios" ? 14 : 12,
+    height: "100%",
   },
   eyeIcon: {
     fontSize: 18,
@@ -122,9 +135,9 @@ const styles = StyleSheet.create({
     color: "#6E7E91",
   },
   errorText: {
-    color: "#E74C3C",
-    fontSize: 13,
+    color: "#EF4444",
+    fontSize: 12,
+    marginTop: 6,
     marginBottom: 12,
-    textAlign: "center",
   },
 });

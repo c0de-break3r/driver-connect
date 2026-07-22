@@ -7,6 +7,7 @@ import {
   Animated,
   Dimensions,
   PanResponder,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -26,9 +27,11 @@ function stampRef(ref: React.MutableRefObject<number>) {
  *
  * Layout:
  * - Peach background (#FFF8F3) fills the screen
- * - Hero image sits on top of the peach with curved bottom corners
- * - Headline & subtext sit on the peach below the image
- * - "Let's Go" CTA, terms, and sign-in link are static (do not re-animate)
+ * - Hero image fills top portion with rounded bottom corners
+ * - Pagination dots sit at the bottom of the image
+ * - Headline, subtext, and CTA are below the image on the peach background
+ * - Terms text sits below the CTA on the peach background
+ * - Sign-in link sits at the very bottom on peach background
  * - Auto-advance every 4 s, loops from last slide back to first
  * - Manual swipe + dot-tap navigation with smooth crossfade
  *
@@ -56,7 +59,7 @@ const SLIDES: Slide[] = [
   {
     image: images.welcome3,
     headline: "Book With\nConfidence",
-    subtext: "Easy booking, fair prices, reliable service",
+    subtext: "Easy booking, fair prices and reliable service ",
   },
   {
     image: images.welcome6,
@@ -255,25 +258,43 @@ export default function Welcome() {
 
   return (
     <ScreenContainer>
-      <View style={styles.swipeLayer} {...panResponder.panHandlers}>
-        {/* ── Stacked hero images with crossfade ── */}
-        <View style={styles.imageContainer} pointerEvents="none">
-          {SLIDES.map((s, i) => (
-            <Animated.View
-              key={i}
-              style={[StyleSheet.absoluteFill, { opacity: slideOpacities[i] }]}
-            >
-              <Image
-                source={s.image}
-                style={styles.heroImage}
-                contentFit="cover"
+      <View style={styles.outerContainer}>
+        {/* ── Swipeable carousel content ── */}
+        <View style={styles.swipeLayer} {...panResponder.panHandlers}>
+        {/* ── Image section with dots ── */}
+        <View style={styles.imageSection}>
+          {/* ── Stacked hero images with crossfade ── */}
+          <View style={styles.imageContainer} pointerEvents="none">
+            {SLIDES.map((s, i) => (
+              <Animated.View
+                key={i}
+                style={[StyleSheet.absoluteFill, { opacity: slideOpacities[i] }]}
+              >
+                <Image
+                  source={s.image}
+                  style={styles.heroImage}
+                  contentFit="cover"
+                />
+              </Animated.View>
+            ))}
+          </View>
+
+          {/* ── Pagination dots at bottom of image ── */}
+          <View style={styles.dotsOnImage}>
+            {SLIDES.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  index === currentSlide && styles.dotActive,
+                ]}
               />
-            </Animated.View>
-          ))}
+            ))}
+          </View>
         </View>
 
-        {/* ── Text content (on the peach, below image) ── */}
-        <View style={styles.textContent}>
+        {/* ── Text below image on peach background ── */}
+        <View style={styles.textBelowImage}>
           <Animated.Text
             style={[
               styles.headline,
@@ -297,58 +318,66 @@ export default function Welcome() {
           >
             {slide.subtext}
           </Animated.Text>
-        </View>
 
-        {/* ── Footer (STATIC — does not re-animate on slide change) ── */}
-        <View style={styles.footer}>
           <PrimaryButton
             title="Let's Go"
             onPress={handleLetsGo}
             style={{ width: "100%" }}
           />
-          <Text style={styles.terms}>
-            By continuing you accept our{" "}
-            <Text style={styles.termsLink}>Terms of Use</Text> and{" "}
-            <Text style={styles.termsLink}>Privacy Notice</Text>
-          </Text>
-          <View style={styles.signInRow}>
-          </View>
         </View>
+      </View>
+
+      {/* ── Static footer - not part of the carousel ── */}
+      <View style={styles.footer}>
+        <Text style={styles.terms}>
+          By continuing you accept our{" "}
+          <Text style={styles.termsLink}>Terms of Use</Text> and{" "}
+          <Text style={styles.termsLink}>Privacy Notice</Text>
+        </Text>
+        <Pressable onPress={() => router.push("/(auth)/sign-in" as Href)}>
+          <Text style={styles.signInText}>
+            Already have an account?{" "}
+            <Text style={styles.signInLink}>Sign in</Text>
+          </Text>
+        </Pressable>
+      </View>
       </View>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  /* ── Outer container ── */
+  outerContainer: {
+    flex: 1,
+  },
+
   /* ── Swipe gesture layer ── */
   swipeLayer: {
     flex: 1,
   },
 
-  /* ── Hero image ── */
+  /* ── Image section ── */
+  imageSection: {
+    height: SCREEN_HEIGHT * 0.58,
+    position: "relative",
+  },
   imageContainer: {
-    position: "absolute",
-    top: 40,
-    left: 16,
-    right: 16,
-    height: SCREEN_HEIGHT * 0.54,
-    paddingTop: 150,
+    ...StyleSheet.absoluteFill,
   },
   heroImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 24,
+    borderRadius: 32,
+    top: 10,
   },
 
-  /* ── Text content (below image, on peach) ── */
-  textContent: {
-    position: "absolute",
-    top: SCREEN_HEIGHT * 0.53,
-    left: 0,
-    right: 0,
+  /* ── Text below image on peach background ── */
+  textBelowImage: {
     paddingHorizontal: 28,
-    paddingTop: 16,
-    alignItems: "center",
+    paddingTop: 24,
+    paddingBottom: 24,
+    gap: 12,
   },
 
   /* ── Typography ── */
@@ -358,25 +387,42 @@ const styles = StyleSheet.create({
     color: "#2C3E5B",
     textAlign: "center",
     lineHeight: 42,
-    marginBottom: 12,
   },
   subtext: {
     fontSize: 16,
     color: "#6E7E91",
     textAlign: "center",
     lineHeight: 24,
-    width: "100%",
   },
 
-  /* ── Footer (static) ── */
-  footer: {
+  /* ── Pagination dots at bottom of image ── */
+  dotsOnImage: {
     position: "absolute",
-    bottom: 0,
     left: 0,
     right: 0,
+    bottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
+  },
+  dotActive: {
+    width: 24,
+    backgroundColor: "#FFFFFF",
+  },
+
+  /* ── Footer below image ── */
+  footer: {
     paddingHorizontal: 28,
-    paddingBottom: 20,
-    gap: 12,
+    paddingBottom: 24,
+    gap: 10,
+    alignItems: "center",
   },
   terms: {
     fontSize: 10,
@@ -387,11 +433,6 @@ const styles = StyleSheet.create({
   termsLink: {
     color: "#2C3E5B",
     fontWeight: "600",
-  },
-  signInRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
   },
   signInText: {
     fontSize: 14,

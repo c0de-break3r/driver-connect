@@ -1,8 +1,9 @@
-import { useCallback, useRef, useState } from "react";
-import { router } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
+  Animated,
   Modal,
   Platform,
   Pressable,
@@ -15,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PrimaryButton } from "@/components/ui";
 import { useDriverOnboardingStore } from "@/store/useDriverOnboardingStore";
+import { useSlideEntrance } from "@/hooks/useSlideEntrance";
 
 type Gender = "male" | "female" | "other" | "";
 
@@ -36,6 +38,28 @@ export default function DriverSignupScreen() {
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [atEnd, setAtEnd] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+
+  const formFields = useMemo(
+    () => [
+      { key: "firstName", label: "First Name", required: true },
+      { key: "lastName", label: "Last Name", required: false },
+      { key: "phone", label: "Phone", required: true },
+      { key: "gender", label: "Gender", required: true },
+    ],
+    [],
+  );
+
+  const { anims, start } = useSlideEntrance({
+    count: formFields.length,
+    direction: "left",
+    initialDelay: 150,
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      start();
+    }, [start]),
+  );
 
   const handleScroll = useCallback(
     (event: any) => {
@@ -72,7 +96,7 @@ export default function DriverSignupScreen() {
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     setDriverOnboardingData(fullName, false, "");
 
-    router.push("/(onboarding)/driver-signup-success" as any);
+    router.push("/(onboarding)/driver-identity" as any);
   };
 
   const canProceed =
@@ -111,105 +135,145 @@ export default function DriverSignupScreen() {
 
         {/* ── Form ── */}
         <View style={styles.form}>
-          <View style={styles.fieldGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.fieldLabel}>First Name</Text>
-              <Text style={styles.requiredStar}>*</Text>
-            </View>
-            <View style={styles.inputWrapper}>
-              <View style={styles.inputIcon}>
-                <Ionicons name="person-outline" size={18} color="#6E7E91" />
+          <Animated.View
+            style={[
+              styles.animatedField,
+              {
+                opacity: anims[0].opacity,
+                transform: [{ translateX: anims[0].translate }],
+              },
+            ]}
+          >
+            <View style={styles.fieldGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.fieldLabel}>First Name</Text>
+                <Text style={styles.requiredStar}>*</Text>
               </View>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter your first name"
-                placeholderTextColor="#6E7E91"
-                value={firstName}
-                onChangeText={setFirstName}
-                autoCapitalize="words"
-                returnKeyType="next"
-              />
-            </View>
-            {errors.firstName && (
-              <Text style={styles.errorText}>{errors.firstName}</Text>
-            )}
-          </View>
-
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Last Name</Text>
-            <View style={styles.inputWrapper}>
-              <View style={styles.inputIcon}>
-                <Ionicons name="person-outline" size={18} color="#6E7E91" />
-              </View>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter your last name"
-                placeholderTextColor="#6E7E91"
-                value={lastName}
-                onChangeText={setLastName}
-                autoCapitalize="words"
-                returnKeyType="next"
-              />
-            </View>
-          </View>
-
-          <View style={styles.fieldGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.fieldLabel}>Phone</Text>
-              <Text style={styles.requiredStar}>*</Text>
-            </View>
-            <View style={styles.inputWrapper}>
-              <Pressable style={styles.countryButton}>
-                <Text style={styles.flag}>🇬🇭</Text>
-                <Text style={styles.countryCode}>+233</Text>
-              </Pressable>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter your phone number"
-                placeholderTextColor="#6E7E91"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                returnKeyType="next"
-              />
-            </View>
-            {errors.phone && (
-              <Text style={styles.errorText}>{errors.phone}</Text>
-            )}
-          </View>
-
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Gender</Text>
-            <Pressable
-              style={styles.inputWrapper}
-              onPress={() => {
-                Haptics.impactAsync(
-                  Haptics.ImpactFeedbackStyle.Light,
-                );
-                setShowGenderModal(true);
-              }}
-            >
-              <View style={styles.inputIcon}>
-                <View style={styles.genderQuestionIcon}>
-                  <Text style={styles.genderQuestionText}>?</Text>
+              <View style={styles.inputWrapper}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="person-outline" size={18} color="#6E7E91" />
                 </View>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter your first name"
+                  placeholderTextColor="#6E7E91"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  autoCapitalize="words"
+                  returnKeyType="next"
+                />
               </View>
-              <View style={styles.genderRow}>
-                <Text
-                  style={[
-                    styles.genderText,
-                    !gender && styles.genderPlaceholder,
-                  ]}
-                >
-                  {gender === "" ? "Select Gender" : gender}
-                </Text>
-                <Ionicons name="chevron-down" size={18} color="#6E7E91" />
+              {errors.firstName && (
+                <Text style={styles.errorText}>{errors.firstName}</Text>
+              )}
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.animatedField,
+              {
+                opacity: anims[1].opacity,
+                transform: [{ translateX: anims[1].translate }],
+              },
+            ]}
+          >
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Last Name</Text>
+              <View style={styles.inputWrapper}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="person-outline" size={18} color="#6E7E91" />
+                </View>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter your last name"
+                  placeholderTextColor="#6E7E91"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  autoCapitalize="words"
+                  returnKeyType="next"
+                />
               </View>
-            </Pressable>
-            {errors.gender && (
-              <Text style={styles.errorText}>{errors.gender}</Text>
-            )}
-          </View>
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.animatedField,
+              {
+                opacity: anims[2].opacity,
+                transform: [{ translateX: anims[2].translate }],
+              },
+            ]}
+          >
+            <View style={styles.fieldGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.fieldLabel}>Phone</Text>
+                <Text style={styles.requiredStar}>*</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <Pressable style={styles.countryButton}>
+                  <Text style={styles.flag}>🇬🇭</Text>
+                  <Text style={styles.countryCode}>+233</Text>
+                </Pressable>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter your phone number"
+                  placeholderTextColor="#6E7E91"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  returnKeyType="next"
+                />
+              </View>
+              {errors.phone && (
+                <Text style={styles.errorText}>{errors.phone}</Text>
+              )}
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.animatedField,
+              {
+                opacity: anims[3].opacity,
+                transform: [{ translateX: anims[3].translate }],
+              },
+            ]}
+          >
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Gender</Text>
+              <Pressable
+                style={styles.inputWrapper}
+                onPress={() => {
+                  Haptics.impactAsync(
+                    Haptics.ImpactFeedbackStyle.Light,
+                  );
+                  setShowGenderModal(true);
+                }}
+              >
+                <View style={styles.inputIcon}>
+                  <View style={styles.genderQuestionIcon}>
+                    <Text style={styles.genderQuestionText}>?</Text>
+                  </View>
+                </View>
+                <View style={styles.genderRow}>
+                  <Text
+                    style={[
+                      styles.genderText,
+                      !gender && styles.genderPlaceholder,
+                    ]}
+                  >
+                    {gender === "" ? "Select Gender" : gender}
+                  </Text>
+                  <Ionicons name="chevron-down" size={18} color="#6E7E91" />
+                </View>
+              </Pressable>
+              {errors.gender && (
+                <Text style={styles.errorText}>{errors.gender}</Text>
+              )}
+            </View>
+          </Animated.View>
         </View>
 
         {atEnd && (
@@ -333,6 +397,9 @@ const styles = StyleSheet.create({
   form: {
     gap: 18,
     marginTop: 8,
+  },
+  animatedField: {
+    flex: 0,
   },
   fieldGroup: {
     gap: 8,

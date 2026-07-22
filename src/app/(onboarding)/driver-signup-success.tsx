@@ -1,12 +1,42 @@
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Animated, Easing } from "react-native";
 import { PrimaryButton } from "@/components/ui";
 
 export default function DriverSignupSuccessScreen() {
+  const fadeAnim = new Animated.Value(0);
+  const slideAnim = new Animated.Value(20);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.content}>
+      <Animated.View
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
         <View style={styles.iconContainer}>
           <Text style={styles.icon}>✓</Text>
         </View>
@@ -15,7 +45,7 @@ export default function DriverSignupSuccessScreen() {
           Welcome aboard! Your driver account is almost ready. Complete your
           profile to start finding jobs.
         </Text>
-      </View>
+      </Animated.View>
 
       <View style={styles.footer}>
         <PrimaryButton

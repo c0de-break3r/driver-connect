@@ -16,6 +16,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
  * 14. Safety, 15. Payout, 16. OTP
  */
 
+export type IdType = "national_id" | "passport" | "drivers_license" | "";
 export type LicenseClass = "A" | "B" | "C" | "D" | "E" | "F";
 
 export type VehicleOwnership = "own" | "lease" | "company" | "other";
@@ -95,6 +96,12 @@ export type DriverOnboardingState = {
   residentialAddress: string;
   hasCriminalRecord: boolean | null;
   criminalRecordDetails: string;
+
+  // Identity verification info
+  identityEmail: string;
+  identityAddress: string;
+  identityType: IdType;
+  identityNumber: string;
 
   // Step 8 — License Confirmation
   fullLegalName: string;
@@ -191,6 +198,12 @@ export type DriverOnboardingState = {
     dateOfBirth: string,
     licenseClass: LicenseClass,
   ) => void;
+  setIdentityInfo: (
+    email: string,
+    address: string,
+    idType: IdType,
+    idNumber: string,
+  ) => void;
   setLicenseDetails: (licenseNumber: string, licenseExpiryDate: string) => void;
   setVehicleDetails: (
     vehicleMake: string,
@@ -278,6 +291,11 @@ const initialState = {
   payoutAccountName: "",
   payoutAccountNumber: "",
   taxIdentificationNumber: "",
+  // Identity verification info
+  identityEmail: "",
+  identityAddress: "",
+  identityType: "" as IdType,
+  identityNumber: "",
   verificationMethod: null as "email" | "phone" | null,
   onboardingComplete: false,
   profileDocumentsUploaded: false,
@@ -325,13 +343,15 @@ setExperience: (yearsExperience) => set({ yearsExperience }),
   ) =>
     set({ selectedVehicleType, hasValidLicense, hasActiveGhanaCard }),
   setPersonalInfo: (
-        residentialAddress,
-        hasCriminalRecord,
-        criminalRecordDetails,
-      ) =>
-        set({ residentialAddress, hasCriminalRecord, criminalRecordDetails }),
-      setLicenseInfo: (fullLegalName, dateOfBirth, licenseClass) =>
-        set({ fullLegalName, dateOfBirth, licenseClass }),
+    residentialAddress,
+    hasCriminalRecord,
+    criminalRecordDetails,
+  ) =>
+    set({ residentialAddress, hasCriminalRecord, criminalRecordDetails }),
+  setLicenseInfo: (fullLegalName, dateOfBirth, licenseClass) =>
+    set({ fullLegalName, dateOfBirth, licenseClass }),
+  setIdentityInfo: (email, address, idType, idNumber) =>
+    set({ identityEmail: email, identityAddress: address, identityType: idType, identityNumber: idNumber }),
       setLicenseDetails: (licenseNumber, licenseExpiryDate) =>
         set({ licenseNumber, licenseExpiryDate }),
       setVehicleDetails: (
