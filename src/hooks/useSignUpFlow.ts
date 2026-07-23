@@ -89,7 +89,19 @@ export function useSignUpFlow(): SignUpFlowState {
         Haptics.notificationAsync(
           Haptics.NotificationFeedbackType.Error
         );
-      } else if (signUp.status === "complete") {
+        return;
+      }
+
+      try {
+        const reloadResult = signUp as any;
+        if (typeof reloadResult.reload === "function") {
+          await reloadResult.reload();
+        }
+      } catch (reloadError) {
+        console.warn("Failed to reload sign-up after verify:", reloadError);
+      }
+
+      if (signUp.status === "complete") {
         Haptics.notificationAsync(
           Haptics.NotificationFeedbackType.Success
         );

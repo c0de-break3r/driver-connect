@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet } from "react-native";
 
-export default function DriverProfile() {
+export default function MessagesScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Profile</Text>
-      <Text style={styles.body}>Driver profile settings will appear here.</Text>
+      <Text style={styles.title}>Messages</Text>
+      <Text style={styles.body}>Your messages will appear here.</Text>
     </View>
   );
 }
@@ -20,11 +20,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0F172A",
+    color: "#2C3E5B",
   },
   body: {
     fontSize: 14,
-    color: "#64748B",
+    color: "#6E7E91",
     textAlign: "center",
   },
 });

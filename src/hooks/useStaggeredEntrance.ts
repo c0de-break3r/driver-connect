@@ -29,22 +29,31 @@ import { Animated } from "react-native";
 export function useStaggeredEntrance() {
   // Animated values — created once, stable across renders
   const headerOpacity = useMemo(() => new Animated.Value(0), []);
+  const headerTranslateY = useMemo(() => new Animated.Value(20), []);
   const iconOpacity = useMemo(() => new Animated.Value(0), []);
   const iconScale = useMemo(() => new Animated.Value(0.85), []);
   const formOpacity = useMemo(() => new Animated.Value(0), []);
   const formTranslateY = useMemo(() => new Animated.Value(20), []);
   const footerOpacity = useMemo(() => new Animated.Value(0), []);
+  const footerTranslateY = useMemo(() => new Animated.Value(20), []);
 
   useEffect(() => {
     Animated.parallel([
       // Layer 1: header / back button
       Animated.sequence([
         Animated.delay(100),
-        Animated.timing(headerOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
+        Animated.parallel([
+          Animated.timing(headerOpacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(headerTranslateY, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]),
       ]),
       // Layer 2: icon / mascot with scale spring
       Animated.sequence([
@@ -79,14 +88,21 @@ export function useStaggeredEntrance() {
           }),
         ]),
       ]),
-      // Layer 4: footer fade
+      // Layer 4: footer fade + slide up
       Animated.sequence([
         Animated.delay(600),
-        Animated.timing(footerOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
+        Animated.parallel([
+          Animated.timing(footerOpacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(footerTranslateY, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]),
       ]),
     ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -94,10 +110,12 @@ export function useStaggeredEntrance() {
 
   return {
     headerOpacity,
+    headerTranslateY,
     iconOpacity,
     iconScale,
     formOpacity,
     formTranslateY,
     footerOpacity,
+    footerTranslateY,
   };
 }

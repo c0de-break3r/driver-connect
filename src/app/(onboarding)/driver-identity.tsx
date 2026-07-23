@@ -23,7 +23,7 @@ import { useSlideEntrance } from "@/hooks/useSlideEntrance";
 
 type IdType = "national_id" | "passport" | "drivers_license" | "";
 type Ownership = "personal" | "work_pay" | "";
-type ImageTarget = "profile" | "idFront" | "idBack";
+type ImageTarget = "profile" | "idFront";
 
 const ID_TYPES: { value: IdType; label: string }[] = [
   { value: "national_id", label: "National ID" },

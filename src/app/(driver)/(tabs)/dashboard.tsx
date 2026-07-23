@@ -1,154 +1,302 @@
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
-    ActivityIndicator,
-    Animated,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-  } from "react-native";
-import { Image } from "expo-image";
-import { SafeAreaView } from "react-native-safe-area-context";
+  Alert,
+  Animated,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
+import { Card } from "@/components/ui/card";
+import { useStreakStore } from "@/store/useStreakStore";
+import { useDriverOnboardingStore } from "@/store/useDriverOnboardingStore";
+import { useKycFlowStore } from "@/store/useKycFlowStore";
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+const NAVY = "#2C3E5B";
 
 export default function DriverDashboard() {
   const entrance = useStaggeredEntrance();
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  const [greeting, setGreeting] = useState(getGreeting);
+  const [showProfilePanel, setShowProfilePanel] = useState(false);
+  const streak = useStreakStore((s) => s.streak);
+  const markActive = useStreakStore((s) => s.markActive);
+  const { fullLegalName, licenseClass, licenseNumber } = useDriverOnboardingStore();
+  const { selfieUri } = useKycFlowStore();
+  const profileAnim = useMemo(() => new Animated.Value(0), []);
 
-  const handleVerify = async () => {
-    setVerifying(true);
-    setTimeout(() => {
-      setVerifying(false);
-      setShowVerifyModal(false);
-    }, 2000);
+  const toggleProfilePanel = () => {
+    const next = !showProfilePanel;
+    setShowProfilePanel(next);
+    Animated.timing(profileAnim, {
+      toValue: next ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  useEffect(() => {
+    markActive();
+    const id = setInterval(() => setGreeting(getGreeting()), 60000);
+    return () => clearInterval(id);
+  }, [markActive]);
+
+  const initials = fullLegalName
+    ? fullLegalName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((n) => n[0]?.toUpperCase() ?? "")
+        .join("")
+    : "DR";
+
+  const profileImage = selfieUri ? (
+    <Image
+      source={{ uri: selfieUri }}
+      style={styles.profileImageSmall}
+      contentFit="cover"
+    />
+  ) : (
+    <Text style={styles.profileInitialsSmall}>{initials}</Text>
+  );
+
+  const handleVerify = () => {
+    router.push("/(driver)/verify-identity" as any);
+  };
+
+  const handleAddVehicle = () => {
+    router.push("/(driver)/add-vehicle" as any);
+  };
+
+  const handleInvite = () => {
+    Alert.alert("Invite Friends", "Share your referral code: DRIVE2026");
+  };
+
+  const handleSettings = () => {
+    Alert.alert("Settings", "Settings screen coming soon.");
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF8F3" }} edges={["top"]}>
+      {/* ── Sticky Header ── */}
+      <Animated.View
+        style={[
+          styles.headerRow,
+          {
+            opacity: entrance.headerOpacity,
+            transform: [{ translateY: entrance.headerTranslateY }],
+          },
+        ]}
+      >
+        <Pressable style={styles.settingsButton} onPress={handleSettings}>
+          <Ionicons name="settings-outline" size={24} color={NAVY} />
+        </Pressable>
+        <Text style={styles.centeredGreeting}>{greeting}</Text>
+        <View style={styles.headerRight}>
+          <View style={styles.streakBadge}>
+            <Ionicons name="flame" size={14} color="#FFFFFF" />
+            <Text style={styles.streakText}>{streak}</Text>
+          </View>
+          <Pressable style={styles.profileIconButton} onPress={toggleProfilePanel}>
+            {profileImage}
+          </Pressable>
+        </View>
+      </Animated.View>
+
+      {/* ── Expandable Profile Panel ── */}
+      <Animated.View
+        style={[
+          styles.profilePanel,
+          {
+            opacity: profileAnim,
+            transform: [
+              {
+                translateY: profileAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-12, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        {showProfilePanel && (
+          <Card style={styles.profilePanelCard}>
+            <View style={styles.profilePanelRow}>
+              <View style={styles.profilePanelAvatarWrap}>
+                {selfieUri ? (
+                  <Image
+                    source={{ uri: selfieUri }}
+                    style={styles.profilePanelImage}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <View style={styles.profilePanelPlaceholder}>
+                    <Ionicons name="person" size={28} color={NAVY} />
+                  </View>
+                )}
+              </View>
+              <View style={styles.profilePanelTextWrap}>
+                <Text style={styles.profilePanelName}>
+                  {fullLegalName || "Driver"}
+                </Text>
+                <Text style={styles.profilePanelMeta}>
+                  {licenseClass ? `License Class ${licenseClass}` : "License pending"}
+                </Text>
+                <Text style={styles.profilePanelMeta}>
+                  {licenseNumber || "Number pending"}
+                </Text>
+              </View>
+            </View>
+          </Card>
+        )}
+      </Animated.View>
+
+      {/* ── Scrollable Content ── */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Header ── */}
+        {/* ── Quick Stats strip ── */}
         <Animated.View
           style={[
-            styles.header,
-            { opacity: entrance.headerOpacity },
-          ]}
-        >
-          <Pressable style={styles.menuBtn} hitSlop={12}>
-            <Ionicons name="menu-outline" size={26} color="#0F172A" />
-          </Pressable>
-          <Text style={styles.headerTitle}>Dashboard</Text>
-          <View style={styles.headerSpacer} />
-        </Animated.View>
-
-        {/* ── Profile Card ── */}
-        <Animated.View
-          style={[
-            styles.profileCard,
+            styles.statsRow,
             {
-              opacity: entrance.formOpacity,
-              transform: [{ translateY: entrance.formTranslateY }],
+              opacity: entrance.headerOpacity,
+              transform: [{ translateY: entrance.headerTranslateY }],
             },
           ]}
         >
-          <View style={styles.profileHeader}>
-            <Image
-              source={{ uri: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" }}
-              style={styles.avatar}
-              contentFit="cover"
-            />
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>Prince Obed</Text>
-              <View style={styles.levelBadge}>
-                <Text style={styles.levelText}>Level 1</Text>
-              </View>
-            </View>
-            <View style={styles.onlineBadge}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>Online</Text>
-            </View>
+          <View style={styles.statPill}>
+            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statLabel}>Requests</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statPill}>
+            <Text style={styles.statValue}>12h</Text>
+            <Text style={styles.statLabel}>Online</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statPill}>
+            <Text style={styles.statValue}>4.8</Text>
+            <Text style={styles.statLabel}>Rating</Text>
           </View>
         </Animated.View>
 
         {/* ── Vehicle Card ── */}
         <Animated.View
           style={[
-            styles.vehicleCard,
+            styles.section,
             {
               opacity: entrance.formOpacity,
               transform: [{ translateY: entrance.formTranslateY }],
             },
           ]}
         >
-          <View style={styles.vehicleImageWrap}>
-            <View style={styles.vehiclePlaceholder}>
-              <Ionicons name="car-outline" size={64} color="#94A3B8" />
-            </View>
-            <View style={styles.mapPin}>
-              <Ionicons name="location" size={20} color="#FFFFFF" />
-            </View>
-            <View style={styles.checkBadge}>
-              <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-            </View>
-          </View>
-
-          <Pressable
-            style={styles.addVehicleBtn}
-            onPress={() => {}}
-          >
-            <Text style={styles.addVehicleText}>Add Vehicle Info</Text>
-          </Pressable>
-        </Animated.View>
-      </ScrollView>
-
-      {/* ── Verify Identity Modal ── */}
-      <Modal
-        visible={showVerifyModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowVerifyModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHandle} />
-            <View style={styles.modalIconWrap}>
-              <View style={styles.modalIconBox}>
-                <Ionicons name="person-outline" size={48} color="#1E3A8A" />
+          <Text style={styles.sectionTitle}>My Vehicle</Text>
+          <Card style={styles.vehicleCard}>
+            <View style={styles.vehicleImageWrap}>
+              <Image
+                source={{
+                  uri: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&h=400&fit=crop",
+                }}
+                style={styles.vehicleImage}
+                contentFit="cover"
+                transition={200}
+              />
+              <View style={styles.vehicleOverlayTopRight}>
+                <View style={styles.vehicleCheckBadge}>
+                  <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                </View>
+              </View>
+              <View style={styles.vehicleOverlayBottomLeft}>
+                <View style={styles.mapMarker}>
+                  <Ionicons name="location" size={18} color="#FF7B54" />
+                </View>
               </View>
             </View>
+            <Pressable style={styles.primaryButton} onPress={handleAddVehicle}>
+              <Text style={styles.primaryButtonText}>Add Vehicle Info</Text>
+            </Pressable>
+          </Card>
+        </Animated.View>
 
-            <Text style={styles.modalTitle}>Verify your identity</Text>
-            <Text style={styles.modalSubtitle}>
-              Please complete face verification to become a verified driver. It
-              will more trusted
-            </Text>
-
-            <Pressable
-              style={styles.modalPrimaryBtn}
-              onPress={handleVerify}
-              disabled={verifying}
-            >
-              {verifying ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.modalPrimaryText}>
-                  Verify your identity
+        {/* ── Verify ID Card ── */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: entrance.formOpacity,
+              transform: [{ translateY: entrance.formTranslateY }],
+            },
+          ]}
+        >
+          <Text style={styles.sectionTitle}>Verification</Text>
+          <Card style={styles.verifyCard}>
+            <View style={styles.verifyRow}>
+              <View style={styles.verifyIconWrap}>
+                <Ionicons name="shield-checkmark-outline" size={22} color="#1E3A8A" />
+              </View>
+              <View style={styles.verifyTextWrap}>
+                <Text style={styles.verifyTitle}>Verify your identity</Text>
+                <Text style={styles.verifySubtitle}>
+                  Complete face verification to unlock more jobs.
                 </Text>
-              )}
-            </Pressable>
+              </View>
+              <Pressable
+                style={styles.verifyButton}
+                onPress={handleVerify}
+              >
+                <Text style={styles.verifyButtonText}>Verify</Text>
+              </Pressable>
+            </View>
+          </Card>
+        </Animated.View>
 
-            <Pressable onPress={() => setShowVerifyModal(false)} hitSlop={8}>
-              <Text style={styles.modalSecondaryText}>I Will Do It Later</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+        {/* ── Invite Card ── */}
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: entrance.footerOpacity,
+              transform: [{ translateY: entrance.formTranslateY }],
+            },
+          ]}
+        >
+          <Card style={styles.inviteCard}>
+            <View style={styles.inviteRow}>
+              <View style={styles.inviteTextWrap}>
+                <Text style={styles.inviteTitle}>Invite & Earn</Text>
+                <Text style={styles.inviteSubtitle}>
+                  Share your referral code. Both you and your friend get rewards when they sign up.
+                </Text>
+                <Pressable style={styles.inviteButton} onPress={handleInvite}>
+                  <Text style={styles.inviteButtonText}>Invite Friends</Text>
+                </Pressable>
+              </View>
+              <View style={styles.inviteIllustration}>
+                <View style={styles.inviteAccent} />
+                <View style={styles.inviteCoin}>
+                  <Ionicons name="cash-outline" size={22} color="#FFFFFF" />
+                </View>
+              </View>
+            </View>
+          </Card>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -156,165 +304,369 @@ export default function DriverDashboard() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 16,
     paddingBottom: 32,
+    gap: 24,
   },
-  header: {
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    marginBottom: 16,
+    gap: 12,
+    position: "relative",
   },
-  menuBtn: {
+  settingsButton: {
     width: 40,
     height: 40,
     alignItems: "center",
     justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#0F172A",
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  profileCard: {
+    borderRadius: 12,
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+  },
+  centeredGreeting: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#2C3E5B",
+    letterSpacing: 0.2,
+  },
+  headerRight: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  streakBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FF7B54",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 4,
   },
-  profileHeader: {
+  streakText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    paddingVertical: 16,
+    shadowColor: "#2C3E5B",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.05,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+  statPill: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#2C3E5B",
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6E7E91",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  statDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 28,
+    backgroundColor: "#EAE1D9",
+  },
+  section: {
+    gap: 10,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6E7E91",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    paddingHorizontal: 4,
+  },
+  profileIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+    overflow: "hidden",
+  },
+  profileImageSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  profileInitialsSmall: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#2C3E5B",
+  },
+  profilePanel: {
+    backgroundColor: "#FFF8F3",
+  },
+  profilePanelCard: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  profilePanelRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
   },
-  avatar: {
+  profilePanelAvatarWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#E2E8F0",
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#0F172A",
-  },
-  levelBadge: {
-    marginTop: 4,
-    alignSelf: "flex-start",
-    backgroundColor: "#EFF6FF",
-    borderWidth: 1,
-    borderColor: "#BFDBFE",
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  levelText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#1E3A8A",
-  },
-  onlineBadge: {
-    flexDirection: "row",
+    backgroundColor: "#F5ECE5",
     alignItems: "center",
-    gap: 6,
-    backgroundColor: "#ECFDF5",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#A7F3D0",
+    justifyContent: "center",
+    overflow: "hidden",
   },
-  onlineDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#10B981",
+  profilePanelImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
-  onlineText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#047857",
+  profilePanelPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#F5ECE5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profilePanelTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  profilePanelName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2C3E5B",
+  },
+  profilePanelMeta: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6E7E91",
   },
   vehicleCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 16,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 24,
-    elevation: 4,
+    padding: 0,
+    overflow: "hidden",
   },
   vehicleImageWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
     height: 180,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 16,
-    marginBottom: 16,
+    backgroundColor: "#FFF8F3",
+    position: "relative",
   },
-  vehiclePlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
+  vehicleImage: {
+    width: "100%",
+    height: "100%",
   },
-  mapPin: {
+  vehicleOverlayTopRight: {
     position: "absolute",
     top: 12,
-    right: 16,
+    right: 12,
+  },
+  vehicleCheckBadge: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#2563EB",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#2563EB",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  checkBadge: {
-    position: "absolute",
-    top: 12,
-    right: 60,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
     backgroundColor: "#10B981",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,
-    borderColor: "#F8FAFC",
+    borderColor: "#FFFFFF",
     shadowColor: "#10B981",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowRadius: 8,
     elevation: 4,
   },
-  addVehicleBtn: {
-    backgroundColor: "#1E3A8A",
+  vehicleOverlayBottomLeft: {
+    position: "absolute",
+    bottom: 12,
+    left: 12,
+  },
+  mapMarker: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  primaryButton: {
+    backgroundColor: "#FF7B54",
     paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 16,
+    marginVertical: 16,
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  primaryButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.2,
+  },
+  verifyCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+  },
+  verifyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  verifyIconWrap: {
+    width: 44,
+    height: 44,
     borderRadius: 14,
+    backgroundColor: "#EFF6FF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#BFDBFE",
+  },
+  verifyTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  verifyTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#2C3E5B",
+  },
+  verifySubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6E7E91",
+    lineHeight: 18,
+  },
+  verifyButton: {
+    backgroundColor: "#FF7B54",
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  verifyButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.2,
+  },
+  inviteCard: {
+    paddingVertical: 20,
+    paddingHorizontal: 18,
+  },
+  inviteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  inviteTextWrap: {
+    flex: 1,
+    gap: 8,
+  },
+  inviteTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2C3E5B",
+  },
+  inviteSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6E7E91",
+    lineHeight: 18,
+  },
+  inviteButton: {
+    backgroundColor: "#FF7B54",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  inviteButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.2,
+  },
+  inviteIllustration: {
+    width: 80,
+    height: 80,
     alignItems: "center",
     justifyContent: "center",
   },
-  addVehicleText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FFFFFF",
+  inviteAccent: {
+    position: "absolute",
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#FFF7ED",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#FFEDD5",
+  },
+  inviteCoin: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#10B981",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#10B981",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   modalOverlay: {
     flex: 1,
@@ -348,7 +700,7 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     backgroundColor: "#EFF6FF",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "#BFDBFE",
     alignItems: "center",
     justifyContent: "center",
@@ -356,29 +708,36 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0F172A",
+    color: "#2C3E5B",
     textAlign: "center",
     marginBottom: 8,
+    letterSpacing: 0.2,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: "#64748B",
+    color: "#6E7E91",
     textAlign: "center",
     lineHeight: 20,
     marginBottom: 24,
   },
   modalPrimaryBtn: {
-    backgroundColor: "#1E3A8A",
+    backgroundColor: "#FF7B54",
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
+    shadowColor: "#FF7B54",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 6,
   },
   modalPrimaryText: {
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+    letterSpacing: 0.2,
   },
   modalSecondaryText: {
     fontSize: 15,
