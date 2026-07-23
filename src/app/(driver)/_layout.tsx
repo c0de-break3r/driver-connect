@@ -1,6 +1,5 @@
-import { Stack } from "expo-router";
+import { Stack, Redirect } from "expo-router";
 import { useAuth } from "@clerk/expo";
-import { Redirect } from "expo-router";
 import { useRoleStore } from "@/store/useRoleStore";
 import { getPostAuthRoute } from "@/lib/routing";
 

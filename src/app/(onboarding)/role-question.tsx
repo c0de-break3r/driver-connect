@@ -1,10 +1,8 @@
 import * as Haptics from "expo-haptics";
 import { router, useFocusEffect, type Href } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Animated,
-  Dimensions,
-  Easing,
   Pressable,
   ScrollView,
   StyleSheet,

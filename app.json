@@ -17,7 +17,8 @@
         "backgroundImage": "./assets/images/android-icon-background.jpg",
         "monochromeImage": "./assets/images/android-icon-monochrome.jpg"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.c0debreak3r.driverconnect"
     },
     "web": {
       "output": "static",
@@ -33,11 +34,25 @@
           "imageWidth": 76
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "@maplibre/maplibre-react-native",
+        {
+          "maplibreGLNativeVersion": "11.3.6"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "newArchEnabled": true,
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "386e3dce-e44a-415a-96f7-75e292c892a8"
+      }
+    },
+    "owner": "c0de-break3r"
   }
 }

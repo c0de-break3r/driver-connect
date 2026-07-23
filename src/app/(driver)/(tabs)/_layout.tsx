@@ -1,10 +1,9 @@
-import { Tabs } from "expo-router";
-import { Platform, View, Text, Pressable, StyleSheet } from "react-native";
+import { Tabs, Redirect } from "expo-router";
+import { Platform, View, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRef, useState } from "react";
 import { useAuth } from "@clerk/expo";
-import { Redirect } from "expo-router";
 import { useRoleStore } from "@/store/useRoleStore";
 
 const NAVY = "#2C3E5B";
@@ -46,11 +45,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
   return (
     <View style={styles.tabBar}>
     {state.routes.map((route: any, index: number) => {
-      const { options } = descriptors[route.key];
-      const label = options.title ?? route.name;
       const iconConfig = icons[route.name] ?? { active: "ellipse", inactive: "ellipse-outline", component: "ionicons" } as IconConfig;
       const isFocused = state.index === index;
-      const showLabel = isFocused || activeLabelIndex === index;
       const iconName = isFocused || activeLabelIndex === index ? iconConfig.active : iconConfig.inactive;
 
       return (
@@ -80,20 +76,10 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
               />
             )}
           </View>
-            {showLabel && (
-              <Text
-                style={[
-                  styles.label,
-                  { color: isFocused ? "#FFFFFF" : NAVY },
-                ]}
-              >
-                {label}
-              </Text>
-            )}
-          </Pressable>
-        );
-      })}
-    </View>
+        </Pressable>
+      );
+    })}
+  </View>
   );
 }
 
@@ -140,8 +126,7 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    minWidth: 64,
+    flex: 1,
     paddingVertical: 4,
   },
   iconWrap: {
@@ -154,9 +139,5 @@ const styles = StyleSheet.create({
   iconWrapActive: {
     backgroundColor: NAVY,
     borderRadius: 16,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "600",
   },
 });

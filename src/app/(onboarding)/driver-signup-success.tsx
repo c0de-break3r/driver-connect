@@ -1,13 +1,12 @@
 import { router } from "expo-router";
-import { useEffect } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo } from "react";
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Animated, Easing } from "react-native";
 import { PrimaryButton } from "@/components/ui";
 
 export default function DriverSignupSuccessScreen() {
-  const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(20);
+  const fadeAnim = useMemo(() => new Animated.Value(0), []);
+  const slideAnim = useMemo(() => new Animated.Value(20), []);
 
   useEffect(() => {
     Animated.parallel([
@@ -24,7 +23,7 @@ export default function DriverSignupSuccessScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

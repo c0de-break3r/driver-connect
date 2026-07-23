@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Animated,
@@ -16,26 +16,25 @@ import { router } from "expo-router";
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
 import { Card } from "@/components/ui/card";
 import { useStreakStore } from "@/store/useStreakStore";
+import { useDriverStatsStore } from "@/store/useDriverStatsStore";
 import { useDriverOnboardingStore } from "@/store/useDriverOnboardingStore";
-import { useKycFlowStore } from "@/store/useKycFlowStore";
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "Good morning";
-  if (hour >= 12 && hour < 17) return "Good afternoon";
-  return "Good evening";
-}
 
 const NAVY = "#2C3E5B";
 
 export default function DriverDashboard() {
   const entrance = useStaggeredEntrance();
-  const [greeting, setGreeting] = useState(getGreeting);
   const [showProfilePanel, setShowProfilePanel] = useState(false);
   const streak = useStreakStore((s) => s.streak);
-  const markActive = useStreakStore((s) => s.markActive);
-  const { fullLegalName, licenseClass, licenseNumber } = useDriverOnboardingStore();
-  const { selfieUri } = useKycFlowStore();
+  const stats = useDriverStatsStore((s) => s.stats);
+  const {
+    fullLegalName,
+    licenseClass,
+    licenseNumber,
+    selfieUri: onboardingSelfieUri,
+    preferredJobType,
+    selectedVehicleType,
+    verificationPipelineStatus,
+  } = useDriverOnboardingStore();
   const profileAnim = useMemo(() => new Animated.Value(0), []);
 
   const toggleProfilePanel = () => {
@@ -48,11 +47,16 @@ export default function DriverDashboard() {
     }).start();
   };
 
+  // Demo: seed some stats on first mount so the dashboard isn't empty.
   useEffect(() => {
-    markActive();
-    const id = setInterval(() => setGreeting(getGreeting()), 60000);
-    return () => clearInterval(id);
-  }, [markActive]);
+    const store = useDriverStatsStore.getState();
+    if (store.tripsCompleted === 0) {
+      store.incrementTrips(12);
+      store.incrementStaffTrips(3);
+      store.addEarnings(1450);
+      store.setRating(4.8);
+    }
+  }, []);
 
   const initials = fullLegalName
     ? fullLegalName
@@ -63,9 +67,9 @@ export default function DriverDashboard() {
         .join("")
     : "DR";
 
-  const profileImage = selfieUri ? (
+  const profileImage = onboardingSelfieUri ? (
     <Image
-      source={{ uri: selfieUri }}
+      source={{ uri: onboardingSelfieUri }}
       style={styles.profileImageSmall}
       contentFit="cover"
     />
@@ -86,7 +90,11 @@ export default function DriverDashboard() {
   };
 
   const handleSettings = () => {
-    Alert.alert("Settings", "Settings screen coming soon.");
+    router.push("/(driver)/settings" as any);
+  };
+
+  const handleNotifications = () => {
+    router.push("/(driver)/notifications" as any);
   };
 
   return (
@@ -101,11 +109,16 @@ export default function DriverDashboard() {
           },
         ]}
       >
-        <Pressable style={styles.settingsButton} onPress={handleSettings}>
-          <Ionicons name="settings-outline" size={24} color={NAVY} />
-        </Pressable>
-        <Text style={styles.centeredGreeting}>{greeting}</Text>
         <View style={styles.headerRight}>
+          <Pressable style={styles.iconButton} onPress={handleSettings}>
+            <Ionicons name="settings-outline" size={22} color={NAVY} />
+          </Pressable>
+          <Pressable style={styles.iconButton} onPress={handleNotifications}>
+            <Ionicons name="notifications-outline" size={22} color={NAVY} />
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>1</Text>
+            </View>
+          </Pressable>
           <View style={styles.streakBadge}>
             <Ionicons name="flame" size={14} color="#FFFFFF" />
             <Text style={styles.streakText}>{streak}</Text>
@@ -137,9 +150,9 @@ export default function DriverDashboard() {
           <Card style={styles.profilePanelCard}>
             <View style={styles.profilePanelRow}>
               <View style={styles.profilePanelAvatarWrap}>
-                {selfieUri ? (
+                {onboardingSelfieUri ? (
                   <Image
-                    source={{ uri: selfieUri }}
+                    source={{ uri: onboardingSelfieUri }}
                     style={styles.profilePanelImage}
                     contentFit="cover"
                   />
@@ -156,9 +169,40 @@ export default function DriverDashboard() {
                 <Text style={styles.profilePanelMeta}>
                   {licenseClass ? `License Class ${licenseClass}` : "License pending"}
                 </Text>
-                <Text style={styles.profilePanelMeta}>
-                  {licenseNumber || "Number pending"}
-                </Text>
+                {licenseNumber ? (
+                  <Text style={styles.profilePanelMeta}>{licenseNumber}</Text>
+                ) : null}
+                {(preferredJobType || selectedVehicleType) && (
+                  <Text style={styles.profilePanelMeta}>
+                    {preferredJobType || selectedVehicleType}
+                  </Text>
+                )}
+                <View style={styles.verificationBadge}>
+                  <Ionicons
+                    name={
+                      verificationPipelineStatus === "confirmed"
+                        ? "checkmark-circle"
+                        : "time-outline"
+                    }
+                    size={14}
+                    color={
+                      verificationPipelineStatus === "confirmed"
+                        ? "#10B981"
+                        : "#6E7E91"
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.verificationBadgeText,
+                      verificationPipelineStatus === "confirmed" &&
+                        styles.verificationBadgeTextConfirmed,
+                    ]}
+                  >
+                    {verificationPipelineStatus === "confirmed"
+                      ? "Verified"
+                      : "Verification pending"}
+                  </Text>
+                </View>
               </View>
             </View>
           </Card>
@@ -180,20 +224,12 @@ export default function DriverDashboard() {
             },
           ]}
         >
-          <View style={styles.statPill}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Requests</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statPill}>
-            <Text style={styles.statValue}>12h</Text>
-            <Text style={styles.statLabel}>Online</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statPill}>
-            <Text style={styles.statValue}>4.8</Text>
-            <Text style={styles.statLabel}>Rating</Text>
-          </View>
+          {stats.map((item, index) => (
+            <View key={item.label} style={styles.statPill}>
+              <Text style={styles.statValue}>{item.value}</Text>
+              <Text style={styles.statLabel}>{item.label}</Text>
+            </View>
+          ))}
         </Animated.View>
 
         {/* ── Vehicle Card ── */}
@@ -311,11 +347,10 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    position: "relative",
+    justifyContent: "flex-end",
+    gap: 10,
   },
-  settingsButton: {
+  iconButton: {
     width: 40,
     height: 40,
     alignItems: "center",
@@ -325,18 +360,30 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#EAE1D9",
   },
-  centeredGreeting: {
+  badge: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    textAlign: "center",
-    fontSize: 22,
+    top: -4,
+    right: -4,
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: "#FFF8F3",
+  },
+  badgeText: {
+    fontSize: 10,
     fontWeight: "700",
-    color: "#2C3E5B",
-    letterSpacing: 0.2,
+    color: "#FFFFFF",
   },
   headerRight: {
-    alignItems: "flex-end",
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     gap: 8,
   },
   streakBadge: {
@@ -668,83 +715,18 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "#00000066",
+  verificationBadge: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
+    gap: 4,
+    marginTop: 4,
   },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 32,
-    width: "100%",
-  },
-  modalHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E2E8F0",
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-  modalIconWrap: {
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  modalIconBox: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: "#EFF6FF",
-    borderWidth: 1.5,
-    borderColor: "#BFDBFE",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#2C3E5B",
-    textAlign: "center",
-    marginBottom: 8,
-    letterSpacing: 0.2,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: "#6E7E91",
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  modalPrimaryBtn: {
-    backgroundColor: "#FF7B54",
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  modalPrimaryText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    letterSpacing: 0.2,
-  },
-  modalSecondaryText: {
-    fontSize: 15,
+  verificationBadgeText: {
+    fontSize: 12,
     fontWeight: "600",
-    color: "#1E3A8A",
-    textAlign: "center",
-    paddingVertical: 8,
-    textDecorationLine: "underline",
+    color: "#6E7E91",
+  },
+  verificationBadgeTextConfirmed: {
+    color: "#10B981",
   },
 });

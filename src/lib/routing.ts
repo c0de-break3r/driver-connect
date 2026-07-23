@@ -17,9 +17,9 @@ export function getPostAuthRoute(role: UserRole | null): Href {
     case "owner":
     case "client":
     case "corporate":
-      return "/(onboarding)/trial" as Href;
+      return "/(onboarding)/welcome" as Href;
     default:
-      return "/(onboarding)/role-select" as Href;
+      return "/(onboarding)/welcome" as Href;
   }
 }
 
