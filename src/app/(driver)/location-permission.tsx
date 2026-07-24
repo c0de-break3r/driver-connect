@@ -12,6 +12,12 @@ export default function LocationPermission() {
   const [granted, setGranted] = useState(false);
   const [checking, setChecking] = useState(true);
 
+  const navigateToDashboard = () => {
+    setTimeout(() => {
+      router.replace("/(driver)/(tabs)/dashboard" as Href);
+    }, 120);
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -21,7 +27,7 @@ export default function LocationPermission() {
         if (mounted) {
           if (status === "granted") {
             setGranted(true);
-            router.replace("/(driver)/(tabs)/dashboard" as Href);
+            navigateToDashboard();
           }
           setChecking(false);
         }
@@ -53,7 +59,7 @@ export default function LocationPermission() {
     if (!hasPermission) return;
 
     setGranted(true);
-    router.replace("/(driver)/(tabs)/dashboard" as Href);
+    navigateToDashboard();
   };
 
   if (checking) {

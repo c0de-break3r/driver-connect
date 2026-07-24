@@ -8,6 +8,9 @@
       ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "convex/_generated/*": [
+        "./convex/_generated/*"
       ]
     }
   },
@@ -19,7 +22,7 @@
     "nativewind-env.d.ts"
   ],
   "exclude": [
-    "convex",
+    "node_modules",
     "**/*.test.ts"
   ]
 }

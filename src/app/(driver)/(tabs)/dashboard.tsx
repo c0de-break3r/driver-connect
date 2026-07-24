@@ -12,18 +12,22 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { router } from "expo-router";
+import { useAuth } from "@clerk/expo";
 
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
 import { Card } from "@/components/ui/card";
 import { useStreakStore } from "@/store/useStreakStore";
 import { useDriverStatsStore } from "@/store/useDriverStatsStore";
 import { useDriverOnboardingStore } from "@/store/useDriverOnboardingStore";
+import { api } from "@/lib/convexApi";
+import { useQuery } from "convex/react";
 
 const NAVY = "#2C3E5B";
 
 export default function DriverDashboard() {
   const entrance = useStaggeredEntrance();
-  const [showProfilePanel, setShowProfilePanel] = useState(false);
+  const [showProfilePanel] = useState(false);
+  const { isSignedIn, userId } = useAuth();
   const streak = useStreakStore((s) => s.streak);
   const stats = useDriverStatsStore((s) => s.stats);
   const {
@@ -35,47 +39,20 @@ export default function DriverDashboard() {
     selectedVehicleType,
     verificationPipelineStatus,
   } = useDriverOnboardingStore();
+  const convexUser = useQuery(api.users.getByClerkUserId, isSignedIn && userId ? { clerkUserId: userId } : "skip");
+  const convexVerification = useQuery(api.verifications.getByUserId, convexUser ? { userId: convexUser._id } : "skip");
   const profileAnim = useMemo(() => new Animated.Value(0), []);
 
-  const toggleProfilePanel = () => {
-    const next = !showProfilePanel;
-    setShowProfilePanel(next);
-    Animated.timing(profileAnim, {
-      toValue: next ? 1 : 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-  };
+  const displayVerificationStatus = convexVerification?.status ?? verificationPipelineStatus;
 
   // Demo: seed some stats on first mount so the dashboard isn't empty.
   useEffect(() => {
     const store = useDriverStatsStore.getState();
     if (store.tripsCompleted === 0) {
       store.incrementTrips(12);
-      store.incrementStaffTrips(3);
       store.addEarnings(1450);
-      store.setRating(4.8);
     }
   }, []);
-
-  const initials = fullLegalName
-    ? fullLegalName
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((n) => n[0]?.toUpperCase() ?? "")
-        .join("")
-    : "DR";
-
-  const profileImage = onboardingSelfieUri ? (
-    <Image
-      source={{ uri: onboardingSelfieUri }}
-      style={styles.profileImageSmall}
-      contentFit="cover"
-    />
-  ) : (
-    <Text style={styles.profileInitialsSmall}>{initials}</Text>
-  );
 
   const handleVerify = () => {
     router.push("/(driver)/verify-identity" as any);
@@ -90,11 +67,11 @@ export default function DriverDashboard() {
   };
 
   const handleSettings = () => {
-    router.push("/(driver)/settings" as any);
+    router.push("/(driver)/settings");
   };
 
   const handleNotifications = () => {
-    router.push("/(driver)/notifications" as any);
+    router.push("/(driver)/notifications");
   };
 
   return (
@@ -109,10 +86,12 @@ export default function DriverDashboard() {
           },
         ]}
       >
-        <View style={styles.headerRight}>
+        <View style={styles.headerLeft}>
           <Pressable style={styles.iconButton} onPress={handleSettings}>
             <Ionicons name="settings-outline" size={22} color={NAVY} />
           </Pressable>
+        </View>
+        <View style={styles.headerRight}>
           <Pressable style={styles.iconButton} onPress={handleNotifications}>
             <Ionicons name="notifications-outline" size={22} color={NAVY} />
             <View style={styles.badge}>
@@ -123,9 +102,6 @@ export default function DriverDashboard() {
             <Ionicons name="flame" size={14} color="#FFFFFF" />
             <Text style={styles.streakText}>{streak}</Text>
           </View>
-          <Pressable style={styles.profileIconButton} onPress={toggleProfilePanel}>
-            {profileImage}
-          </Pressable>
         </View>
       </Animated.View>
 
@@ -180,13 +156,13 @@ export default function DriverDashboard() {
                 <View style={styles.verificationBadge}>
                   <Ionicons
                     name={
-                      verificationPipelineStatus === "confirmed"
+                      displayVerificationStatus === "confirmed"
                         ? "checkmark-circle"
                         : "time-outline"
                     }
                     size={14}
                     color={
-                      verificationPipelineStatus === "confirmed"
+                      displayVerificationStatus === "confirmed"
                         ? "#10B981"
                         : "#6E7E91"
                     }
@@ -194,11 +170,11 @@ export default function DriverDashboard() {
                   <Text
                     style={[
                       styles.verificationBadgeText,
-                      verificationPipelineStatus === "confirmed" &&
+                      displayVerificationStatus === "confirmed" &&
                         styles.verificationBadgeTextConfirmed,
                     ]}
                   >
-                    {verificationPipelineStatus === "confirmed"
+                    {displayVerificationStatus === "confirmed"
                       ? "Verified"
                       : "Verification pending"}
                   </Text>
@@ -224,12 +200,23 @@ export default function DriverDashboard() {
             },
           ]}
         >
-          {stats.map((item, index) => (
-            <View key={item.label} style={styles.statPill}>
-              <Text style={styles.statValue}>{item.value}</Text>
-              <Text style={styles.statLabel}>{item.label}</Text>
-            </View>
-          ))}
+          {stats.flatMap((item, index) => {
+            if (index === 0) {
+              return [
+                <View key={item.label} style={styles.statPill}>
+                  <Text style={styles.statValue}>{item.value}</Text>
+                  <Text style={styles.statLabel}>{item.label}</Text>
+                </View>,
+              ];
+            }
+            return [
+              <View key={`${item.label}-divider`} style={styles.statDivider} />,
+              <View key={item.label} style={styles.statPill}>
+                <Text style={styles.statValue}>{item.value}</Text>
+                <Text style={styles.statLabel}>{item.label}</Text>
+              </View>,
+            ];
+          })}
         </Animated.View>
 
         {/* ── Vehicle Card ── */}
@@ -347,8 +334,21 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     gap: 10,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingLeft: 20,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 8,
+    paddingRight: 20,
   },
   iconButton: {
     width: 40,
@@ -379,19 +379,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
   },
-  headerRight: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 8,
-  },
   streakBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     backgroundColor: "#FF7B54",
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
     shadowColor: "#FF7B54",

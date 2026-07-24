@@ -8,7 +8,13 @@
     "scheme": "driverconnect",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Allow Africana Driver Connect to use your location for driver matching and live tracking.",
+        "NSPhotoLibraryUsageDescription": "Allow Africana Driver Connect to access your photos for identity document uploads.",
+        "NSCameraUsageDescription": "Allow Africana Driver Connect to use your camera for identity verification.",
+        "NSMicrophoneUsageDescription": "Allow Africana Driver Connect to use your microphone for video verification."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +24,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.jpg"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.c0debreak3r.driverconnect"
+      "package": "com.c0debreak3r.driverconnect",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "output": "static",
@@ -29,24 +41,45 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FFF8F3",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 200
         }
       ],
       "expo-web-browser",
+      "expo-splash-screen",
       [
-        "@maplibre/maplibre-react-native",
+        "react-native-maps",
         {
-          "maplibreGLNativeVersion": "11.3.6"
+          "androidGoogleMapsApiKey": "AIzaSyAx7VtjKqxY1HhucbRvLwXKiOCPjodqwpM",
+          "iosGoogleMapsApiKey": "AIzaSyAx7VtjKqxY1HhucbRvLwXKiOCPjodqwpM"
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0"
+          },
+          "ios": {
+            "extraPods": [
+              {
+                "name": "Realm",
+                "version": "~> 10.52.2",
+                "modular_headers": true
+              }
+            ]
+          }
+        }
+      ],
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "extra": {
       "router": {},
       "eas": {

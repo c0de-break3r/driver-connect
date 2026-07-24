@@ -1,5 +1,6 @@
 import { Stack, Redirect } from "expo-router";
 import { useAuth } from "@clerk/expo";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useRoleStore } from "@/store/useRoleStore";
 import { getPostAuthRoute } from "@/lib/routing";
 
@@ -11,8 +12,16 @@ export default function DriverLayout() {
     return null;
   }
 
-  if (!isSignedIn || role !== "driver") {
+  if (!isSignedIn) {
     return <Redirect href={getPostAuthRoute(role)} />;
+  }
+
+  if (role !== "driver") {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2C3E5B" />
+      </View>
+    );
   }
 
   return (
@@ -25,3 +34,12 @@ export default function DriverLayout() {
     />
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#FFF8F3",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

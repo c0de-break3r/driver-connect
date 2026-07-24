@@ -40,7 +40,6 @@ export default function DriverIdentityScreen() {
   const [idNumber, setIdNumber] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showIdTypeModal, setShowIdTypeModal] = useState(false);
-  const [atEnd, setAtEnd] = useState(false);
   const [ownership, setOwnership] = useState<Ownership>("");
   const [profileUri, setProfileUri] = useState<string | null>(null);
   const [idFrontUris, setIdFrontUris] = useState<string[]>([]);
@@ -149,15 +148,7 @@ export default function DriverIdentityScreen() {
           bounces={Platform.OS === "ios"}
           alwaysBounceVertical={Platform.OS === "ios"}
           overScrollMode="always"
-          onScroll={(e) => {
-            const { layoutMeasurement, contentOffset, contentSize } =
-              e.nativeEvent;
-            setAtEnd(
-              layoutMeasurement.height + contentOffset.y >=
-                contentSize.height - 8,
-            );
-          }}
-          scrollEventThrottle={16}
+          style={{ flex: 1 }}
         >
         {/* ── Title ── */}
         <View style={styles.titleBlock}>
@@ -424,12 +415,6 @@ export default function DriverIdentityScreen() {
             </View>
           </Animated.View>
         </View>
-
-        {atEnd && (
-          <View style={styles.endIndicator}>
-            <View style={styles.endPill} />
-          </View>
-        )}
       </ScrollView>
 
       {/* ── Identity Type Modal ── */}
@@ -503,7 +488,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 32,
+    paddingBottom: 120,
     gap: 24,
   },
   header: {
@@ -768,17 +753,6 @@ const styles = StyleSheet.create({
     color: "#6E7E91",
     textAlign: "center",
     lineHeight: 16,
-  },
-  endIndicator: {
-    alignItems: "center",
-    paddingVertical: 12,
-    opacity: 0.6,
-  },
-  endPill: {
-    width: 32,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#2C3E5B",
   },
   modalOverlay: {
     flex: 1,

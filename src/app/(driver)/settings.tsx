@@ -4,6 +4,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Animated,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -58,7 +59,7 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View
+        <Animated.View
           style={[
             styles.list,
             {
@@ -85,7 +86,7 @@ export default function SettingsScreen() {
               <Ionicons name="chevron-forward" size={18} color="#6E7E91" />
             </Pressable>
           ))}
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );

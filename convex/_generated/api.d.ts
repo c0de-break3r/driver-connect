@@ -11,6 +11,7 @@
 import type * as ads from "../ads.js";
 import type * as referralCodes from "../referralCodes.js";
 import type * as users from "../users.js";
+import type * as verifications from "../verifications.js";
 
 import type {
   ApiFromModules,
@@ -22,6 +23,7 @@ declare const fullApi: ApiFromModules<{
   ads: typeof ads;
   referralCodes: typeof referralCodes;
   users: typeof users;
+  verifications: typeof verifications;
 }>;
 
 /**

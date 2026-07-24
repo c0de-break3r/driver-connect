@@ -11,6 +11,7 @@ config.resolver = {
     ...(config.resolver?.extraNodeModules || {}),
     "@": path.resolve(__dirname, "src"),
     "@/assets": path.resolve(__dirname, "assets"),
+    "convex/_generated": path.resolve(__dirname, "convex/_generated"),
   },
   sourceExts: [...(config.resolver?.sourceExts || []), "css"],
 };

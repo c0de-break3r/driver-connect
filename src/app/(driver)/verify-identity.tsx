@@ -10,6 +10,8 @@ import { router, useFocusEffect } from "expo-router";
 import { useDriverOnboardingStore } from "@/store/useDriverOnboardingStore";
 import { useKycFlowStore } from "@/store/useKycFlowStore";
 import { useSlideEntrance } from "@/hooks/useSlideEntrance";
+import { api } from "@/lib/convexApi";
+import { useAction, useQuery } from "convex/react";
 
 const NAVY = "#2C3E5B";
 const ORANGE = "#FF7B54";
@@ -38,7 +40,7 @@ export default function VerifyIdentityScreen() {
     setFaceMatchResult,
   } = useDriverOnboardingStore();
 
-  const { setStatus, setSelfieCapture: setKycSelfie, setDocumentCapture: setKycDocument } = useKycFlowStore();
+  const { setStatus, setDocumentCapture: setKycDocument } = useKycFlowStore();
 
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState(identityEmail || "");
@@ -48,6 +50,9 @@ export default function VerifyIdentityScreen() {
   const [profileUri, setProfileUri] = useState<string | null>(selfieUri || null);
   const [idFrontUri, setIdFrontUri] = useState<string | null>(nationalIdFrontUri || null);
   const [idBackUri, setIdBackUri] = useState<string | null>(nationalIdBackUri || null);
+  const [profileBase64, setProfileBase64] = useState<string>("");
+  const [idFrontBase64, setIdFrontBase64] = useState<string>("");
+  const [idBackBase64, setIdBackBase64] = useState<string>("");
   const [scanning, setScanning] = useState(false);
   const [verified, setVerified] = useState(
     verificationPipelineStatus === "confirmed" || faceMatchPassed === true,
@@ -55,6 +60,9 @@ export default function VerifyIdentityScreen() {
   const [showIdTypeModal, setShowIdTypeModal] = useState(false);
 
   const { anims, start } = useSlideEntrance({ count: 1, direction: "up" });
+
+  const submitDocumentVerificationAction = useAction(api.verifications.submitDocumentVerification);
+  const convexUser = useQuery(api.users.getByClerkUserId, identityEmail ? { clerkUserId: identityEmail } : "skip");
 
   useFocusEffect(
     useCallback(() => {
@@ -80,14 +88,23 @@ export default function VerifyIdentityScreen() {
       allowsEditing: true,
       quality: 0.8,
       aspect: [4, 3],
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
       const uri = result.assets[0].uri;
+      const base64 = result.assets[0].base64 ?? "";
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      if (target === "profile") setProfileUri(uri);
-      else if (target === "idFront") setIdFrontUri(uri);
-      else setIdBackUri(uri);
+      if (target === "profile") {
+        setProfileUri(uri);
+        setProfileBase64(base64);
+      } else if (target === "idFront") {
+        setIdFrontUri(uri);
+        setIdFrontBase64(base64);
+      } else {
+        setIdBackUri(uri);
+        setIdBackBase64(base64);
+      }
     }
   }, [requestPermission]);
 
@@ -100,24 +117,60 @@ export default function VerifyIdentityScreen() {
     setStep(1);
   };
 
-  const handleFaceVerify = async () => {
-    if (!profileUri) {
-      Alert.alert("Photo required", "Please take a selfie first.");
+  const handleSubmitVerification = async () => {
+    if (!profileBase64 || !idFrontBase64) {
+      Alert.alert("Missing data", "Please capture all required images.");
       return;
     }
+
+    if (!email.trim() || !address.trim() || !idType || !idNumber.trim()) {
+      Alert.alert("Missing fields", "Please fill in all fields.");
+      return;
+    }
+
     setScanning(true);
-    await new Promise((r) => setTimeout(r, 2500));
-    setScanning(false);
-    setSelfieCapture(profileUri);
-    setKycSelfie(profileUri);
-    setFaceMatchResult(true, 98);
-    setVerificationPipelineStatus("confirmed");
-    setStatus("confirmed");
-    setVerified(true);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert("Verified", "Your identity has been verified successfully.", [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+
+    try {
+      if (!convexUser) {
+        throw new Error("User not found");
+      }
+
+      const result = await submitDocumentVerificationAction({
+        userId: convexUser._id,
+        documentType: idType,
+        idNumber: idNumber.trim(),
+        email: email.trim(),
+        address: address.trim(),
+        documentFront: idFrontBase64,
+        documentBack: idBackBase64 || undefined,
+        selfie: profileBase64 || undefined,
+      });
+
+      setSelfieCapture(profileUri ?? "");
+      setDocumentCapture(idFrontUri ?? "", idBackUri ?? "", "", "");
+
+      if (result.status === "confirmed") {
+        setFaceMatchResult(true, result.confidence ?? 98);
+        setVerificationPipelineStatus("confirmed");
+        setStatus("confirmed");
+        setVerified(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert("Verified", "Your identity has been verified successfully.", [
+          { text: "OK", onPress: () => router.back() },
+        ]);
+      } else {
+        setVerificationPipelineStatus("failed");
+        setStatus("failed");
+        Alert.alert(
+          "Verification failed",
+          "We could not verify your identity with the provided documents. Please try again with clearer images."
+        );
+      }
+    } catch (e: any) {
+      Alert.alert("Verification failed", e?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setScanning(false);
+    }
   };
 
   const handleIdSubmit = () => {
@@ -286,9 +339,9 @@ export default function VerifyIdentityScreen() {
 
         {step === 2 && (
           <Animated.View style={{ opacity: anims[0].opacity, transform: [{ translateY: anims[0].translate }] }}>
-            <Text style={styles.title}>Face Verification</Text>
+            <Text style={styles.title}>Verify Identity</Text>
             <Text style={styles.subtitle}>
-              Please position your face in the frame and blink your eye when prompted
+              Submit your documents for verification. This usually takes a few minutes.
             </Text>
 
             <View style={styles.faceFrame}>
@@ -299,15 +352,11 @@ export default function VerifyIdentityScreen() {
                   <Ionicons name="person" size={64} color="#6E7E91" />
                 )}
               </View>
-              <View style={styles.faceCornerTL} />
-              <View style={styles.faceCornerTR} />
-              <View style={styles.faceCornerBL} />
-              <View style={styles.faceCornerBR} />
             </View>
 
             {scanning && (
               <View style={styles.scanningOverlay}>
-                <Text style={styles.scanningText}>Scanning your face</Text>
+                <Text style={styles.scanningText}>Verifying documents</Text>
                 <View style={styles.progressBar}>
                   <View style={styles.progressFill} />
                 </View>
@@ -315,8 +364,8 @@ export default function VerifyIdentityScreen() {
             )}
 
             {!scanning && (
-              <Pressable style={styles.primaryButton} onPress={handleFaceVerify}>
-                <Text style={styles.primaryButtonText}>Verify Face</Text>
+              <Pressable style={styles.primaryButton} onPress={handleSubmitVerification}>
+                <Text style={styles.primaryButtonText}>Submit for Verification</Text>
               </Pressable>
             )}
           </Animated.View>

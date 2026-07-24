@@ -100,6 +100,7 @@ export default function DriverTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        lazy: true,
       }}
       tabBar={(props) => <CustomTabBar {...props} />}
     >

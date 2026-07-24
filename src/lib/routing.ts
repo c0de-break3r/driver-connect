@@ -7,17 +7,21 @@ import { useRoleStore, type UserRole } from "@/store/useRoleStore";
  * based on their selected role.
  *
  * - driver → location permission first, then dashboard
- * - owner / client / corporate → placeholder trial page
- * - no role yet → role selection
+ * - owner → owner route group
+ * - client → client route group
+ * - corporate → corporate route group
+ * - no role yet → onboarding welcome
  */
 export function getPostAuthRoute(role: UserRole | null): Href {
   switch (role) {
     case "driver":
       return "/(driver)/location-permission" as Href;
     case "owner":
+      return "/(owner)/" as Href;
     case "client":
+      return "/(client)/" as Href;
     case "corporate":
-      return "/(onboarding)/welcome" as Href;
+      return "/(corporate)/" as Href;
     default:
       return "/(onboarding)/welcome" as Href;
   }

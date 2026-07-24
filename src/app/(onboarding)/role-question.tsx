@@ -60,6 +60,7 @@ const OPTIONS: RoleOption[] = [
 export default function RoleQuestion() {
   const setRole = useRoleStore((s) => s.setRole);
   const [selected, setSelected] = useState<UserRole | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const { anims, start } = useSlideEntrance({
     count: OPTIONS.length,
@@ -71,6 +72,7 @@ export default function RoleQuestion() {
   useFocusEffect(
     useCallback(() => {
       start();
+      setIsNavigating(false);
     }, [start]),
   );
 
@@ -84,6 +86,8 @@ export default function RoleQuestion() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
+    if (isNavigating) return;
+    setIsNavigating(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setRole(selected);
 

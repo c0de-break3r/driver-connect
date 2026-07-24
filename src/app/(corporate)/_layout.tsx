@@ -1,5 +1,6 @@
 import { Stack, Redirect } from "expo-router";
 import { useAuth } from "@clerk/expo";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useRoleStore } from "@/store/useRoleStore";
 import { getPostAuthRoute } from "@/lib/routing";
 
@@ -11,9 +12,16 @@ export default function CorporateLayout() {
     return null;
   }
 
-  if (!isSignedIn || role !== "corporate") {
-    const href = role === "corporate" ? "/(auth)/sign-in" : getPostAuthRoute(role);
-    return <Redirect href={href as any} />;
+  if (!isSignedIn) {
+    return <Redirect href={getPostAuthRoute(role)} />;
+  }
+
+  if (role !== "corporate") {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2C3E5B" />
+      </View>
+    );
   }
 
   return (
@@ -26,3 +34,12 @@ export default function CorporateLayout() {
     />
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#FFF8F3",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

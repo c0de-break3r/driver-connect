@@ -37,6 +37,7 @@ export default function DriverSignupScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [atEnd, setAtEnd] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
   const formFields = useMemo(
@@ -58,6 +59,7 @@ export default function DriverSignupScreen() {
   useFocusEffect(
     useCallback(() => {
       start();
+      setIsNavigating(false);
     }, [start]),
   );
 
@@ -88,6 +90,9 @@ export default function DriverSignupScreen() {
       );
       return;
     }
+
+    if (isNavigating) return;
+    setIsNavigating(true);
 
     Haptics.notificationAsync(
       Haptics.NotificationFeedbackType.Success,

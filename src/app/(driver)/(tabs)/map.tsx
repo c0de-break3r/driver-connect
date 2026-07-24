@@ -1,16 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
-  Keyboard,
-  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  TouchableWithoutFeedback,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from "expo-location";
+import MapView, {
+  Marker,
+  Polyline,
+  PROVIDER_GOOGLE,
+} from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import {
   impactAsync,
@@ -18,16 +21,9 @@ import {
   ImpactFeedbackStyle,
   NotificationFeedbackType,
 } from "expo-haptics";
-import {
-  Camera,
-  type CameraRef,
-  Map,
-  Marker,
-  GeoJSONSource,
-  Layer,
-} from "@maplibre/maplibre-react-native";
-import { MapLibreMap, Marker as WebMarker, GeoJSONSource as WebGeoJSONSource } from "maplibre-gl";
-
+import * as Location from "expo-location";
+import { useDriverMapStore } from "@/store/useDriverMapStore";
+import { MUTED_MAP_STYLE } from "@/lib/mapStyle";
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
 
 const ACCRA_LAT = 5.6037;
@@ -43,170 +39,52 @@ const INITIAL_REGION: LatLng = {
   longitude: ACCRA_LNG,
 };
 
-const MAP_STYLE = {
-  version: 8 as 8,
-  sources: {
-    osm: {
-      type: "raster" as const,
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors",
-    },
-  },
-  layers: [
-    {
-      id: "osm",
-      type: "raster" as const,
-      source: "osm",
-    },
-  ],
-};
-
 const NAVY = "#2C3E5B";
 const ORANGE = "#FF7B54";
 const PEACH = "#FFF8F3";
+const WHITE = "#FFFFFF";
 
-const isWeb = Platform.OS === "web";
+type NearbyDriver = LatLng & { id: string };
 
-function createDriverMarkerElement() {
-  const el = document.createElement("div");
-  el.style.cssText =
-    "width:40px;height:40px;background:#2E7DE0;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.2);position:relative;";
-  el.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>`;
-
-  const pulse = document.createElement("div");
-  pulse.style.cssText =
-    "position:absolute;width:56px;height:56px;border-radius:50%;background:rgba(46,125,224,0.15);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;";
-
-  const wrapper = document.createElement("div");
-  wrapper.style.cssText =
-    "position:relative;display:inline-flex;align-items:center;justify-content:center;";
-  wrapper.appendChild(pulse);
-  wrapper.appendChild(el);
-
-  return wrapper;
-}
-
-type WebMapProps = {
-  driverLocation: LatLng;
-  showRideRequest: boolean;
-};
-
-function WebMap({ driverLocation, showRideRequest }: WebMapProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
-  const markerRef = useRef<WebMarker | null>(null);
-  const sourceId = "route-source";
-  const layerId = "route-layer";
-
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) {
-      return;
-    }
-
-    const map = new MapLibreMap({
-      container: containerRef.current,
-      style: MAP_STYLE,
-      center: [driverLocation.longitude, driverLocation.latitude],
-      zoom: 14,
+function generateNearbyDrivers(center: LatLng, count = 6): NearbyDriver[] {
+  const drivers: NearbyDriver[] = [];
+  for (let i = 0; i < count; i++) {
+    drivers.push({
+      id: `nearby-${i}`,
+      latitude: center.latitude + (Math.random() - 0.5) * 0.02,
+      longitude: center.longitude + (Math.random() - 0.5) * 0.02,
     });
-    mapRef.current = map;
-
-    map.on("load", () => {
-      map.addSource(sourceId, {
-        type: "geojson",
-        data: {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "LineString",
-            coordinates: [
-              [driverLocation.longitude, driverLocation.latitude],
-              [driverLocation.longitude + 0.015, driverLocation.latitude + 0.012],
-            ],
-          },
-        },
-      });
-
-      map.addLayer({
-        id: layerId,
-        type: "line",
-        source: sourceId,
-        paint: {
-          "line-color": ORANGE,
-          "line-width": 4,
-          "line-opacity": 0.9,
-        },
-      });
-
-      map.setLayoutProperty(layerId, "visibility", showRideRequest ? "visible" : "none");
-
-      const markerElement = createDriverMarkerElement();
-      const marker = new WebMarker({
-        element: markerElement,
-        anchor: "center",
-      })
-        .setLngLat([driverLocation.longitude, driverLocation.latitude])
-        .addTo(map);
-      markerRef.current = marker;
-    });
-
-    return () => {
-      markerRef.current?.remove();
-      map.remove();
-      mapRef.current = null;
-      markerRef.current = null;
-    };
-    // Run once on mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    map.setCenter([driverLocation.longitude, driverLocation.latitude]);
-    markerRef.current?.setLngLat([driverLocation.longitude, driverLocation.latitude]);
-
-    const source = map.getSource(sourceId) as
-      | WebGeoJSONSource
-      | undefined;
-    if (source) {
-      source.setData({
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [driverLocation.longitude, driverLocation.latitude],
-            [driverLocation.longitude + 0.015, driverLocation.latitude + 0.012],
-          ],
-        },
-      });
-    }
-  }, [driverLocation]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    map.setLayoutProperty(layerId, "visibility", showRideRequest ? "visible" : "none");
-  }, [showRideRequest]);
-
-  return (
-    <div
-      ref={containerRef}
-      style={{ width: "100%", height: "100%", position: "absolute", inset: 0 }}
-    />
-  );
+  }
+  return drivers;
 }
 
 export default function MapScreen() {
-  const cameraRef = useRef<CameraRef>(null);
+  const mapRef = useRef<MapView>(null);
   const entrance = useStaggeredEntrance();
-  const [isOnline, setIsOnline] = useState(false);
   const [region, setRegion] = useState<LatLng>(INITIAL_REGION);
-  const [driverLocation, setDriverLocation] = useState<LatLng | null>(null);
-  const [showRideRequest, setShowRideRequest] = useState(false);
-  const [sheetHeight] = useState(new Animated.Value(0));
+  const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  const sheetHeight = useMemo(() => new Animated.Value(200), []);
+
+  useEffect(() => {
+    Animated.timing(sheetHeight, {
+      toValue: sheetExpanded ? SHEET_EXPANDED_HEIGHT : SHEET_COLLAPSED_HEIGHT,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [sheetExpanded, sheetHeight]);
+
+  const {
+    driverLocation,
+    isOnline,
+    rideRequests,
+    selectedDestination,
+    setDriverLocation,
+    toggleOnline,
+    acceptRideRequest,
+    declineRideRequest,
+    setSelectedDestination,
+  } = useDriverMapStore();
 
   useEffect(() => {
     (async () => {
@@ -218,40 +96,17 @@ export default function MapScreen() {
       const next: LatLng = { latitude, longitude };
       setDriverLocation(next);
       setRegion(next);
+      setNearbyDrivers(generateNearbyDrivers(next));
 
-      if (!isWeb) {
-        cameraRef.current?.setStop({
-          center: [longitude, latitude],
+      mapRef.current?.animateCamera(
+        {
+          center: { latitude, longitude },
           zoom: 14,
-          duration: 800,
-        });
-      }
-    })();
-  }, []);
-
-  const toggleOnline = async () => {
-    await impactAsync(ImpactFeedbackStyle.Medium);
-    const next = !isOnline;
-    setIsOnline(next);
-    if (next) {
-      setTimeout(() => setShowRideRequest(true), 1200);
-      setTimeout(
-        () =>
-          Animated.spring(sheetHeight, {
-            toValue: 280,
-            useNativeDriver: false,
-          }).start(),
-        300
+        },
+        { duration: 800 }
       );
-    } else {
-      setShowRideRequest(false);
-      Animated.timing(sheetHeight, {
-        toValue: 0,
-        duration: 220,
-        useNativeDriver: false,
-      }).start();
-    }
-  };
+    })();
+  }, [setDriverLocation]);
 
   const centerOnMe = async () => {
     await impactAsync(ImpactFeedbackStyle.Light);
@@ -262,98 +117,165 @@ export default function MapScreen() {
     const next: LatLng = { latitude, longitude };
     setRegion(next);
     setDriverLocation(next);
+    setNearbyDrivers(generateNearbyDrivers(next));
 
-    if (!isWeb) {
-      cameraRef.current?.setStop({
-        center: [longitude, latitude],
+    mapRef.current?.animateCamera(
+      {
+        center: { latitude, longitude },
         zoom: 14,
-        duration: 800,
-      });
-    }
+      },
+      { duration: 800 }
+    );
   };
 
-  const handleAccept = async () => {
+  const handleToggleOnline = async () => {
+    await impactAsync(ImpactFeedbackStyle.Medium);
+    toggleOnline();
+  };
+
+  const handleAccept = async (id: string) => {
     await notificationAsync(NotificationFeedbackType.Success);
-    setShowRideRequest(false);
-    Animated.timing(sheetHeight, {
-      toValue: 0,
-      duration: 220,
-      useNativeDriver: false,
-    }).start();
+    acceptRideRequest(id);
   };
 
-  const handleDecline = async () => {
+  const handleDecline = async (id: string) => {
     await notificationAsync(NotificationFeedbackType.Error);
-    setShowRideRequest(false);
-    Animated.timing(sheetHeight, {
-      toValue: 0,
-      duration: 220,
-      useNativeDriver: false,
-    }).start();
+    declineRideRequest(id);
   };
+
+  const routeCoordinates =
+    driverLocation && selectedDestination
+      ? [driverLocation, selectedDestination]
+      : [];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: PEACH }} edges={["top"]}>
       <View style={styles.container}>
-        {isWeb ? (
-          <WebMap
-            driverLocation={driverLocation ?? INITIAL_REGION}
-            showRideRequest={showRideRequest}
-          />
-        ) : (
-          <Map mapStyle={MAP_STYLE} style={styles.map}>
-            <Camera
-              ref={cameraRef as any}
-              center={[region.longitude, region.latitude]}
-              zoom={14}
-            />
-
-            {driverLocation && (
-              <Marker
-                id="driver-marker"
-                lngLat={[driverLocation.longitude, driverLocation.latitude]}
-                anchor="center"
-              >
-                <View style={styles.driverMarker}>
-                  <View style={styles.driverMarkerPulse} />
-                  <View style={styles.driverMarkerInner}>
-                    <Ionicons name="car" size={18} color="#fff" />
-                  </View>
+        <MapView
+          ref={mapRef}
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          customMapStyle={MUTED_MAP_STYLE as any}
+          initialRegion={{
+            ...region,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          }}
+          showsUserLocation={false}
+          showsMyLocationButton={false}
+          showsCompass={false}
+          showsScale={false}
+          toolbarEnabled={false}
+        >
+          {driverLocation && (
+            <Marker
+              identifier="driver"
+              // @ts-ignore - react-native-maps coordinate prop type mismatch
+              coordinate={{
+                latitude: driverLocation.latitude,
+                longitude: driverLocation.longitude,
+              }}
+            >
+              <View style={styles.driverMarker}>
+                <View style={styles.driverMarkerPulse} />
+                <View style={styles.driverMarkerInner}>
+                  <Ionicons name="car" size={18} color={WHITE} />
                 </View>
-              </Marker>
-            )}
+              </View>
+            </Marker>
+          )}
 
-            {driverLocation && showRideRequest && (
-              <GeoJSONSource
-                id="route-source"
-                data={{
-                  type: "Feature",
-                  properties: {},
-                  geometry: {
-                    type: "LineString",
-                    coordinates: [
-                      [driverLocation.longitude, driverLocation.latitude],
-                      [
-                        driverLocation.longitude + 0.015,
-                        driverLocation.latitude + 0.012,
-                      ],
-                    ],
+          {nearbyDrivers.map((driver) => (
+            <Marker
+              key={driver.id}
+              identifier={driver.id}
+              // @ts-ignore - react-native-maps coordinate prop type mismatch
+              coordinate={{
+                latitude: driver.latitude,
+                longitude: driver.longitude,
+              }}
+            >
+              <View style={styles.nearbyDriverMarker}>
+                <View style={styles.nearbyDriverInner}>
+                  <Ionicons name="car-sport" size={14} color={WHITE} />
+                </View>
+              </View>
+            </Marker>
+          ))}
+
+          {routeCoordinates.length > 0 && (
+            <Polyline
+              coordinates={routeCoordinates}
+              strokeColor={ORANGE}
+              strokeWidth={4}
+              lineCap="round"
+              lineJoin="round"
+            />
+          )}
+        </MapView>
+
+        {/* Top-left profile avatar */}
+        <Animated.View
+          style={[
+            styles.topLeftControls,
+            {
+              opacity: entrance.headerOpacity,
+              transform: [{ translateY: entrance.headerTranslateY }],
+            },
+          ]}
+        >
+          <Pressable style={styles.profileButton}>
+            <View style={styles.profileImageWrap}>
+              <Ionicons name="person" size={20} color={NAVY} />
+            </View>
+          </Pressable>
+        </Animated.View>
+
+        {/* Search bar */}
+        <Animated.View
+          style={[
+            styles.searchBarWrap,
+            {
+              opacity: entrance.formOpacity,
+              transform: [
+                {
+                  translateY: entrance.formTranslateY.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.searchBarContainer}>
+            <Ionicons name="search" size={20} color={NAVY} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchBarInput}
+              placeholder="Where to?"
+              placeholderTextColor="#6E7E91"
+              returnKeyType="search"
+              onSubmitEditing={(e) => {
+                const text = e.nativeEvent.text.trim();
+                if (!text) return;
+                setSelectedDestination({
+                  latitude: driverLocation?.latitude ?? ACCRA_LAT + (Math.random() - 0.5) * 0.1,
+                  longitude: driverLocation?.longitude ?? ACCRA_LNG + (Math.random() - 0.5) * 0.1,
+                });
+                mapRef.current?.animateCamera(
+                  {
+                    center: {
+                      latitude: driverLocation?.latitude ?? ACCRA_LAT,
+                      longitude: driverLocation?.longitude ?? ACCRA_LNG,
+                    },
+                    zoom: 14,
                   },
-                }}
-              >
-                <Layer
-                  id="route-line"
-                  type="line"
-                  style={{
-                    lineColor: ORANGE,
-                    lineWidth: 4,
-                    lineOpacity: 0.9,
-                  }}
-                />
-              </GeoJSONSource>
-            )}
-          </Map>
-        )}
+                  { duration: 800 }
+                );
+              }}
+            />
+          </View>
+        </Animated.View>
 
         {/* Floating map controls */}
         <Animated.View
@@ -371,11 +293,162 @@ export default function MapScreen() {
           <Pressable
             style={[styles.mapControlButton, styles.mapControlButtonMargin]}
           >
-            <Ionicons name="layers-outline" size={22} color={NAVY} />
+            <Ionicons name="map-outline" size={22} color={NAVY} />
           </Pressable>
-          <Pressable style={styles.mapControlButton}>
-            <Ionicons name="battery-full-outline" size={22} color={NAVY} />
+        </Animated.View>
+
+        {/* Status pill above bottom sheet */}
+        <Animated.View
+          style={[
+            styles.statusPillWrap,
+            {
+              opacity: entrance.formOpacity,
+              transform: [
+                {
+                  translateY: entrance.formTranslateY.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Pressable
+            style={styles.statusPill}
+            onPress={() => setSheetExpanded((prev) => !prev)}
+          >
+            <Ionicons name="car" size={18} color={WHITE} />
+            <Text style={styles.statusPillText}>
+              {rideRequests.length} More request
+            </Text>
           </Pressable>
+        </Animated.View>
+
+        {/* Bottom Sheet */}
+        <Animated.View
+          style={[
+            styles.sheetContainer,
+            {
+              height: sheetHeight,
+            },
+          ]}
+        >
+          <ScrollView
+            contentContainerStyle={styles.sheetScrollContent}
+          >
+            <View style={styles.sheetHeader}>
+              <View style={styles.wifiIconWrap}>
+                <Ionicons name="wifi" size={32} color={NAVY} />
+              </View>
+              <Text style={styles.sheetTitle}>Stay Online</Text>
+              <Text style={styles.sheetSubtitle}>
+                Customer Are Surrounding You!
+              </Text>
+            </View>
+
+            <View style={styles.sheetActionsRow}>
+              <Pressable style={styles.sheetActionItem}>
+                <View style={styles.sheetActionIconWrap}>
+                  <Ionicons name="refresh" size={22} color="#2E7DE0" />
+                </View>
+                <Text style={styles.sheetActionLabel}>Refresh</Text>
+              </Pressable>
+              <Pressable style={styles.sheetActionItem}>
+                <View style={styles.sheetActionIconWrap}>
+                  <Ionicons name="time" size={22} color={NAVY} />
+                </View>
+                <Text style={styles.sheetActionLabel}>Leader Board</Text>
+              </Pressable>
+              <Pressable style={styles.sheetActionItem}>
+                <View style={styles.sheetActionIconWrap}>
+                  <Ionicons name="car-sport" size={22} color={ORANGE} />
+                </View>
+                <Text style={styles.sheetActionLabel}>Trip Request</Text>
+              </Pressable>
+            </View>
+
+            {rideRequests.length > 0 && (
+              <View style={styles.rideRequestsList}>
+                <Text style={styles.rideRequestsTitle}>Ride Requests</Text>
+                {rideRequests.map((request) => (
+                  <View key={request.id} style={styles.rideRequestCard}>
+                    <View style={styles.routeRow}>
+                      <View style={styles.routeDotStart} />
+                      <View style={styles.routeLine} />
+                      <View style={styles.routeDotEnd} />
+                      <View style={styles.routeTexts}>
+                        <Text style={styles.routeLabel}>Pickup</Text>
+                        <Text style={styles.routeValue} numberOfLines={1}>
+                          {request.pickup}
+                        </Text>
+                        <Text style={[styles.routeLabel, styles.routeLabelTop]}>
+                          Drop-off
+                        </Text>
+                        <Text style={styles.routeValue} numberOfLines={1}>
+                          {request.dropoff}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.sheetDivider} />
+
+                    <View style={styles.metaRow}>
+                      <View style={styles.metaItem}>
+                        <Ionicons
+                          name="cash-outline"
+                          size={16}
+                          color={NAVY}
+                        />
+                        <Text style={styles.metaText}>{request.price}</Text>
+                      </View>
+                      <View style={styles.metaItem}>
+                        <Ionicons
+                          name="time-outline"
+                          size={16}
+                          color={NAVY}
+                        />
+                        <Text style={styles.metaText}>{request.duration}</Text>
+                      </View>
+                      <View style={styles.metaItem}>
+                        <Ionicons
+                          name="people-outline"
+                          size={16}
+                          color={NAVY}
+                        />
+                        <Text style={styles.metaText}>{request.passengers}</Text>
+                      </View>
+                      <View style={styles.metaItem}>
+                        <Ionicons
+                          name="cube-outline"
+                          size={16}
+                          color={NAVY}
+                        />
+                        <Text style={styles.metaText}>{request.distance}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.requestActions}>
+                      <Pressable
+                        style={styles.declineButton}
+                        onPress={() => handleDecline(request.id)}
+                      >
+                        <Text style={styles.declineButtonText}>Decline</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.acceptButton}
+                        onPress={() => handleAccept(request.id)}
+                      >
+                        <Text style={styles.acceptButtonText}>Accept</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View style={styles.bottomSpacer} />
+          </ScrollView>
         </Animated.View>
 
         {/* Go Online / Offline Button */}
@@ -397,86 +470,25 @@ export default function MapScreen() {
         >
           <Pressable
             style={[styles.onlineButton, isOnline && styles.onlineButtonActive]}
-            onPress={toggleOnline}
+            onPress={handleToggleOnline}
           >
             <Ionicons
               name={isOnline ? "arrow-up" : "power"}
               size={22}
-              color="#FFFFFF"
+              color={WHITE}
             />
             <Text style={styles.onlineButtonText}>
               {isOnline ? "GOING ONLINE" : "GO ONLINE"}
             </Text>
           </Pressable>
         </Animated.View>
-
-        {/* Ride Request Bottom Sheet */}
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <Animated.View
-            style={[
-              styles.sheet,
-              { height: sheetHeight },
-              showRideRequest && styles.sheetVisible,
-            ]}
-          >
-            <View style={styles.sheetHandle} />
-            <View style={styles.sheetContent}>
-              <View style={styles.sheetRouteRow}>
-                <View style={styles.routeDot} />
-                <View style={styles.routeLine} />
-                <View style={styles.routeDotEnd} />
-
-                <View style={styles.routeTextWrap}>
-                  <Text style={styles.routeLabel}>Pickup</Text>
-                  <Text style={styles.routeValue} numberOfLines={1}>
-                    East Legon, Accra
-                  </Text>
-                </View>
-
-                <View style={styles.routeTextWrap}>
-                  <Text style={styles.routeLabel}>Drop-off</Text>
-                  <Text style={styles.routeValue} numberOfLines={1}>
-                    Kotoka Airport, Accra
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.sheetDivider} />
-
-              <View style={styles.sheetMetaRow}>
-                <View style={styles.sheetMetaItem}>
-                  <Ionicons name="cash-outline" size={18} color={NAVY} />
-                  <Text style={styles.sheetMetaText}>GHS 85.00</Text>
-                </View>
-                <View style={styles.sheetMetaItem}>
-                  <Ionicons name="time-outline" size={18} color={NAVY} />
-                  <Text style={styles.sheetMetaText}>22 min</Text>
-                </View>
-                <View style={styles.sheetMetaItem}>
-                  <Ionicons name="people-outline" size={18} color={NAVY} />
-                  <Text style={styles.sheetMetaText}>2 pax</Text>
-                </View>
-                <View style={styles.sheetMetaItem}>
-                  <Ionicons name="cube-outline" size={18} color={NAVY} />
-                  <Text style={styles.sheetMetaText}>1 bag</Text>
-                </View>
-              </View>
-
-              <View style={styles.sheetActions}>
-                <Pressable style={styles.declineButton} onPress={handleDecline}>
-                  <Text style={styles.declineButtonText}>Decline</Text>
-                </Pressable>
-                <Pressable style={styles.acceptButton} onPress={handleAccept}>
-                  <Text style={styles.acceptButtonText}>Accept</Text>
-                </Pressable>
-              </View>
-            </View>
-          </Animated.View>
-        </TouchableWithoutFeedback>
       </View>
     </SafeAreaView>
   );
 }
+
+const SHEET_COLLAPSED_HEIGHT = 200;
+const SHEET_EXPANDED_HEIGHT = 400;
 
 const styles = StyleSheet.create({
   container: {
@@ -507,12 +519,111 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,
-    borderColor: "#FFFFFF",
+    borderColor: WHITE,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 4,
+  },
+  nearbyDriverMarker: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  nearbyDriverInner: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: NAVY,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: WHITE,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  topLeftControls: {
+    position: "absolute",
+    top: 16,
+    left: 20,
+    zIndex: 10,
+  },
+  profileButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: WHITE,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  profileImageWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: PEACH,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  searchBarWrap: {
+    position: "absolute",
+    top: 16,
+    left: 76,
+    right: 16,
+    zIndex: 10,
+  },
+  searchBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: WHITE,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 44,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchBarInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 15,
+    fontWeight: "600",
+    color: NAVY,
+  },
+  searchBarList: {
+    backgroundColor: WHITE,
+    borderRadius: 14,
+    marginTop: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  searchBarRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#EAE1D9",
   },
   mapControls: {
     position: "absolute",
@@ -525,7 +636,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: WHITE,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
@@ -538,6 +649,254 @@ const styles = StyleSheet.create({
   },
   mapControlButtonMargin: {
     marginTop: 12,
+  },
+  statusPillWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 220,
+    alignItems: "center",
+    zIndex: 20,
+  },
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: NAVY,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 999,
+    shadowColor: NAVY,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  statusPillText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: WHITE,
+    letterSpacing: 0.4,
+  },
+  sheetBackground: {
+    backgroundColor: PEACH,
+  },
+  sheetIndicator: {
+    backgroundColor: "#D6CFC7",
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+  },
+  sheetContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: PEACH,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    zIndex: 10,
+    overflow: "hidden",
+  },
+  sheetScrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
+    gap: 20,
+  },
+  sheetHeader: {
+    alignItems: "center",
+    gap: 8,
+  },
+  wifiIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: WHITE,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: NAVY,
+    textAlign: "center",
+  },
+  sheetSubtitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#6E7E91",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  sheetActionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    gap: 12,
+  },
+  sheetActionItem: {
+    alignItems: "center",
+    gap: 8,
+  },
+  sheetActionIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: WHITE,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sheetActionLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: NAVY,
+    textAlign: "center",
+  },
+  rideRequestsList: {
+    gap: 12,
+  },
+  rideRequestsTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: NAVY,
+    marginBottom: 4,
+  },
+  rideRequestCard: {
+    backgroundColor: WHITE,
+    borderRadius: 20,
+    padding: 16,
+    gap: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  routeRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  routeDotStart: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#10B981",
+    marginTop: 4,
+  },
+  routeLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#D6CFC7",
+    marginTop: 6,
+  },
+  routeDotEnd: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: ORANGE,
+    marginTop: 4,
+  },
+  routeTexts: {
+    flex: 1,
+    gap: 2,
+  },
+  routeLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#6E7E91",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  routeLabelTop: {
+    marginTop: 8,
+  },
+  routeValue: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  sheetDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#EAE1D9",
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  metaItem: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#F5ECE5",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+  },
+  metaText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  requestActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  declineButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: WHITE,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+  },
+  declineButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  acceptButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: ORANGE,
+    shadowColor: ORANGE,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  acceptButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: WHITE,
+    letterSpacing: 0.2,
   },
   onlineButtonWrap: {
     position: "absolute",
@@ -569,149 +928,10 @@ const styles = StyleSheet.create({
   onlineButtonText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: WHITE,
     letterSpacing: 0.6,
   },
-  sheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 30,
-    backgroundColor: PEACH,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 8,
-    overflow: "hidden",
-  },
-  sheetVisible: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#EAE1D9",
-  },
-  sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#D6CFC7",
-    alignSelf: "center",
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  sheetContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 32,
-    gap: 16,
-  },
-  sheetRouteRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  routeDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#10B981",
-    marginLeft: 8,
-  },
-  routeLine: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: "#D6CFC7",
-    marginHorizontal: 8,
-  },
-  routeDotEnd: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: ORANGE,
-  },
-  routeTextWrap: {
-    position: "absolute",
-    left: 28,
-    right: 16,
-    gap: 2,
-  },
-  routeLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#6E7E91",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  routeValue: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  sheetDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: "#EAE1D9",
-  },
-  sheetMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  sheetMetaItem: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#EAE1D9",
-  },
-  sheetMetaText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  sheetActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  declineButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#EAE1D9",
-  },
-  declineButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  acceptButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: ORANGE,
-    shadowColor: ORANGE,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  acceptButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    letterSpacing: 0.2,
+  bottomSpacer: {
+    height: 24,
   },
 });

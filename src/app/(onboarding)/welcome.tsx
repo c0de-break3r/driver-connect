@@ -1,6 +1,6 @@
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { router, type Href } from "expo-router";
+import { router, type Href, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ImageSourcePropType } from "react-native";
 import {
@@ -117,6 +117,7 @@ function renderHeadline(text: string) {
 
 export default function Welcome() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isNavigating, setIsNavigating] = useState(false);
   const slideOpacities = useMemo(
     () => SLIDES.map(() => new Animated.Value(0)),
     [],
@@ -125,6 +126,13 @@ export default function Welcome() {
   // ── Auto-swipe refs ──
   const isTouching = useRef(false);
   const lastInteractionTime = useRef<number>(0);
+
+  // Reset navigation guard when screen regains focus
+  useFocusEffect(
+    useCallback(() => {
+      setIsNavigating(false);
+    }, []),
+  );
 
   // ── Entrance animations (headline + subtext only) ──
   const headlineOpacity = useMemo(() => new Animated.Value(0), []);
@@ -249,6 +257,8 @@ export default function Welcome() {
   /* eslint-enable react-hooks/refs */
 
   const handleLetsGo = () => {
+    if (isNavigating) return;
+    setIsNavigating(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     useOnboardingAnswersStore.getState().setLastCompletedScreen("welcome");
     router.push("/(onboarding)/role-question" as Href);

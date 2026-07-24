@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
-import { router, type Href } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useSignUp, useSSO } from "@clerk/expo";
+
+import { navigatePostAuth } from "@/lib/routing";
 
 export type SignUpFlowState = {
   email: string;
@@ -105,7 +106,7 @@ export function useSignUpFlow(): SignUpFlowState {
         Haptics.notificationAsync(
           Haptics.NotificationFeedbackType.Success
         );
-        router.replace("/(driver)/location-permission" as Href);
+        navigatePostAuth();
       } else {
         setError("Verification incomplete. Please try again.");
       }
@@ -145,7 +146,7 @@ export function useSignUpFlow(): SignUpFlowState {
         Haptics.notificationAsync(
           Haptics.NotificationFeedbackType.Success
         );
-        router.replace("/(driver)/location-permission" as Href);
+        navigatePostAuth();
       } else {
         setError(
           "Google sign-up did not complete. Please try again or use email."
