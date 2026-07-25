@@ -1,5 +1,6 @@
 import { router, type Href } from "expo-router";
-import { Animated, Platform, Pressable, StyleSheet, Text } from "react-native";
+import { Animated, Platform, Pressable, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export type AuthBackButtonProps = {
   /** Animated opacity value from useStaggeredEntrance (header layer) */
@@ -11,7 +12,7 @@ export type AuthBackButtonProps = {
    * - `"sign-in"` → goes to sign-in screen
    * - Custom function for full control
    */
-  goBack: "welcome" | "identity" | "sign-in" | (() => void);
+  goBack: "welcome" | "identity" | "sign-in" | "forgot-password" | (() => void);
 };
 
 /**
@@ -32,7 +33,9 @@ export function AuthBackButton({ opacity, goBack }: AuthBackButtonProps) {
       ? "/(onboarding)/welcome"
       : goBack === "identity"
         ? "/(onboarding)/driver-identity"
-        : "/(auth)/sign-in";
+        : goBack === "forgot-password"
+          ? "/(auth)/forgot-password"
+          : "/(auth)/sign-in";
 
     router.replace(target as Href);
   };
@@ -40,7 +43,7 @@ export function AuthBackButton({ opacity, goBack }: AuthBackButtonProps) {
   return (
     <Animated.View style={[styles.backBtnWrap, { opacity }]}>
       <Pressable style={styles.backBtn} onPress={handlePress} hitSlop={12}>
-        <Text style={styles.backBtnText}>{"‹"}</Text>
+        <Ionicons name="chevron-back" size={22} color="#2C3E5B" />
       </Pressable>
     </Animated.View>
   );
@@ -65,10 +68,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  backBtnText: {
-    fontSize: 24,
-    fontWeight: "300",
-    color: "#2C3E5B",
   },
 });

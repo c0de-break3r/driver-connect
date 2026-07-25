@@ -55,6 +55,7 @@ export default defineSchema({
     status: v.string(),
     livenessPassed: v.optional(v.boolean()),
     confidence: v.optional(v.number()),
+    smileIdJobId: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user_id", ["userId"]),

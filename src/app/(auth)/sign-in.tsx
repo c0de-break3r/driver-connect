@@ -1,8 +1,10 @@
 import { Image } from "expo-image";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Href, router, useLocalSearchParams } from "expo-router";
 import {
     ActivityIndicator,
     Animated,
+    KeyboardAvoidingView,
+    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -11,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
 import {
     AuthBackButton,
@@ -27,19 +30,31 @@ export default function SignIn() {
   const entrance = useStaggeredEntrance();
   const flow = useSignInFlow();
   const params = useLocalSearchParams<{ from?: string }>();
-  const fromIdentity = params.from === "driver-identity";
+  const fromWelcome = params.from === "welcome";
+  const fromDriverIdentity = params.from === "driver-identity";
+  const fromForgotPassword = params.from === "forgot-password";
+  const signInOnly = fromWelcome || fromDriverIdentity || fromForgotPassword;
 
-  const backTarget: "welcome" | "identity" = fromIdentity ? "identity" : "welcome";
+  const backTarget: "welcome" | "identity" | "forgot-password" = fromDriverIdentity
+    ? "identity"
+    : fromForgotPassword
+      ? "forgot-password"
+      : "welcome";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF8F3" }} edges={["top"]}>
       <AuthBackButton opacity={entrance.headerOpacity} goBack={backTarget} />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
       >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <Animated.View
           style={[
             styles.iconWrap,
@@ -83,11 +98,21 @@ export default function SignIn() {
             icon={<Ionicons name="lock-closed-outline" size={18} color="#6E7E91" />}
           />
 
-          <Link href="/(auth)/forgot-password" asChild>
-            <Pressable style={styles.forgotWrap} hitSlop={8}>
-              <Text style={styles.forgotText}>Forgot password?</Text>
-            </Pressable>
-          </Link>
+          <Pressable
+            style={styles.forgotWrap}
+            hitSlop={8}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              const href: Href = fromWelcome
+                ? "/(auth)/forgot-password?from=welcome"
+                : fromDriverIdentity
+                  ? "/(auth)/forgot-password?from=driver-identity"
+                  : "/(auth)/forgot-password?from=forgot-password";
+              router.push(href);
+            }}
+          >
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </Pressable>
 
           <View style={styles.buttonSpacer}>
             {flow.loading ? (
@@ -110,10 +135,13 @@ export default function SignIn() {
           />
         </Animated.View>
 
-        <Animated.View style={{ opacity: entrance.footerOpacity }}>
-          <AuthFooter variant="sign-up-link" from={fromIdentity ? "driver-identity" : undefined} />
-        </Animated.View>
+        {!signInOnly && (
+          <Animated.View style={{ opacity: entrance.footerOpacity }}>
+            <AuthFooter variant="sign-up-link" from={undefined} />
+          </Animated.View>
+        )}
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -24,7 +24,7 @@ export function AuthFooter({ variant, from }: AuthFooterProps) {
   if (variant === "forgot-password-link") {
     return (
       <View style={styles.wrap}>
-        <Text style={styles.text}>Remember your password? </Text>
+        <Text style={styles.text}>I have remembered my password? </Text>
         <Pressable hitSlop={8}>
           <Text style={styles.link}>Sign in</Text>
         </Pressable>

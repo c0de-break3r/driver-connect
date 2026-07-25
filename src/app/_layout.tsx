@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { convex } from "@/lib/convex";
 import { useConvexRoleSync } from "@/hooks/useConvexRoleSync";
+import { useSessionManager } from "@/hooks/useSessionManager";
 
 enableScreens(false);
 
@@ -19,9 +20,10 @@ if (!publishableKey) {
 
 const clerkKey: string = publishableKey;
 
-function useConvexAuth() {
+function ConvexAuthBridge({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
-  return {
+
+  const convexAuth = {
     isLoading: !isLoaded,
     isAuthenticated: isSignedIn ?? false,
     fetchAccessToken: async () => {
@@ -29,16 +31,22 @@ function useConvexAuth() {
       return token ?? null;
     },
   };
+
+  return (
+    <ConvexProviderWithAuth client={convex} useAuth={() => convexAuth}>
+      {children}
+    </ConvexProviderWithAuth>
+  );
 }
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ConvexProviderWithAuth client={convex} useAuth={useConvexAuth}>
-        <ClerkProvider publishableKey={clerkKey}>
+      <ClerkProvider publishableKey={clerkKey}>
+        <ConvexAuthBridge>
           <AppInner />
-        </ClerkProvider>
-      </ConvexProviderWithAuth>
+        </ConvexAuthBridge>
+      </ClerkProvider>
     </GestureHandlerRootView>
   );
 }
@@ -46,6 +54,7 @@ export default function RootLayout() {
 function AppInner() {
   const { isSignedIn, isLoaded, userId } = useAuth();
   useConvexRoleSync({ isLoaded, isSignedIn, userId });
+  useSessionManager({ isLoaded, isSignedIn, userId });
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

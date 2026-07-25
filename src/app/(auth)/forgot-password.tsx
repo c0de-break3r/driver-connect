@@ -1,8 +1,10 @@
 import { Image } from "expo-image";
-import { router, type Href } from "expo-router";
+import { router, type Href, useLocalSearchParams } from "expo-router";
 import {
     ActivityIndicator,
     Animated,
+    KeyboardAvoidingView,
+    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -10,6 +12,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
 
 import {
     AuthBackButton,
@@ -23,19 +26,38 @@ import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
 export default function ForgotPassword() {
   const entrance = useStaggeredEntrance();
   const reset = usePasswordReset();
+  const params = useLocalSearchParams<{ from?: string }>();
+  const from = params.from;
+
+  const backToSignIn = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      const target: Href = from
+        ? (`/(auth)/sign-in?from=${from}` as Href)
+        : ("/(auth)/sign-in?from=forgot-password" as Href);
+      router.replace(target);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF8F3" }} edges={["top"]}>
       <AuthBackButton
         opacity={entrance.headerOpacity}
-        goBack="sign-in"
+        goBack={backToSignIn}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
       >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <Animated.View
           style={[
             styles.iconWrap,
@@ -143,9 +165,10 @@ export default function ForgotPassword() {
             <View style={styles.buttonSpacer}>
               <Pressable
                 style={styles.primaryBtn}
-                onPress={() =>
-                  router.replace("/(auth)/sign-in" as Href)
-                }
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  backToSignIn();
+                }}
               >
                 <Text style={styles.primaryBtnText}>Sign in</Text>
               </Pressable>
@@ -157,6 +180,7 @@ export default function ForgotPassword() {
           <AuthFooter variant="forgot-password-link" />
         </Animated.View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

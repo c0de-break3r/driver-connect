@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import {
@@ -24,6 +24,7 @@ import { useSlideEntrance } from "@/hooks/useSlideEntrance";
 type IdType = "national_id" | "passport" | "drivers_license" | "";
 type Ownership = "personal" | "work_pay" | "";
 type ImageTarget = "profile" | "idFront";
+type Gender = "male" | "female" | "other" | "";
 
 const ID_TYPES: { value: IdType; label: string }[] = [
   { value: "national_id", label: "National ID" },
@@ -31,10 +32,17 @@ const ID_TYPES: { value: IdType; label: string }[] = [
   { value: "drivers_license", label: "Driver's License" },
 ];
 
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
+];
+
 export default function DriverIdentityScreen() {
   const setIdentityInfo = useDriverOnboardingStore(
     (s) => s.setIdentityInfo,
   );
+  const setBasicInfo = useDriverOnboardingStore((s) => s.setBasicInfo);
   const [address, setAddress] = useState("");
   const [idType, setIdType] = useState<IdType>("");
   const [idNumber, setIdNumber] = useState("");
@@ -43,10 +51,17 @@ export default function DriverIdentityScreen() {
   const [ownership, setOwnership] = useState<Ownership>("");
   const [profileUri, setProfileUri] = useState<string | null>(null);
   const [idFrontUris, setIdFrontUris] = useState<string[]>([]);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState("");
+  const [showGenderModal, setShowGenderModal] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
   const formFields = useMemo(
     () => [
+      { key: "fullName", label: "Full Name", required: true },
+      { key: "phone", label: "Phone", required: true },
+      { key: "gender", label: "Gender", required: true },
       { key: "address", label: "Address", required: true },
       { key: "identityType", label: "Identity Type", required: true },
       { key: "idNumber", label: "Identification Number", required: true },
@@ -98,6 +113,9 @@ export default function DriverIdentityScreen() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
+    if (!fullName.trim()) newErrors.fullName = "Full name is required";
+    if (!phone.trim()) newErrors.phone = "Phone number is required";
+    if (!gender) newErrors.gender = "Gender is required";
     if (!address.trim()) newErrors.address = "Address is required";
     if (!idType) newErrors.idType = "Identity type is required";
     if (!idNumber.trim()) newErrors.idNumber = "ID number is required";
@@ -118,9 +136,10 @@ export default function DriverIdentityScreen() {
       Haptics.NotificationFeedbackType.Success,
     );
 
+    setBasicInfo(fullName, phone, gender);
     setIdentityInfo("", address, idType, idNumber);
 
-    router.push("/(auth)/sign-in?from=driver-identity");
+    router.push("/(auth)/sign-up?from=driver-identity");
   };
 
   return (
@@ -131,7 +150,7 @@ export default function DriverIdentityScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Text style={styles.backArrow}>‹</Text>
+          <Ionicons name="chevron-back" size={22} color="#2C3E5B" />
         </Pressable>
       </View>
 
@@ -154,7 +173,7 @@ export default function DriverIdentityScreen() {
         <View style={styles.titleBlock}>
           <Text style={styles.title}>Provide Your Identity</Text>
           <Text style={styles.subtitleTop}>
-            This information will help to confirm your identity
+            Provide Basic Info — This information will help to confirm your identity
           </Text>
         </View>
 
@@ -183,12 +202,126 @@ export default function DriverIdentityScreen() {
 
         {/* ── Form ── */}
         <View style={styles.form}>
+          {/* ── Basic Info ── */}
           <Animated.View
             style={[
               styles.animatedField,
               {
                 opacity: anims[0].opacity,
                 transform: [{ translateX: anims[0].translate }],
+              },
+            ]}
+          >
+            <View style={styles.fieldGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.fieldLabel}>Full Name</Text>
+                <Text style={styles.requiredStar}>*</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="person-outline" size={18} color="#6E7E91" />
+                </View>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#6E7E91"
+                  value={fullName}
+                  onChangeText={setFullName}
+                  autoCapitalize="words"
+                  returnKeyType="next"
+                />
+              </View>
+              {errors.fullName && (
+                <Text style={styles.errorText}>{errors.fullName}</Text>
+              )}
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.animatedField,
+              {
+                opacity: anims[1].opacity,
+                transform: [{ translateX: anims[1].translate }],
+              },
+            ]}
+          >
+            <View style={styles.fieldGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.fieldLabel}>Phone</Text>
+                <Text style={styles.requiredStar}>*</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <View style={styles.countryButton}>
+                  <Text style={styles.flag}>🇬🇭</Text>
+                  <Text style={styles.countryCode}>+233</Text>
+                </View>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter your phone number"
+                  placeholderTextColor="#6E7E91"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  returnKeyType="next"
+                />
+              </View>
+              {errors.phone && (
+                <Text style={styles.errorText}>{errors.phone}</Text>
+              )}
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.animatedField,
+              {
+                opacity: anims[2].opacity,
+                transform: [{ translateX: anims[2].translate }],
+              },
+            ]}
+          >
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Gender</Text>
+              <Pressable
+                style={styles.inputWrapper}
+                onPress={() => {
+                  Haptics.impactAsync(
+                    Haptics.ImpactFeedbackStyle.Light,
+                  );
+                  setShowGenderModal(true);
+                }}
+              >
+                <View style={styles.inputIcon}>
+                  <View style={styles.genderQuestionIcon}>
+                    <Text style={styles.genderQuestionText}>?</Text>
+                  </View>
+                </View>
+                <View style={styles.genderRow}>
+                  <Text
+                    style={[
+                      styles.genderText,
+                      !gender && styles.genderPlaceholder,
+                    ]}
+                  >
+                    {gender === "" ? "Select Gender" : gender}
+                  </Text>
+                  <Ionicons name="chevron-down" size={18} color="#6E7E91" />
+                </View>
+              </Pressable>
+              {errors.gender && (
+                <Text style={styles.errorText}>{errors.gender}</Text>
+              )}
+            </View>
+          </Animated.View>
+
+          {/* ── Address ── */}
+          <Animated.View
+            style={[
+              styles.animatedField,
+              {
+                opacity: anims[3].opacity,
+                transform: [{ translateX: anims[3].translate }],
               },
             ]}
           >
@@ -220,8 +353,8 @@ export default function DriverIdentityScreen() {
             style={[
               styles.animatedField,
               {
-                opacity: anims[1].opacity,
-                transform: [{ translateX: anims[1].translate }],
+                opacity: anims[4].opacity,
+                transform: [{ translateX: anims[4].translate }],
               },
             ]}
           >
@@ -266,8 +399,8 @@ export default function DriverIdentityScreen() {
             style={[
               styles.animatedField,
               {
-                opacity: anims[2].opacity,
-                transform: [{ translateX: anims[2].translate }],
+                opacity: anims[5].opacity,
+                transform: [{ translateX: anims[5].translate }],
               },
             ]}
           >
@@ -303,8 +436,8 @@ export default function DriverIdentityScreen() {
             style={[
               styles.animatedField,
               {
-                opacity: anims[3].opacity,
-                transform: [{ translateX: anims[3].translate }],
+                opacity: anims[6].opacity,
+                transform: [{ translateX: anims[6].translate }],
               },
             ]}
           >
@@ -348,8 +481,8 @@ export default function DriverIdentityScreen() {
             style={[
               styles.animatedField,
               {
-                opacity: anims[4].opacity,
-                transform: [{ translateX: anims[4].translate }],
+                opacity: anims[7].opacity,
+                transform: [{ translateX: anims[7].translate }],
               },
             ]}
           >
@@ -382,7 +515,7 @@ export default function DriverIdentityScreen() {
                       </View>
                     )}
                   </View>
-                  <Text style={styles.ownershipTitle}>Personal Vehicle</Text>
+                  <Text style={styles.ownershipTitle}>Sales</Text>
                   <Text style={styles.ownershipSubtitle}>I own this vehicle</Text>
                 </Pressable>
 
@@ -461,12 +594,59 @@ export default function DriverIdentityScreen() {
         </Pressable>
       </Modal>
 
+      {/* ── Gender Modal ── */}
+      <Modal
+        visible={showGenderModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowGenderModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowGenderModal(false)}
+        >
+          <View style={styles.modalContent}>
+            {GENDER_OPTIONS.map((option) => (
+              <Pressable
+                key={option.value}
+                style={[
+                  styles.modalOption,
+                  gender === option.value && styles.modalOptionSelected,
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(
+                    Haptics.ImpactFeedbackStyle.Light,
+                  );
+                  setGender(option.value);
+                  setShowGenderModal(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.modalOptionText,
+                    gender === option.value && styles.modalOptionTextSelected,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+                {gender === option.value && (
+                  <Ionicons name="checkmark" size={20} color="#FF7B54" />
+                )}
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+
       {/* ── Footer CTA ── */}
       <View style={styles.footer}>
         <PrimaryButton
           title="Submit"
           onPress={handleSubmit}
           disabled={
+            !fullName.trim() ||
+            !phone.trim() ||
+            !gender ||
             !address.trim() ||
             !idType ||
             !idNumber.trim() ||
@@ -786,6 +966,36 @@ const styles = StyleSheet.create({
   },
   modalOptionTextSelected: {
     color: "#FF7B54",
+    fontWeight: "700",
+  },
+  countryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingRight: 8,
+    borderRightWidth: 1,
+    borderRightColor: "#EAE1D9",
+    paddingVertical: 4,
+  },
+  flag: {
+    fontSize: 16,
+  },
+  countryCode: {
+    fontSize: 14,
+    color: "#2C3E5B",
+    fontWeight: "500",
+  },
+  genderQuestionIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#F5ECE5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  genderQuestionText: {
+    fontSize: 14,
+    color: "#6E7E91",
     fontWeight: "700",
   },
   footer: {

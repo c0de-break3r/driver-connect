@@ -344,7 +344,12 @@ export default function Welcome() {
           <Text style={styles.termsLink}>Terms of Use</Text> and{" "}
           <Text style={styles.termsLink}>Privacy Notice</Text>
         </Text>
-        <Pressable onPress={() => router.push("/(auth)/sign-in" as Href)}>
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push("/(auth)/sign-in?from=welcome" as Href);
+          }}
+        >
           <Text style={styles.signInText}>
             Already have an account?{" "}
             <Text style={styles.signInLink}>Sign in</Text>
@@ -386,7 +391,7 @@ const styles = StyleSheet.create({
   textBelowImage: {
     paddingHorizontal: 28,
     paddingTop: 24,
-    paddingBottom: 24,
+    paddingBottom: 32,
     gap: 12,
   },
 

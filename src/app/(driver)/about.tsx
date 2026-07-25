@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   Pressable,
   ScrollView,
@@ -9,7 +8,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
 
@@ -21,29 +21,18 @@ type SettingItem = {
   title: string;
   subtitle?: string;
   icon: keyof typeof Ionicons.glyphMap;
-  route?: string;
 };
 
-const SETTINGS_ITEMS: SettingItem[] = [
-  { title: "Account", subtitle: "Profile, email, phone", icon: "person-outline", route: "/(driver)/account" },
-  { title: "Vehicles", subtitle: "Manage your vehicles", icon: "car-outline", route: "/(driver)/add-vehicle" },
-  { title: "Verification", subtitle: "ID and documents", icon: "shield-checkmark-outline", route: "/(driver)/verify-identity" },
-  { title: "Payments", subtitle: "Wallet and payouts", icon: "wallet-outline", route: "/(driver)/(tabs)/wallet" },
-  { title: "Notifications", subtitle: "Ride and staff alerts", icon: "notifications-outline", route: "/(driver)/notifications" },
-  { title: "Privacy & Security", subtitle: "Password, permissions", icon: "lock-closed-outline", route: "/(driver)/privacy-security" },
-  { title: "Support", subtitle: "Help center and contact", icon: "help-circle-outline", route: "/(driver)/support" },
-  { title: "About", subtitle: "Version, terms, privacy", icon: "information-circle-outline", route: "/(driver)/about" },
-];
-
-export default function SettingsScreen() {
+export default function AboutScreen() {
+  const router = useRouter();
   const entrance = useStaggeredEntrance();
 
-  const items = useMemo(() => SETTINGS_ITEMS, []);
-
-  const handlePress = (item: SettingItem) => {
-    if (!item.route) return;
-    router.push(item.route as any);
-  };
+  const items: SettingItem[] = [
+    { title: "Terms of Service", subtitle: "Legal terms", icon: "document-text-outline" },
+    { title: "Privacy Policy", subtitle: "Data and privacy policy", icon: "lock-closed-outline" },
+    { title: "Open Source Licenses", subtitle: "Third-party libraries", icon: "code-slash-outline" },
+    { title: "App Version", subtitle: "1.0.0", icon: "information-circle-outline" },
+  ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: PEACH }} edges={["top"]}>
@@ -51,7 +40,7 @@ export default function SettingsScreen() {
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={22} color={NAVY} />
         </Pressable>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>About</Text>
         <View style={styles.headerRight} />
       </View>
 
@@ -72,7 +61,9 @@ export default function SettingsScreen() {
             <Pressable
               key={item.title}
               style={styles.card}
-              onPress={() => handlePress(item)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
             >
               <View style={styles.iconWrap}>
                 <Ionicons name={item.icon} size={20} color={ORANGE} />

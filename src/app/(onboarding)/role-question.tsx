@@ -19,8 +19,7 @@ import { useRoleStore, type UserRole } from "@/store/useRoleStore";
 import { useSlideEntrance } from "@/hooks/useSlideEntrance";
 
 /**
- * Role question screen — routes to driver signup for drivers, auth for others.
- * Matches driver-signup.tsx positioning.
+ * Role question screen — routes to driver identity for drivers, auth for others.
  */
 
 type RoleOption = {
@@ -92,7 +91,7 @@ export default function RoleQuestion() {
     setRole(selected);
 
     if (selected === "driver") {
-      router.push("/(onboarding)/driver-signup" as Href);
+      router.push("/(onboarding)/driver-identity" as Href);
     } else {
       router.push("/(auth)/sign-in" as Href);
     }
@@ -103,7 +102,7 @@ export default function RoleQuestion() {
       {/* ── Header ── */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backArrow}>‹</Text>
+          <Ionicons name="chevron-back" size={22} color="#2C3E5B" />
         </Pressable>
       </View>
 
@@ -181,17 +180,17 @@ export default function RoleQuestion() {
             );
           })}
         </View>
-
-        {/* ── CTA Button ── */}
-        <View style={styles.buttonContainer}>
-          <PrimaryButton
-            title="Continue"
-            onPress={handleContinue}
-            disabled={!selected}
-            style={{ width: "100%" }}
-          />
-        </View>
       </ScrollView>
+
+      {/* ── Static CTA Button ── */}
+      <View style={styles.buttonContainer}>
+        <PrimaryButton
+          title="Continue"
+          onPress={handleContinue}
+          disabled={!selected}
+          style={{ width: "100%" }}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -200,6 +199,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF8F3",
+    paddingBottom: 100,
   },
   header: {
     flexDirection: "row",
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 0,
     paddingTop: 0,
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   heroContainer: {
     marginBottom: 23,
@@ -324,7 +324,15 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   buttonContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingBottom: 24,
+    backgroundColor: "#FFF8F3",
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#EAE1D9",
   },
 });

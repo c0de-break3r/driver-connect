@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -132,10 +132,15 @@ export default function AddVehicleScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
       >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         <Text style={styles.title}>Vehicle Setup</Text>
         <Text style={styles.subtitle}>
           Add your info to send approval request to admin.
@@ -239,6 +244,7 @@ export default function AddVehicleScreen() {
           </Text>
         </Pressable>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Brand Picker Modal */}
       <Modal

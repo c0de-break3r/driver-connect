@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Alert, Animated, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Alert, Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -40,7 +40,7 @@ export default function VerifyIdentityScreen() {
     setFaceMatchResult,
   } = useDriverOnboardingStore();
 
-  const { setStatus, setDocumentCapture: setKycDocument } = useKycFlowStore();
+  const { setStatus, setDocumentCapture: setKycDocument, setSmileIdJobId } = useKycFlowStore();
 
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState(identityEmail || "");
@@ -54,14 +54,18 @@ export default function VerifyIdentityScreen() {
   const [idFrontBase64, setIdFrontBase64] = useState<string>("");
   const [idBackBase64, setIdBackBase64] = useState<string>("");
   const [scanning, setScanning] = useState(false);
+  const [submittedJobId, setSubmittedJobId] = useState<string | null>(null);
+  const [pollError, setPollError] = useState<string | null>(null);
   const [verified, setVerified] = useState(
     verificationPipelineStatus === "confirmed" || faceMatchPassed === true,
   );
   const [showIdTypeModal, setShowIdTypeModal] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { anims, start } = useSlideEntrance({ count: 1, direction: "up" });
 
   const submitDocumentVerificationAction = useAction(api.verifications.submitDocumentVerification);
+  const checkVerificationStatusAction = useAction(api.verifications.checkVerificationStatus);
   const convexUser = useQuery(api.users.getByClerkUserId, identityEmail ? { clerkUserId: identityEmail } : "skip");
 
   useFocusEffect(
@@ -69,6 +73,62 @@ export default function VerifyIdentityScreen() {
       start();
     }, [start]),
   );
+
+  useEffect(() => {
+    if (!submittedJobId) {
+      return;
+    }
+
+    const poll = async () => {
+      try {
+        const result = await checkVerificationStatusAction({ jobId: submittedJobId });
+        const status = result.status as string;
+        if (status === "clear") {
+          setFaceMatchResult(true, result.confidence ?? 98);
+          setVerificationPipelineStatus("confirmed");
+          setStatus("confirmed");
+          setSmileIdJobId(submittedJobId);
+          setVerified(true);
+          setScanning(false);
+          setSubmittedJobId(null);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Alert.alert("Verified", "Your identity has been verified successfully.", [
+            { text: "OK", onPress: () => router.back() },
+          ]);
+        } else if (status === "block" || status === "error") {
+          setVerificationPipelineStatus("failed");
+          setStatus("failed");
+          setScanning(false);
+          setSubmittedJobId(null);
+          Alert.alert(
+            "Verification failed",
+            (result.raw as any)?.message || "We could not verify your identity with the provided documents. Please try again with clearer images."
+          );
+        } else if (status === "attention") {
+          setVerificationPipelineStatus("review");
+          setStatus("review");
+          setScanning(false);
+          setSubmittedJobId(null);
+          Alert.alert(
+            "Review needed",
+            (result.raw as any)?.message || "Your verification needs manual review. We'll notify you once it's complete."
+          );
+        }
+      } catch (e: any) {
+        setPollError(e?.message ?? "Something went wrong while checking verification status.");
+      }
+    };
+
+    pollTimerRef.current = setInterval(poll, 3000);
+    poll();
+
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, [submittedJobId, checkVerificationStatusAction, setFaceMatchResult, setVerificationPipelineStatus, setStatus, setSmileIdJobId, setVerified, setScanning, setSubmittedJobId]);
 
   const requestPermission = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -118,7 +178,7 @@ export default function VerifyIdentityScreen() {
   };
 
   const handleSubmitVerification = async () => {
-    if (!profileBase64 || !idFrontBase64) {
+    if (!profileBase64 && !idFrontBase64) {
       Alert.alert("Missing data", "Please capture all required images.");
       return;
     }
@@ -128,13 +188,15 @@ export default function VerifyIdentityScreen() {
       return;
     }
 
+    if (!convexUser) {
+      Alert.alert("Error", "User not found. Please try again.");
+      return;
+    }
+
     setScanning(true);
+    setPollError(null);
 
     try {
-      if (!convexUser) {
-        throw new Error("User not found");
-      }
-
       const result = await submitDocumentVerificationAction({
         userId: convexUser._id,
         documentType: idType,
@@ -148,28 +210,10 @@ export default function VerifyIdentityScreen() {
 
       setSelfieCapture(profileUri ?? "");
       setDocumentCapture(idFrontUri ?? "", idBackUri ?? "", "", "");
-
-      if (result.status === "confirmed") {
-        setFaceMatchResult(true, result.confidence ?? 98);
-        setVerificationPipelineStatus("confirmed");
-        setStatus("confirmed");
-        setVerified(true);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert("Verified", "Your identity has been verified successfully.", [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-      } else {
-        setVerificationPipelineStatus("failed");
-        setStatus("failed");
-        Alert.alert(
-          "Verification failed",
-          "We could not verify your identity with the provided documents. Please try again with clearer images."
-        );
-      }
+      setSubmittedJobId(result.jobId ?? null);
     } catch (e: any) {
-      Alert.alert("Verification failed", e?.message ?? "Something went wrong. Please try again.");
-    } finally {
       setScanning(false);
+      Alert.alert("Verification failed", e?.message ?? "Something went wrong. Please try again.");
     }
   };
 
@@ -186,32 +230,43 @@ export default function VerifyIdentityScreen() {
   if (verified) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Animated.View style={{ opacity: anims[0].opacity, transform: [{ translateY: anims[0].translate }] }}>
-            <View style={styles.successIconWrap}>
-              <View style={styles.successCircle}>
-                <Ionicons name="checkmark" size={64} color="#FFFFFF" />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0 }
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <Animated.View style={{ opacity: anims[0].opacity, transform: [{ translateY: anims[0].translate }] }}>
+              <View style={styles.successIconWrap}>
+                <View style={styles.successCircle}>
+                  <Ionicons name="checkmark" size={64} color="#FFFFFF" />
+                </View>
               </View>
-            </View>
-            <Text style={styles.successTitle}>Identity Verified!</Text>
-            <Text style={styles.successSubtitle}>
-              Now you are a verified Driver
-            </Text>
-            <Pressable style={styles.primaryButton} onPress={() => router.back()}>
-              <Text style={styles.primaryButtonText}>Continue Driving</Text>
-            </Pressable>
-          </Animated.View>
-        </ScrollView>
+              <Text style={styles.successTitle}>Identity Verified!</Text>
+              <Text style={styles.successSubtitle}>
+                Now you are a verified Driver
+              </Text>
+              <Pressable style={styles.primaryButton} onPress={() => router.back()}>
+                <Text style={styles.primaryButtonText}>Continue Driving</Text>
+              </Pressable>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0 }
       >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         {step === 0 && (
           <Animated.View style={{ opacity: anims[0].opacity, transform: [{ translateY: anims[0].translate }] }}>
             <Text style={styles.title}>Verify your identity</Text>
@@ -356,14 +411,17 @@ export default function VerifyIdentityScreen() {
 
             {scanning && (
               <View style={styles.scanningOverlay}>
-                <Text style={styles.scanningText}>Verifying documents</Text>
+                <Text style={styles.scanningText}>
+                  {submittedJobId ? "Verifying your identity..." : "Verifying documents"}
+                </Text>
                 <View style={styles.progressBar}>
                   <View style={styles.progressFill} />
                 </View>
+                {pollError && <Text style={styles.pollErrorText}>{pollError}</Text>}
               </View>
             )}
 
-            {!scanning && (
+            {!scanning && !verified && (
               <Pressable style={styles.primaryButton} onPress={handleSubmitVerification}>
                 <Text style={styles.primaryButtonText}>Submit for Verification</Text>
               </Pressable>
@@ -371,6 +429,7 @@ export default function VerifyIdentityScreen() {
           </Animated.View>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* ID Type Modal */}
       <Modal
@@ -687,6 +746,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: NAVY,
+  },
+  pollErrorText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#EF4444",
+    textAlign: "center",
+    marginTop: 8,
   },
   progressBar: {
     width: 200,

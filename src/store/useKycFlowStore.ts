@@ -18,7 +18,7 @@ export type KycFlowState = {
     confidence: number;
     reason?: string;
   } | null;
-  dojahSessionId: string | null;
+  smileIdJobId: string | null;
   verificationId: string | null;
   consentGiven: boolean;
   
@@ -28,7 +28,7 @@ export type KycFlowState = {
   setDocumentCapture: (front: string, back?: string) => void;
   setSelfieCapture: (uri: string) => void;
   setLivenessResult: (result: { passed: boolean; confidence: number; reason?: string }) => void;
-  setDojahSessionId: (id: string | null) => void;
+  setSmileIdJobId: (id: string | null) => void;
   setVerificationId: (id: string | null) => void;
   setConsentGiven: (given: boolean) => void;
   reset: () => void;
@@ -42,7 +42,7 @@ const initialState: KycFlowState = {
   documentBackUri: "",
   selfieUri: "",
   livenessResult: null,
-  dojahSessionId: null,
+  smileIdJobId: null,
   verificationId: null,
   consentGiven: false,
   setStep: () => {},
@@ -51,7 +51,7 @@ const initialState: KycFlowState = {
   setDocumentCapture: () => {},
   setSelfieCapture: () => {},
   setLivenessResult: () => {},
-  setDojahSessionId: () => {},
+  setSmileIdJobId: () => {},
   setVerificationId: () => {},
   setConsentGiven: () => {},
   reset: () => {},
@@ -67,7 +67,7 @@ export const useKycFlowStore = create<KycFlowState>()(
       setDocumentCapture: (front, back = "") => set({ documentFrontUri: front, documentBackUri: back }),
       setSelfieCapture: (uri) => set({ selfieUri: uri }),
       setLivenessResult: (result) => set({ livenessResult: result }),
-      setDojahSessionId: (id) => set({ dojahSessionId: id }),
+      setSmileIdJobId: (id) => set({ smileIdJobId: id }),
       setVerificationId: (id) => set({ verificationId: id }),
       setConsentGiven: (given) => set({ consentGiven: given }),
       reset: () => set({
@@ -78,7 +78,7 @@ export const useKycFlowStore = create<KycFlowState>()(
         documentBackUri: "",
         selfieUri: "",
         livenessResult: null,
-        dojahSessionId: null,
+        smileIdJobId: null,
         verificationId: null,
         consentGiven: false,
       }),

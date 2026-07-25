@@ -2,6 +2,8 @@ import { Image } from "expo-image";
 import {
     ActivityIndicator,
     Animated,
+    KeyboardAvoidingView,
+    Platform,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -27,20 +29,25 @@ export default function SignUp() {
   const entrance = useStaggeredEntrance();
   const flow = useSignUpFlow();
   const params = useLocalSearchParams<{ from?: string }>();
-  const fromIdentity = params.from === "driver-identity";
+  const fromDriverIdentity = params.from === "driver-identity";
 
-  const backTarget: "welcome" | "identity" = fromIdentity ? "identity" : "welcome";
+  const backTarget: "welcome" | "identity" = fromDriverIdentity ? "identity" : "welcome";
 
   if (flow.pendingVerification) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF8F3" }} edges={["top"]}>
         <AuthBackButton opacity={entrance.headerOpacity} goBack={() => flow.setPendingVerification(false)} />
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
         >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
           <Animated.View
             style={[
               styles.iconWrap,
@@ -123,6 +130,7 @@ export default function SignUp() {
 
           <View nativeID="clerk-captcha" />
         </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -131,11 +139,16 @@ export default function SignUp() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF8F3" }} edges={["top"]}>
       <AuthBackButton opacity={entrance.headerOpacity} goBack={backTarget} />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 24 : 0}
       >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <Animated.View
           style={[
             styles.iconWrap,
@@ -210,12 +223,15 @@ export default function SignUp() {
           />
         </Animated.View>
 
-        <Animated.View style={{ opacity: entrance.footerOpacity }}>
-          <AuthFooter variant="sign-in-link" from={fromIdentity ? "driver-identity" : undefined} />
-        </Animated.View>
+        {!fromDriverIdentity && (
+          <Animated.View style={{ opacity: entrance.footerOpacity }}>
+            <AuthFooter variant="sign-in-link" from={undefined} />
+          </Animated.View>
+        )}
 
         <View nativeID="clerk-captcha" />
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

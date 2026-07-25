@@ -97,6 +97,11 @@ export type DriverOnboardingState = {
   hasCriminalRecord: boolean | null;
   criminalRecordDetails: string;
 
+  // Basic Info
+  fullName: string;
+  phone: string;
+  gender: string;
+
   // Identity verification info
   identityEmail: string;
   identityAddress: string;
@@ -193,6 +198,7 @@ export type DriverOnboardingState = {
     hasCriminalRecord: boolean,
     criminalRecordDetails: string,
   ) => void;
+  setBasicInfo: (fullName: string, phone: string, gender: string) => void;
   setLicenseInfo: (
     fullLegalName: string,
     dateOfBirth: string,
@@ -269,6 +275,9 @@ const initialState = {
   residentialAddress: "",
   hasCriminalRecord: null as boolean | null,
   criminalRecordDetails: "",
+  fullName: "",
+  phone: "",
+  gender: "",
   vehicleTypes: [] as string[],
   selectedVehicleType: null as "motorbike" | "sedan" | "van" | null,
   hasValidLicense: false,
@@ -348,6 +357,8 @@ setExperience: (yearsExperience) => set({ yearsExperience }),
     criminalRecordDetails,
   ) =>
     set({ residentialAddress, hasCriminalRecord, criminalRecordDetails }),
+  setBasicInfo: (fullName, phone, gender) =>
+    set({ fullName, phone, gender }),
   setLicenseInfo: (fullLegalName, dateOfBirth, licenseClass) =>
     set({ fullLegalName, dateOfBirth, licenseClass }),
   setIdentityInfo: (email, address, idType, idNumber) =>

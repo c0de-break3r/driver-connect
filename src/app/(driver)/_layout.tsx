@@ -2,7 +2,6 @@ import { Stack, Redirect } from "expo-router";
 import { useAuth } from "@clerk/expo";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useRoleStore } from "@/store/useRoleStore";
-import { getPostAuthRoute } from "@/lib/routing";
 
 export default function DriverLayout() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -13,7 +12,8 @@ export default function DriverLayout() {
   }
 
   if (!isSignedIn) {
-    return <Redirect href={getPostAuthRoute(role)} />;
+    const href = role === "driver" ? "/(auth)/sign-in" : "/(onboarding)/welcome";
+    return <Redirect href={href as any} />;
   }
 
   if (role !== "driver") {

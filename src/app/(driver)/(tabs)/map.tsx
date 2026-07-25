@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Image } from "expo-image";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Animated,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,6 +16,7 @@ import MapView, {
   PROVIDER_GOOGLE,
 } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {
   impactAsync,
   notificationAsync,
@@ -22,9 +24,17 @@ import {
   NotificationFeedbackType,
 } from "expo-haptics";
 import * as Location from "expo-location";
+import { router, useFocusEffect } from "expo-router";
 import { useDriverMapStore } from "@/store/useDriverMapStore";
+import { useDriverOnboardingStore } from "@/store/useDriverOnboardingStore";
 import { MUTED_MAP_STYLE } from "@/lib/mapStyle";
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
+import GooglePlacesModule, {
+  GooglePlaceData,
+  GooglePlaceDetail,
+} from "react-native-google-places-autocomplete";
+
+const PlacesAutocomplete = GooglePlacesModule.GooglePlacesAutocomplete;
 
 const ACCRA_LAT = 5.6037;
 const ACCRA_LNG = -0.187;
@@ -63,28 +73,94 @@ export default function MapScreen() {
   const entrance = useStaggeredEntrance();
   const [region, setRegion] = useState<LatLng>(INITIAL_REGION);
   const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
+  const [sheetVisible, setSheetVisible] = useState(true);
   const [sheetExpanded, setSheetExpanded] = useState(false);
-  const sheetHeight = useMemo(() => new Animated.Value(200), []);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const statusPillOpacity = useMemo(() => new Animated.Value(1), []);
+  const sheetHeight = useMemo(() => new Animated.Value(SHEET_COLLAPSED_HEIGHT), []);
 
   useEffect(() => {
     Animated.timing(sheetHeight, {
-      toValue: sheetExpanded ? SHEET_EXPANDED_HEIGHT : SHEET_COLLAPSED_HEIGHT,
+      toValue: sheetVisible
+        ? sheetExpanded
+          ? SHEET_EXPANDED_HEIGHT
+          : SHEET_COLLAPSED_HEIGHT
+        : 0,
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [sheetExpanded, sheetHeight]);
+  }, [sheetVisible, sheetExpanded, sheetHeight]);
+
+  useEffect(() => {
+    Animated.timing(statusPillOpacity, {
+      toValue: sheetVisible && !sheetExpanded ? 1 : 0,
+      duration: 280,
+      useNativeDriver: true,
+    }).start();
+  }, [sheetVisible, sheetExpanded, statusPillOpacity]);
+
+  const sheetPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          return sheetVisible && gestureState.dy > 0;
+        },
+        onPanResponderMove: (_, gestureState) => {
+          if (!sheetVisible) return;
+          const currentBase = sheetExpanded
+            ? SHEET_EXPANDED_HEIGHT
+            : SHEET_COLLAPSED_HEIGHT;
+          const newHeight = Math.max(0, currentBase - gestureState.dy);
+          sheetHeight.setValue(newHeight);
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (!sheetVisible) return;
+          const currentBase = sheetExpanded
+            ? SHEET_EXPANDED_HEIGHT
+            : SHEET_COLLAPSED_HEIGHT;
+          const newHeight = currentBase - gestureState.dy;
+
+          if (newHeight < 80) {
+            setSheetVisible(false);
+            Animated.timing(sheetHeight, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: false,
+            }).start();
+          } else if (sheetExpanded) {
+            if (gestureState.dy > 60) {
+              setSheetExpanded(false);
+            }
+            Animated.timing(sheetHeight, {
+              toValue: gestureState.dy > 60
+                ? SHEET_COLLAPSED_HEIGHT
+                : SHEET_EXPANDED_HEIGHT,
+              duration: 200,
+              useNativeDriver: false,
+            }).start();
+          } else {
+            Animated.timing(sheetHeight, {
+              toValue: SHEET_COLLAPSED_HEIGHT,
+              duration: 200,
+              useNativeDriver: false,
+            }).start();
+          }
+        },
+      }),
+    [sheetVisible, sheetExpanded, sheetHeight]
+  );
 
   const {
     driverLocation,
-    isOnline,
     rideRequests,
     selectedDestination,
     setDriverLocation,
-    toggleOnline,
     acceptRideRequest,
     declineRideRequest,
     setSelectedDestination,
   } = useDriverMapStore();
+
+  const { selfieUri } = useDriverOnboardingStore();
 
   useEffect(() => {
     (async () => {
@@ -108,6 +184,12 @@ export default function MapScreen() {
     })();
   }, [setDriverLocation]);
 
+  useFocusEffect(
+    useCallback(() => {
+      setIsNavigating(false);
+    }, [])
+  );
+
   const centerOnMe = async () => {
     await impactAsync(ImpactFeedbackStyle.Light);
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -126,11 +208,6 @@ export default function MapScreen() {
       },
       { duration: 800 }
     );
-  };
-
-  const handleToggleOnline = async () => {
-    await impactAsync(ImpactFeedbackStyle.Medium);
-    toggleOnline();
   };
 
   const handleAccept = async (id: string) => {
@@ -214,73 +291,80 @@ export default function MapScreen() {
           )}
         </MapView>
 
-        {/* Top-left profile avatar */}
+        {/* Top row: profile + search bar */}
         <Animated.View
           style={[
-            styles.topLeftControls,
+            styles.topRow,
             {
               opacity: entrance.headerOpacity,
               transform: [{ translateY: entrance.headerTranslateY }],
             },
           ]}
         >
-          <Pressable style={styles.profileButton}>
+          <Pressable
+            style={styles.profileButton}
+            onPress={() => {
+              if (isNavigating) return;
+              setIsNavigating(true);
+              router.push("/(driver)/account");
+            }}
+          >
             <View style={styles.profileImageWrap}>
-              <Ionicons name="person" size={20} color={NAVY} />
+              {selfieUri ? (
+                <Image
+                  source={{ uri: selfieUri }}
+                  style={styles.profileImage}
+                  contentFit="cover"
+                />
+              ) : (
+                <Ionicons name="person" size={20} color={NAVY} />
+              )}
             </View>
           </Pressable>
-        </Animated.View>
-
-        {/* Search bar */}
-        <Animated.View
-          style={[
-            styles.searchBarWrap,
-            {
-              opacity: entrance.formOpacity,
-              transform: [
-                {
-                  translateY: entrance.formTranslateY.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <View style={styles.searchBarContainer}>
-            <Ionicons name="search" size={20} color={NAVY} style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchBarInput}
+          <View style={styles.searchBarWrap}>
+            <PlacesAutocomplete
               placeholder="Where to?"
-              placeholderTextColor="#6E7E91"
-              returnKeyType="search"
-              onSubmitEditing={(e) => {
-                const text = e.nativeEvent.text.trim();
-                if (!text) return;
-                setSelectedDestination({
-                  latitude: driverLocation?.latitude ?? ACCRA_LAT + (Math.random() - 0.5) * 0.1,
-                  longitude: driverLocation?.longitude ?? ACCRA_LNG + (Math.random() - 0.5) * 0.1,
-                });
+              textInputProps={{
+                placeholderTextColor: "#6E7E91",
+              }}
+              onPress={(data: GooglePlaceData, details: GooglePlaceDetail | null) => {
+                if (!details?.geometry?.location) return;
+                const { lat, lng } = details.geometry.location;
+                const next = { latitude: lat, longitude: lng };
+                setSelectedDestination(next);
+                setRegion(next);
+                setNearbyDrivers(generateNearbyDrivers(next));
                 mapRef.current?.animateCamera(
-                  {
-                    center: {
-                      latitude: driverLocation?.latitude ?? ACCRA_LAT,
-                      longitude: driverLocation?.longitude ?? ACCRA_LNG,
-                    },
-                    zoom: 14,
-                  },
+                  { center: next, zoom: 14 },
                   { duration: 800 }
                 );
               }}
+              fetchDetails
+              onFail={(error: any) => console.error("Places autocomplete error:", error)}
+              query={{
+                key: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+                language: "en",
+                components: "country:gh",
+              }}
+              styles={{
+                container: styles.autocompleteContainer,
+                textInputContainer: styles.autocompleteTextInputContainer,
+                textInput: styles.autocompleteInput,
+                listView: styles.autocompleteList,
+                row: styles.autocompleteRow,
+                description: styles.autocompleteDescription,
+                separator: styles.autocompleteSeparator,
+              }}
+              enablePoweredByContainer={false}
+              nearbyPlacesAPI="GooglePlacesSearch"
             />
           </View>
         </Animated.View>
 
-        {/* Floating map controls */}
+        {/* Controls row below search bar */}
         <Animated.View
           style={[
-            styles.mapControls,
+            styles.controlsRow,
             {
               opacity: entrance.iconOpacity,
               transform: [{ scale: entrance.iconScale }],
@@ -290,10 +374,8 @@ export default function MapScreen() {
           <Pressable style={styles.mapControlButton} onPress={centerOnMe}>
             <Ionicons name="navigate" size={22} color={NAVY} />
           </Pressable>
-          <Pressable
-            style={[styles.mapControlButton, styles.mapControlButtonMargin]}
-          >
-            <Ionicons name="map-outline" size={22} color={NAVY} />
+          <Pressable style={styles.mapControlButton}>
+            <MaterialCommunityIcons name="traffic-light" size={22} color={NAVY} />
           </Pressable>
         </Animated.View>
 
@@ -302,21 +384,20 @@ export default function MapScreen() {
           style={[
             styles.statusPillWrap,
             {
-              opacity: entrance.formOpacity,
-              transform: [
-                {
-                  translateY: entrance.formTranslateY.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  }),
-                },
-              ],
+              opacity: statusPillOpacity,
             },
           ]}
         >
           <Pressable
             style={styles.statusPill}
-            onPress={() => setSheetExpanded((prev) => !prev)}
+            onPress={() => {
+              if (sheetVisible) {
+                setSheetExpanded((prev) => !prev);
+              } else {
+                setSheetVisible(true);
+                setSheetExpanded(false);
+              }
+            }}
           >
             <Ionicons name="car" size={18} color={WHITE} />
             <Text style={styles.statusPillText}>
@@ -325,15 +406,30 @@ export default function MapScreen() {
           </Pressable>
         </Animated.View>
 
+        {/* Floating wifi button when sheet is hidden */}
+        {!sheetVisible && (
+          <Pressable
+            style={styles.wifiFloatingButton}
+            onPress={() => {
+              setSheetVisible(true);
+              setSheetExpanded(false);
+            }}
+          >
+            <Ionicons name="wifi" size={24} color={NAVY} />
+          </Pressable>
+        )}
+
         {/* Bottom Sheet */}
-        <Animated.View
-          style={[
-            styles.sheetContainer,
-            {
-              height: sheetHeight,
-            },
-          ]}
-        >
+        {sheetVisible && (
+          <Animated.View
+            style={[
+              styles.sheetContainer,
+              {
+                height: sheetHeight,
+              },
+            ]}
+            {...sheetPanResponder.panHandlers}
+          >
           <ScrollView
             contentContainerStyle={styles.sheetScrollContent}
           >
@@ -450,38 +546,7 @@ export default function MapScreen() {
             <View style={styles.bottomSpacer} />
           </ScrollView>
         </Animated.View>
-
-        {/* Go Online / Offline Button */}
-        <Animated.View
-          style={[
-            styles.onlineButtonWrap,
-            {
-              opacity: entrance.formOpacity,
-              transform: [
-                {
-                  translateY: entrance.formTranslateY.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [30, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <Pressable
-            style={[styles.onlineButton, isOnline && styles.onlineButtonActive]}
-            onPress={handleToggleOnline}
-          >
-            <Ionicons
-              name={isOnline ? "arrow-up" : "power"}
-              size={22}
-              color={WHITE}
-            />
-            <Text style={styles.onlineButtonText}>
-              {isOnline ? "GOING ONLINE" : "GO ONLINE"}
-            </Text>
-          </Pressable>
-        </Animated.View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -545,10 +610,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  topLeftControls: {
+  topRow: {
     position: "absolute",
     top: 16,
-    left: 20,
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     zIndex: 10,
   },
   profileButton: {
@@ -575,20 +644,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
-  searchBarWrap: {
-    position: "absolute",
-    top: 16,
-    left: 76,
-    right: 16,
-    zIndex: 10,
+  profileImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
-  searchBarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+  searchBarWrap: {
+    flex: 1,
+    zIndex: 20,
+  },
+  autocompleteContainer: {
+    flex: 1,
+    zIndex: 20,
+  },
+  autocompleteTextInputContainer: {
+    flex: 1,
+    zIndex: 20,
+  },
+  autocompleteInput: {
+    height: 44,
+    fontSize: 15,
+    fontWeight: "600",
+    color: NAVY,
     backgroundColor: WHITE,
     borderRadius: 14,
     paddingHorizontal: 16,
-    height: 44,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#EAE1D9",
     shadowColor: "#000",
@@ -596,6 +676,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+  },
+  autocompleteList: {
+    backgroundColor: WHITE,
+    borderRadius: 14,
+    marginTop: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+    zIndex: 20,
+    maxHeight: 220,
+  },
+  autocompleteRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  autocompleteDescription: {
+    fontSize: 14,
+    color: NAVY,
+  },
+  autocompleteSeparator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#EAE1D9",
   },
   searchIcon: {
     marginRight: 10,
@@ -625,12 +731,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#EAE1D9",
   },
-  mapControls: {
+  controlsRow: {
     position: "absolute",
     right: 16,
-    top: 16,
-    zIndex: 10,
+    top: 72,
+    flexDirection: "column",
+    alignItems: "center",
     gap: 12,
+    zIndex: 30,
   },
   mapControlButton: {
     width: 44,
@@ -646,9 +754,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
-  },
-  mapControlButtonMargin: {
-    marginTop: 12,
   },
   statusPillWrap: {
     position: "absolute",
@@ -677,6 +782,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: WHITE,
     letterSpacing: 0.4,
+  },
+  wifiFloatingButton: {
+    position: "absolute",
+    bottom: 24,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 20,
   },
   sheetBackground: {
     backgroundColor: PEACH,
@@ -897,39 +1010,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: WHITE,
     letterSpacing: 0.2,
-  },
-  onlineButtonWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 32,
-    alignItems: "center",
-    zIndex: 10,
-  },
-  onlineButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    backgroundColor: "#2E7DE0",
-    paddingVertical: 16,
-    paddingHorizontal: 28,
-    borderRadius: 999,
-    shadowColor: "#2E7DE0",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  onlineButtonActive: {
-    backgroundColor: ORANGE,
-    shadowColor: ORANGE,
-  },
-  onlineButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: WHITE,
-    letterSpacing: 0.6,
   },
   bottomSpacer: {
     height: 24,

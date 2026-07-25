@@ -59,7 +59,7 @@ export default function NotificationsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: PEACH }} edges={["top"]}>
       <View style={styles.headerRow}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={NAVY} />
+          <Ionicons name="chevron-back" size={22} color={NAVY} />
         </Pressable>
         <Text style={styles.headerTitle}>Notifications</Text>
         <View style={styles.headerRight}>
@@ -132,12 +132,15 @@ const styles = StyleSheet.create({
   backButton: {
     width: 40,
     height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#EAE1D9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: 17,

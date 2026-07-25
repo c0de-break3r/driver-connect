@@ -57,8 +57,12 @@ export function useSignUpFlow(): SignUpFlowState {
           Haptics.NotificationFeedbackType.Error
         );
       } else {
+        const signUpResource = signUp as any;
+        const reloadedSignUp = await signUpResource.reload?.();
+        const currentSignUp = reloadedSignUp ?? signUpResource;
+
         const { error: sendError } =
-          await signUp.verifications.sendEmailCode();
+          await currentSignUp.verifications.sendEmailCode();
         if (sendError) {
           setError(sendError.longMessage ?? sendError.message);
         } else {
@@ -83,8 +87,12 @@ export function useSignUpFlow(): SignUpFlowState {
     setError(null);
     setLoading(true);
     try {
+      const signUpResource = signUp as any;
+      const reloadedSignUp = await signUpResource.reload?.();
+      const activeSignUp = reloadedSignUp ?? signUpResource;
+
       const { error } =
-        await signUp.verifications.verifyEmailCode({ code: code.trim() });
+        await activeSignUp.verifications.verifyEmailCode({ code: code.trim() });
       if (error) {
         setError(error.longMessage ?? error.message);
         Haptics.notificationAsync(
@@ -94,20 +102,27 @@ export function useSignUpFlow(): SignUpFlowState {
       }
 
       try {
-        const reloadResult = signUp as any;
-        if (typeof reloadResult.reload === "function") {
-          await reloadResult.reload();
+        const reloaded = await activeSignUp.reload?.();
+        const finalSignUp = reloaded ?? activeSignUp;
+
+        if (finalSignUp.status === "complete") {
+          const { error: finalizeError } = await finalSignUp.finalize();
+          if (finalizeError) {
+            setError(finalizeError.longMessage ?? finalizeError.message);
+            Haptics.notificationAsync(
+              Haptics.NotificationFeedbackType.Error
+            );
+            return;
+          }
+          Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Success
+          );
+          navigatePostAuth();
+        } else {
+          setError("Verification incomplete. Please try again.");
         }
       } catch (reloadError) {
         console.warn("Failed to reload sign-up after verify:", reloadError);
-      }
-
-      if (signUp.status === "complete") {
-        Haptics.notificationAsync(
-          Haptics.NotificationFeedbackType.Success
-        );
-        navigatePostAuth();
-      } else {
         setError("Verification incomplete. Please try again.");
       }
     } catch {
@@ -123,7 +138,10 @@ export function useSignUpFlow(): SignUpFlowState {
   const handleResendCode = useCallback(async () => {
     if (!signUp) return;
     try {
-      await signUp.verifications.sendEmailCode();
+      const signUpResource = signUp as any;
+      const reloadedSignUp = await signUpResource.reload?.();
+      const activeSignUp = reloadedSignUp ?? signUpResource;
+      await activeSignUp.verifications.sendEmailCode();
       Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success
       );

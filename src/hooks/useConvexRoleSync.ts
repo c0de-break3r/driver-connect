@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useRoleStore } from "@/store/useRoleStore";
 import { api } from "@/lib/convexApi";
@@ -24,9 +24,14 @@ export function useConvexRoleSync({
   );
 
   const upsertUser = useMutation(api.users.upsert);
+  const syncedUserId = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !userId) {
+      return;
+    }
+
+    if (syncedUserId.current === userId && convexUser) {
       return;
     }
 
@@ -37,10 +42,12 @@ export function useConvexRoleSync({
       if (convexUser.role && convexUser.role !== currentRole) {
         setRole(convexUser.role);
       }
+      syncedUserId.current = userId;
       return;
     }
 
     if (currentRole) {
+      syncedUserId.current = userId;
       upsertUser({
         clerkUserId: userId,
         role: currentRole,

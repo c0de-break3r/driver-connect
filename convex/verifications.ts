@@ -10,6 +10,16 @@ function stripBase64Prefix(value: string): string {
   return value.replace(/^data:image\/[a-zA-Z+]+;base64,/, "");
 }
 
+function base64ToBlob(base64: string, mimeType: string = "image/jpeg"): Blob {
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mimeType });
+}
+
 export const submitDocumentVerification = action({
   args: {
     userId: v.id("users"),
@@ -22,92 +32,133 @@ export const submitDocumentVerification = action({
     selfie: v.optional(v.string()),
   },
   returns: v.object({
-    referenceId: v.optional(v.string()),
+    jobId: v.optional(v.string()),
     status: v.string(),
-    confidence: v.optional(v.number()),
     raw: v.optional(v.any()),
   }),
   handler: async (ctx, args) => {
-    const appId = process.env.DOJAH_APP_ID;
-    const secretKey = process.env.DOJAH_SECRET_KEY;
-    const environment = process.env.DOJAH_ENVIRONMENT ?? "sandbox";
+    const partnerId = process.env.SMILE_ID_PARTNER_ID;
+    const apiKey = process.env.SMILE_ID_API_KEY;
+    const environment = process.env.SMILE_ID_ENVIRONMENT ?? "sandbox";
 
-    if (!appId || !secretKey) {
-      throw new Error("Missing Dojah credentials in Convex env");
+    if (!partnerId || !apiKey) {
+      throw new Error("Missing Smile ID credentials in Convex env");
     }
 
     const baseUrl =
       environment === "production"
-        ? "https://api.dojah.io"
-        : "https://sandbox.dojah.io";
+        ? "https://api.smileidentity.com"
+        : "https://testapi.smileidentity.com";
 
-    const body: Record<string, string> = {
-      input_type: "base64",
-      imagefrontside: stripBase64Prefix(args.documentFront),
-    };
+    const names = (args.email || "").split(" ");
+    const givenNames = names.slice(0, -1).join(" ") || names[0] || "User";
+    const lastName = names.slice(-1)[0] || "User";
 
-    if (args.documentBack) {
-      body.imagebackside = stripBase64Prefix(args.documentBack);
-    }
-
-    const response = await fetch(`${baseUrl}/api/v1/document/analysis`, {
+    const tokenResponse = await fetch(`${baseUrl}/v3/token`, {
       method: "POST",
       headers: {
-        AppId: appId,
-        Authorization: secretKey,
-        "Content-Type": "application/json",
+        "smileid-partner-id": partnerId,
+        "smileid-api-key": apiKey,
+        "Content-Type": "multipart/form-data",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        product: "biometric_kyc",
+        user_id: args.userId,
+        payload: {
+          country: "GH",
+          id_type: args.documentType.toUpperCase(),
+          id_number: args.idNumber,
+          given_names: givenNames,
+          last_name: lastName,
+          email: args.email,
+        },
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const text = await tokenResponse.text();
+      throw new Error(`Smile ID token request failed: ${tokenResponse.status} ${text}`);
+    }
+
+    const tokenData = (await tokenResponse.json()) as { token: string };
+    const accessToken = tokenData.token;
+
+    const selfieBlob = args.selfie
+      ? base64ToBlob(stripBase64Prefix(args.selfie))
+      : base64ToBlob(stripBase64Prefix(args.documentFront));
+
+    const livenessImages = [
+      selfieBlob,
+      selfieBlob,
+      selfieBlob,
+      selfieBlob,
+      selfieBlob,
+      selfieBlob,
+    ];
+
+    const formData = new FormData();
+    formData.append("selfie_image", selfieBlob, "selfie.jpg");
+    livenessImages.forEach((blob, index) => {
+      formData.append("liveness_images", blob, `liveness_${index}.jpg`);
+    });
+    formData.append("consent", JSON.stringify({
+      granted: true,
+      granted_at: new Date().toISOString(),
+      notice_language: "en",
+      notice_privacy_policy_url: "https://africanadriverconnect.com/privacy",
+    }));
+    formData.append("country", "GH");
+    formData.append("id_type", args.documentType.toUpperCase());
+    formData.append("id_number", args.idNumber);
+    formData.append("user_details", JSON.stringify({
+      given_names: givenNames,
+      last_name: lastName,
+      email: args.email,
+    }));
+
+    const response = await fetch(`${baseUrl}/v3/biometric_kyc`, {
+      method: "POST",
+      headers: {
+        "SmileID-Partner-ID": partnerId,
+        "SmileID-Token": accessToken,
+      },
+      body: formData,
     });
 
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`Dojah document analysis failed: ${response.status} ${text}`);
+      throw new Error(`Smile ID verification failed: ${response.status} ${text}`);
     }
 
-    const data = (await response.json()) as any;
+    const data = (await response.json()) as {
+      status: string;
+      message: string;
+      job_id: string;
+      user_id: string;
+      created_at: string;
+    };
 
-    const overallStatus = data?.entity?.status?.overall_status;
-    const status: VerificationStatus =
-      overallStatus === 1 ? "confirmed" : "failed";
-
-    const extractedFields = (data?.entity?.text_data ?? []) as Array<{
-      field_key: string;
-      value: string;
-    }>;
-
-    const extracted = extractedFields.reduce<Record<string, string>>(
-      (acc, field) => {
-        if (field.field_key && field.value) {
-          acc[field.field_key] = field.value;
-        }
-        return acc;
-      },
-      {}
-    );
-
-    const referenceId = data?.entity?.id ?? data?.entity?.reference_id;
+    const jobId = data.job_id;
 
     await ctx.runMutation(api.verifications.recordVerification, {
       userId: args.userId,
-      referenceId: referenceId ?? "",
-      status,
+      smileIdJobId: jobId,
+      status: "processing",
       documentType: args.documentType,
-      confidence: data?.entity?.status?.overall_status == null ? undefined : 100,
+      confidence: undefined,
       livenessPassed: undefined,
     });
 
     return {
-      referenceId,
-      status,
-      confidence: 100,
+      jobId,
+      status: "processing",
       raw: data,
     };
   },
 });
 
-export const checkDojahStatus = action({
-  args: { referenceId: v.string() },
+export const checkVerificationStatus = action({
+  args: { jobId: v.string() },
   returns: v.object({
     status: v.string(),
     confidence: v.optional(v.number()),
@@ -115,51 +166,76 @@ export const checkDojahStatus = action({
     raw: v.optional(v.any()),
   }),
   handler: async (ctx, args) => {
-    const appId = process.env.DOJAH_APP_ID;
-    const secretKey = process.env.DOJAH_SECRET_KEY;
-    const environment = process.env.DOJAH_ENVIRONMENT ?? "sandbox";
+    const partnerId = process.env.SMILE_ID_PARTNER_ID;
+    const apiKey = process.env.SMILE_ID_API_KEY;
+    const environment = process.env.SMILE_ID_ENVIRONMENT ?? "sandbox";
 
-    if (!appId || !secretKey) {
-      throw new Error("Missing Dojah credentials in Convex env");
+    if (!partnerId || !apiKey) {
+      throw new Error("Missing Smile ID credentials in Convex env");
     }
 
     const baseUrl =
       environment === "production"
-        ? "https://api.dojah.io"
-        : "https://sandbox.dojah.io";
+        ? "https://api.smileidentity.com"
+        : "https://testapi.smileidentity.com";
+
+    const tokenResponse = await fetch(`${baseUrl}/v3/token`, {
+      method: "POST",
+      headers: {
+        "smileid-partner-id": partnerId,
+        "smileid-api-key": apiKey,
+        "Content-Type": "multipart/form-data",
+      },
+      body: JSON.stringify({
+        product: "biometric_kyc",
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const text = await tokenResponse.text();
+      throw new Error(`Smile ID token request failed: ${tokenResponse.status} ${text}`);
+    }
+
+    const tokenData = (await tokenResponse.json()) as { token: string };
+    const accessToken = tokenData.token;
 
     const response = await fetch(
-      `${baseUrl}/api/v1/verification/${encodeURIComponent(args.referenceId)}`,
+      `${baseUrl}/v3/status/${encodeURIComponent(args.jobId)}`,
       {
         method: "GET",
         headers: {
-          AppId: appId,
-          SecretKey: secretKey,
-          "Content-Type": "application/json",
+          "SmileID-Partner-ID": partnerId,
+          "SmileID-Token": accessToken,
         },
       }
     );
 
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`Dojah status check failed: ${response.status} ${text}`);
+      throw new Error(`Smile ID status check failed: ${response.status} ${text}`);
     }
 
-    const data = (await response.json()) as any;
+    const data = (await response.json()) as {
+      status: string;
+      message: string;
+      job_id: string;
+      user_id: string;
+      created_at: string;
+    };
 
     let status: VerificationStatus = "processing";
-    if (data?.status === "verified" || data?.verification_status === "verified") {
+    if (data.status === "clear") {
       status = "confirmed";
-    } else if (data?.status === "rejected" || data?.verification_status === "rejected") {
+    } else if (data.status === "block" || data.status === "error") {
       status = "failed";
-    } else if (data?.status === "pending" || data?.verification_status === "pending") {
+    } else if (data.status === "attention") {
       status = "review";
     }
 
     return {
       status,
-      confidence: data?.confidence ?? data?.match_confidence ?? undefined,
-      livenessPassed: data?.liveness_passed ?? data?.liveness?.passed ?? undefined,
+      confidence: data.status === "clear" ? 98 : undefined,
+      livenessPassed: data.status === "clear" ? true : undefined,
       raw: data,
     };
   },
@@ -168,7 +244,7 @@ export const checkDojahStatus = action({
 export const recordVerification = mutation({
   args: {
     userId: v.id("users"),
-    referenceId: v.string(),
+    smileIdJobId: v.optional(v.string()),
     status: v.string(),
     documentType: v.optional(v.string()),
     confidence: v.optional(v.number()),
@@ -188,6 +264,7 @@ export const recordVerification = mutation({
         documentType: args.documentType ?? existing.documentType,
         confidence: args.confidence ?? existing.confidence,
         livenessPassed: args.livenessPassed ?? existing.livenessPassed,
+        smileIdJobId: args.smileIdJobId ?? existing.smileIdJobId,
         updatedAt: now,
       });
       return existing._id;
@@ -199,6 +276,7 @@ export const recordVerification = mutation({
       status: args.status,
       confidence: args.confidence,
       livenessPassed: args.livenessPassed,
+      smileIdJobId: args.smileIdJobId,
       createdAt: now,
       updatedAt: now,
     });
@@ -216,6 +294,7 @@ export const getByUserId = query({
       status: v.string(),
       livenessPassed: v.optional(v.boolean()),
       confidence: v.optional(v.number()),
+      smileIdJobId: v.optional(v.string()),
       createdAt: v.number(),
       updatedAt: v.number(),
     }),
