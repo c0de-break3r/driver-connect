@@ -73,6 +73,7 @@ export type DriverOnboardingState = {
   licenseBackUri: string;
   // Selfie capture
   selfieUri: string;
+  profileImageUri: string;
   // OCR extracted data
   extractedIdData: ExtractedIdData | null;
   extractedLicenseData: ExtractedLicenseData | null;
@@ -173,6 +174,7 @@ export type DriverOnboardingState = {
     licenseBackUri: string,
   ) => void;
   setSelfieCapture: (selfieUri: string) => void;
+  setProfileImageUri: (profileImageUri: string) => void;
   setExtractedData: (
     idData: ExtractedIdData | null,
     licenseData: ExtractedLicenseData | null,
@@ -258,6 +260,7 @@ const initialState = {
   licenseFrontUri: "",
   licenseBackUri: "",
   selfieUri: "",
+  profileImageUri: "",
   extractedIdData: null as ExtractedIdData | null,
   extractedLicenseData: null as ExtractedLicenseData | null,
   faceMatchPassed: null as boolean | null,
@@ -328,6 +331,7 @@ export const useDriverOnboardingStore = create<DriverOnboardingState>()(
           licenseBackUri,
         }),
       setSelfieCapture: (selfieUri) => set({ selfieUri }),
+      setProfileImageUri: (profileImageUri) => set({ profileImageUri }),
       setExtractedData: (extractedIdData, extractedLicenseData) =>
         set({ extractedIdData, extractedLicenseData }),
       setFaceMatchResult: (faceMatchPassed, faceMatchConfidence) =>

@@ -1,5 +1,6 @@
-export const clerkConfig = {
-  publishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "",
+export const supabaseConfig = {
+  url: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "",
+  anonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "",
 };
 
 export const convexConfig = {

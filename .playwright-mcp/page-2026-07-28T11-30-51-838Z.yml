@@ -1,0 +1,338 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - navigation [ref=f3e3]:
+      - link [ref=f3e5] [cursor=pointer]:
+        - /url: /
+      - link "Pricing" [ref=f3e9] [cursor=pointer]:
+        - /url: /pricing
+      - link "Awards" [ref=f3e11] [cursor=pointer]:
+        - /url: /awards
+      - link "Log in" [ref=f3e13] [cursor=pointer]:
+        - /url: /login
+      - link "Join for free" [ref=f3e15] [cursor=pointer]:
+        - /url: /signup
+    - main [ref=f3e18]:
+      - generic [ref=f3e19]:
+        - generic [ref=f3e21]:
+          - generic [ref=f3e23]:
+            - heading "Design like a Pro." [level=1] [ref=f3e24]
+            - heading "Get full access to all apps & features from only $0.33 per day — Cancel anytime." [level=2] [ref=f3e25]
+          - generic [ref=f3e27]:
+            - radiogroup [ref=f3e28]:
+              - radio "Yearly" [checked] [ref=f3e29] [cursor=pointer]
+              - radio "Quarterly" [ref=f3e30] [cursor=pointer]
+            - paragraph [ref=f3e32]:
+              - strong [ref=f3e33]: Save 33%
+              - text: on a yearly subscription
+          - generic [ref=f3e35]:
+            - article [ref=f3e37]:
+              - generic [ref=f3e38]:
+                - heading "Pro Popular" [level=2] [ref=f3e39]:
+                  - text: Pro
+                  - generic [ref=f3e40]: Popular
+                - heading "For individuals" [level=3] [ref=f3e41]
+              - generic [ref=f3e42]:
+                - heading "$10" [level=2] [ref=f3e43]
+                - generic [ref=f3e44]:
+                  - heading "per month" [level=3] [ref=f3e45]
+                  - heading "billed yearly" [level=3] [ref=f3e46]
+              - button "Get started" [ref=f3e47] [cursor=pointer]
+              - list [ref=f3e50]:
+                - listitem [ref=f3e51]: All core apps & sites
+                - listitem [ref=f3e52]: Browse flows
+                - listitem [ref=f3e53]: See animations
+                - listitem [ref=f3e54]: Unlimited collections
+                - listitem [ref=f3e55]: Hide screen footers
+                - listitem [ref=f3e56]: Download multiple screens
+                - listitem [ref=f3e57]: App history
+                - listitem [ref=f3e58]:
+                  - link "...and more" [ref=f3e59] [cursor=pointer]:
+                    - /url: /pricing#comparison
+            - article [ref=f3e60]:
+              - generic [ref=f3e61]:
+                - heading "Team" [level=2] [ref=f3e62]
+                - heading "For teams & agencies" [level=3] [ref=f3e63]
+              - generic [ref=f3e64]:
+                - heading "$16" [level=2] [ref=f3e65]
+                - generic [ref=f3e66]:
+                  - heading "per member/month" [level=3] [ref=f3e67]
+                  - heading "billed yearly" [level=3] [ref=f3e68]
+              - button "Get started" [ref=f3e69] [cursor=pointer]
+              - list [ref=f3e72]:
+                - listitem [ref=f3e73]: All Pro features
+                - listitem [ref=f3e74]: Team collections
+                - listitem [ref=f3e75]: Comments & mentions
+                - listitem [ref=f3e76]: Admin tools
+                - listitem [ref=f3e77]: Centralized billing
+                - listitem [ref=f3e78]: Seat-based pricing
+                - listitem [ref=f3e79]: SOC 2 reports
+          - generic [ref=f3e81]:
+            - article [ref=f3e82]:
+              - heading "Enterprise" [level=3] [ref=f3e85]
+              - paragraph [ref=f3e86]: Get advanced security (SOC 2 reports), priority support, standard legal agreement & more.
+              - link "Contact Sales" [ref=f3e87] [cursor=pointer]:
+                - /url: https://tally.so/r/mRR04j
+            - article [ref=f3e88]:
+              - heading "Student or educator?" [level=3] [ref=f3e91]
+              - paragraph [ref=f3e92]: Discover Mobbin for Education and get a discount if you’re eligible.
+              - link "Read more" [ref=f3e93] [cursor=pointer]:
+                - /url: /education
+        - heading "Used by leading design & product teams." [level=2] [ref=f3e95]
+        - generic [ref=f3e194]:
+          - generic [ref=f3e195]:
+            - generic [ref=f3e196]: Add-on
+            - heading "Explore Finance+" [level=2] [ref=f3e197]
+            - generic [ref=f3e198]:
+              - paragraph [ref=f3e199]: Add-on for finance focused teams.
+              - paragraph [ref=f3e200]: Access to over 55 apps across Banking, Crypto, Investment & more for $399/mo. Billed yearly.
+            - generic [ref=f3e201]:
+              - link "Read more" [ref=f3e202] [cursor=pointer]:
+                - /url: /finance
+              - paragraph [ref=f3e205]: Available on Team & Enterprise plans
+          - generic [ref=f3e208]:
+            - generic [ref=f3e210]:
+              - generic [ref=f3e211]:
+                - paragraph [ref=f3e214]: TurboTax
+                - paragraph [ref=f3e217]: Polymarket
+                - paragraph [ref=f3e220]: Rocket Mortgage
+                - paragraph [ref=f3e223]: Albert
+                - paragraph [ref=f3e226]: Capital One
+                - paragraph [ref=f3e229]: Mercado Pago
+                - paragraph [ref=f3e232]: eToro
+                - paragraph [ref=f3e235]: Kalshi
+              - generic [ref=f3e236]:
+                - paragraph [ref=f3e239]: TurboTax
+                - paragraph [ref=f3e242]: Polymarket
+                - paragraph [ref=f3e245]: Rocket Mortgage
+                - paragraph [ref=f3e248]: Albert
+                - paragraph [ref=f3e251]: Capital One
+                - paragraph [ref=f3e254]: Mercado Pago
+                - paragraph [ref=f3e257]: eToro
+                - paragraph [ref=f3e260]: Kalshi
+            - generic [ref=f3e263]:
+              - generic [ref=f3e264]:
+                - paragraph [ref=f3e267]: UGLYCASH
+                - paragraph [ref=f3e270]: Bank of America
+                - paragraph [ref=f3e273]: Current
+                - paragraph [ref=f3e276]: Nook
+                - paragraph [ref=f3e279]: Webull
+                - paragraph [ref=f3e282]: EarnIn
+                - paragraph [ref=f3e285]: Wio
+                - paragraph [ref=f3e288]: MoneyLion
+              - generic [ref=f3e289]:
+                - paragraph [ref=f3e292]: UGLYCASH
+                - paragraph [ref=f3e295]: Bank of America
+                - paragraph [ref=f3e298]: Current
+                - paragraph [ref=f3e301]: Nook
+                - paragraph [ref=f3e304]: Webull
+                - paragraph [ref=f3e307]: EarnIn
+                - paragraph [ref=f3e310]: Wio
+                - paragraph [ref=f3e313]: MoneyLion
+        - table [ref=f3e315]:
+          - rowgroup [ref=f3e321]:
+            - row [ref=f3e322]:
+              - columnheader "Compare plans & features" [ref=f3e323]
+              - columnheader "Free" [ref=f3e325]
+              - columnheader "Pro Popular" [ref=f3e327]:
+                - generic [ref=f3e328]:
+                  - text: Pro
+                  - generic [ref=f3e329]: Popular
+              - columnheader "Team" [ref=f3e330]
+            - row [ref=f3e332]:
+              - columnheader "$0" [ref=f3e333]
+              - columnheader "$10 per mo" [ref=f3e335]
+              - columnheader "$16 per member/mo" [ref=f3e337]
+            - row [ref=f3e339]:
+              - columnheader [ref=f3e340]:
+                - button "Get started" [ref=f3e342] [cursor=pointer]
+              - columnheader [ref=f3e345]:
+                - button "Get started" [ref=f3e347] [cursor=pointer]
+              - columnheader [ref=f3e350]:
+                - button "Get started" [ref=f3e352] [cursor=pointer]
+          - rowgroup [ref=f3e355]:
+            - row [ref=f3e356]:
+              - columnheader "Content" [ref=f3e357]
+              - columnheader
+              - columnheader
+              - columnheader
+            - row [ref=f3e361]:
+              - rowheader [ref=f3e362]
+              - cell "Latest 4" [ref=f3e370]
+              - cell [ref=f3e373]
+              - cell [ref=f3e377]
+            - row [ref=f3e381]:
+              - rowheader [ref=f3e382]
+              - cell "Latest 4" [ref=f3e390]
+              - cell [ref=f3e393]
+              - cell [ref=f3e397]
+            - row [ref=f3e401]:
+              - rowheader [ref=f3e402]
+              - cell "Limited" [ref=f3e410]
+              - cell [ref=f3e413]
+              - cell [ref=f3e417]
+            - row [ref=f3e421]:
+              - rowheader [ref=f3e422]
+              - cell "Limited" [ref=f3e430]
+              - cell [ref=f3e433]
+              - cell [ref=f3e437]
+            - row [ref=f3e441]:
+              - rowheader [ref=f3e442]
+              - cell "Limited" [ref=f3e450]
+              - cell [ref=f3e453]
+              - cell [ref=f3e457]
+            - row [ref=f3e461]:
+              - rowheader [ref=f3e462]
+              - cell "Limited" [ref=f3e470]
+              - cell [ref=f3e473]
+              - cell [ref=f3e477]
+          - rowgroup [ref=f3e481]:
+            - row [ref=f3e482]:
+              - columnheader "Features" [ref=f3e483]
+              - columnheader
+              - columnheader
+              - columnheader
+            - row [ref=f3e487]:
+              - rowheader [ref=f3e488]
+              - cell "Up to 3" [ref=f3e496]
+              - cell "Unlimited" [ref=f3e499]
+              - cell "Unlimited" [ref=f3e502]
+            - row [ref=f3e505]:
+              - rowheader [ref=f3e506]
+              - cell [ref=f3e514]
+              - cell [ref=f3e518]
+              - cell [ref=f3e522]
+            - row [ref=f3e526]:
+              - rowheader [ref=f3e527]
+              - cell [ref=f3e535]
+              - cell [ref=f3e539]
+              - cell [ref=f3e543]
+            - row [ref=f3e547]:
+              - rowheader [ref=f3e548]
+              - cell [ref=f3e556]
+              - cell [ref=f3e560]
+              - cell [ref=f3e564]
+          - rowgroup [ref=f3e568]:
+            - row [ref=f3e569]:
+              - columnheader "Collaboration" [ref=f3e570]
+              - columnheader
+              - columnheader
+              - columnheader
+            - row [ref=f3e574]:
+              - rowheader [ref=f3e575]
+              - cell "Just you" [ref=f3e583]
+              - cell "Just you" [ref=f3e586]
+              - cell [ref=f3e589]
+            - row [ref=f3e593]:
+              - rowheader [ref=f3e594]
+              - cell "Just you" [ref=f3e602]
+              - cell "Just you" [ref=f3e605]
+              - cell [ref=f3e608]
+            - row [ref=f3e612]:
+              - rowheader [ref=f3e613]
+              - cell [ref=f3e621]
+              - cell [ref=f3e625]
+              - cell [ref=f3e629]
+            - row [ref=f3e633]:
+              - rowheader [ref=f3e634]
+              - cell [ref=f3e642]
+              - cell [ref=f3e646]
+              - cell [ref=f3e650]
+            - row [ref=f3e654]:
+              - rowheader [ref=f3e655]
+              - cell [ref=f3e663]
+              - cell [ref=f3e667]
+              - cell [ref=f3e671]
+          - rowgroup [ref=f3e675]:
+            - row [ref=f3e676]:
+              - columnheader "Other" [ref=f3e677]
+              - columnheader
+              - columnheader
+              - columnheader
+            - row [ref=f3e681]:
+              - rowheader [ref=f3e682]
+              - cell [ref=f3e690]
+              - cell [ref=f3e694]
+              - cell [ref=f3e698]
+            - row [ref=f3e702]:
+              - rowheader [ref=f3e703]
+              - cell [ref=f3e711]
+              - cell [ref=f3e715]
+              - cell [ref=f3e719]
+            - row [ref=f3e723]:
+              - rowheader [ref=f3e724]
+              - cell "Best effort basis" [ref=f3e732]
+              - cell [ref=f3e735]
+              - cell [ref=f3e739]
+          - rowgroup [ref=f3e743]:
+            - row [ref=f3e744]:
+              - cell [ref=f3e745]
+              - cell [ref=f3e746]
+              - cell [ref=f3e748]
+              - cell [ref=f3e750]
+        - generic [ref=f3e753]:
+          - heading "Frequently asked questions" [level=2] [ref=f3e754]
+          - generic [ref=f3e757]:
+            - button [ref=f3e759] [cursor=pointer]:
+              - heading "What is Mobbin?" [level=3] [ref=f3e760]
+            - button [ref=f3e765] [cursor=pointer]:
+              - heading "How often do you update the library?" [level=3] [ref=f3e766]
+            - button [ref=f3e771] [cursor=pointer]:
+              - heading "Do you have discounts for students and educators?" [level=3] [ref=f3e772]
+            - button [ref=f3e777] [cursor=pointer]:
+              - heading "What forms of payment do you accept?" [level=3] [ref=f3e778]
+            - button [ref=f3e783] [cursor=pointer]:
+              - heading "Can I cancel my subscription?" [level=3] [ref=f3e784]
+            - button [ref=f3e789] [cursor=pointer]:
+              - heading "How do I switch from a Pro plan to a Team plan?" [level=3] [ref=f3e790]
+            - button [ref=f3e795] [cursor=pointer]:
+              - heading "What is the difference between Enterprise plan and Team plan?" [level=3] [ref=f3e796]
+            - button [ref=f3e801] [cursor=pointer]:
+              - heading "What is your refund policy?" [level=3] [ref=f3e802]
+          - paragraph [ref=f3e806]:
+            - text: Still have more questions? Find answers in our
+            - link "help center" [ref=f3e807] [cursor=pointer]:
+              - /url: https://help.mobbin.com/
+            - text: .
+      - generic [ref=f3e809]:
+        - generic [ref=f3e810]:
+          - img "Mobbin" [ref=f3e811]
+          - paragraph [ref=f3e813]: Design better digital experiences with Mobbin.
+        - generic [ref=f3e814]:
+          - generic [ref=f3e815]:
+            - link "Explore" [ref=f3e816] [cursor=pointer]:
+              - /url: /explore
+            - link "Glossary" [ref=f3e817] [cursor=pointer]:
+              - /url: /glossary
+            - link "Pricing" [ref=f3e818] [cursor=pointer]:
+              - /url: /pricing
+            - link "Changelog" [ref=f3e819] [cursor=pointer]:
+              - /url: /changelog
+            - link "Blog" [ref=f3e820] [cursor=pointer]:
+              - /url: /blog
+            - link "Colors" [ref=f3e821] [cursor=pointer]:
+              - /url: /colors
+            - link "MCP" [ref=f3e822] [cursor=pointer]:
+              - /url: /mcp
+            - link "Finance+" [ref=f3e823] [cursor=pointer]:
+              - /url: /finance
+          - generic [ref=f3e824]:
+            - link "Contact" [ref=f3e825] [cursor=pointer]:
+              - /url: mailto:support@mobbin.com
+            - link "Help center" [ref=f3e826] [cursor=pointer]:
+              - /url: https://help.mobbin.com
+            - link "Careers" [ref=f3e827] [cursor=pointer]:
+              - /url: https://careers.mobbin.com
+            - link "Merch" [ref=f3e828] [cursor=pointer]:
+              - /url: https://merch.mobbin.com
+            - link "X (Twitter)" [ref=f3e829] [cursor=pointer]:
+              - /url: https://x.com/mobbin
+            - link "LinkedIn" [ref=f3e830] [cursor=pointer]:
+              - /url: https://linkedin.com/company/mobbin
+        - paragraph [ref=f3e831]: © Mobbin 2018–2026. All rights reserved
+        - generic [ref=f3e832]:
+          - link "Privacy policy" [ref=f3e833] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=f3e834] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - alert [ref=f3e835]

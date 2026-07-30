@@ -1,0 +1,616 @@
+- generic [active] [ref=f46e1]:
+  - generic [ref=f46e2]:
+    - navigation [ref=f46e3]:
+      - link [ref=f46e5] [cursor=pointer]:
+        - /url: /
+      - link "Pricing" [ref=f46e9] [cursor=pointer]:
+        - /url: /pricing
+      - link "Awards" [ref=f46e11] [cursor=pointer]:
+        - /url: /awards
+      - link "Log in" [ref=f46e13] [cursor=pointer]:
+        - /url: /login
+      - link "Join for free" [ref=f46e15] [cursor=pointer]:
+        - /url: /signup
+    - main [ref=f46e18]:
+      - generic [ref=f46e20]:
+        - generic [ref=f46e22]:
+          - link "Explore" [ref=f46e24] [cursor=pointer]:
+            - /url: /explore/mobile
+          - link "Mobile" [ref=f46e28] [cursor=pointer]:
+            - /url: /explore/mobile
+          - link "Screens" [ref=f46e32] [cursor=pointer]:
+            - /url: /explore/mobile/screens
+        - generic [ref=f46e33]:
+          - generic [ref=f46e35]:
+            - heading "Explore Screens" [level=1] [ref=f46e36]
+            - paragraph [ref=f46e37]: Discover mobile screens, UI & UX design ideas & examples from the world’s best apps on Mobbin.
+          - generic [ref=f46e38]:
+            - article [ref=f46e39]:
+              - heading "Account Management" [level=2] [ref=f46e40]
+              - generic [ref=f46e41]:
+                - article [ref=f46e43] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Natural AI screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Discord screen"
+                  - heading [level=3] [ref=f46e44]:
+                    - link "Delete & Deactivate Account" [ref=f46e45]:
+                      - /url: /explore/mobile/screens/delete-deactivate-account
+                  - paragraph [ref=f46e46]: 548 Screens
+                - article [ref=f46e48] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Kraken screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Greenlight screen"
+                  - heading [level=3] [ref=f46e49]:
+                    - link "Forgot Password" [ref=f46e50]:
+                      - /url: /explore/mobile/screens/forgot-password
+                  - paragraph [ref=f46e51]: 261 Screens
+                - article [ref=f46e53] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Tesla Robotaxi screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "TIDE screen"
+                  - heading [level=3] [ref=f46e54]:
+                    - link "Login" [ref=f46e55]:
+                      - /url: /explore/mobile/screens/login
+                  - paragraph [ref=f46e56]: 3056 Screens
+              - button "See more" [ref=f46e57] [cursor=pointer]
+            - article [ref=f46e60]:
+              - heading "Actions" [level=2] [ref=f46e61]
+              - generic [ref=f46e62]:
+                - article [ref=f46e64] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Abode screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Orb Social screen"
+                  - heading [level=3] [ref=f46e65]:
+                    - link "Add & Create" [ref=f46e66]:
+                      - /url: /explore/mobile/screens/add-create
+                  - paragraph [ref=f46e67]: 9319 Screens
+                - article [ref=f46e69] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Luma screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Plex screen"
+                  - heading [level=3] [ref=f46e70]:
+                    - link "Ban & Block" [ref=f46e71]:
+                      - /url: /explore/mobile/screens/ban-block
+                  - paragraph [ref=f46e72]: 313 Screens
+                - article [ref=f46e74] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Meta Quest screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "ClassPass screen"
+                  - heading [level=3] [ref=f46e75]:
+                    - link "Cancel" [ref=f46e76]:
+                      - /url: /explore/mobile/screens/cancel
+                  - paragraph [ref=f46e77]: 773 Screens
+              - button "See more" [ref=f46e78] [cursor=pointer]
+            - article [ref=f46e81]:
+              - heading "Commerce & Finance" [level=2] [ref=f46e82]
+              - generic [ref=f46e83]:
+                - article [ref=f46e85] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Crypto.com screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Monarch screen"
+                  - heading [level=3] [ref=f46e86]:
+                    - link "Bank App Design" [ref=f46e87]:
+                      - /url: /explore/mobile/screens/bank-app
+                - article [ref=f46e89] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Cosmos screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Bear screen"
+                  - heading [level=3] [ref=f46e90]:
+                    - link "Billing" [ref=f46e91]:
+                      - /url: /explore/mobile/screens/billing
+                  - paragraph [ref=f46e92]: 457 Screens
+                - article [ref=f46e94] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Revolut screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Turo screen"
+                  - heading [level=3] [ref=f46e95]:
+                    - link "Checkout" [ref=f46e96]:
+                      - /url: /explore/mobile/screens/checkout
+                  - paragraph [ref=f46e97]: 2577 Screens
+              - button "See more" [ref=f46e98] [cursor=pointer]
+            - article [ref=f46e101]:
+              - heading "Communication" [level=2] [ref=f46e102]
+              - generic [ref=f46e103]:
+                - article [ref=f46e105] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "talabat screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Figma screen"
+                  - heading [level=3] [ref=f46e106]:
+                    - link "About" [ref=f46e107]:
+                      - /url: /explore/mobile/screens/about
+                  - paragraph [ref=f46e108]: 163 Screens
+                - article [ref=f46e110] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "stoic. screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Nextdoor screen"
+                  - heading [level=3] [ref=f46e111]:
+                    - link "Acknowledgement & Success" [ref=f46e112]:
+                      - /url: /explore/mobile/screens/acknowledgement-success
+                  - paragraph [ref=f46e113]: 10099 Screens
+                - article [ref=f46e115] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Instagram screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "pillowtalk screen"
+                  - heading [level=3] [ref=f46e116]:
+                    - link "Action Option" [ref=f46e117]:
+                      - /url: /explore/mobile/screens/action-option
+                  - paragraph [ref=f46e118]: 2661 Screens
+              - button "See more" [ref=f46e119] [cursor=pointer]
+            - article [ref=f46e122]:
+              - heading "Content" [level=2] [ref=f46e123]
+              - generic [ref=f46e124]:
+                - article [ref=f46e126] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Particle News screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Klarna screen"
+                  - heading [level=3] [ref=f46e127]:
+                    - link "Article Detail" [ref=f46e128]:
+                      - /url: /explore/mobile/screens/article-detail
+                  - paragraph [ref=f46e129]: 1642 Screens
+                - article [ref=f46e131] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Slopes screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Target screen"
+                  - heading [level=3] [ref=f46e132]:
+                    - link "Augmented Reality" [ref=f46e133]:
+                      - /url: /explore/mobile/screens/augmented-reality
+                  - paragraph [ref=f46e134]: 174 Screens
+                - article [ref=f46e136] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Ultrahuman screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "iFood screen"
+                  - heading [level=3] [ref=f46e137]:
+                    - link "Browse & Discover" [ref=f46e138]:
+                      - /url: /explore/mobile/screens/browse-discover
+                  - paragraph [ref=f46e139]: 7501 Screens
+              - button "See more" [ref=f46e140] [cursor=pointer]
+            - article [ref=f46e143]:
+              - heading "Data" [level=2] [ref=f46e144]
+              - generic [ref=f46e145]:
+                - article [ref=f46e147] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Revolut screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Starling Bank screen"
+                  - heading [level=3] [ref=f46e148]:
+                    - link "Bar Chart UI" [ref=f46e149]:
+                      - /url: /explore/mobile/screens/bar-chart-ui
+                - article [ref=f46e151] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Ubank Money App screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Ultrahuman screen"
+                  - heading [level=3] [ref=f46e152]:
+                    - link "Charts" [ref=f46e153]:
+                      - /url: /explore/mobile/screens/charts
+                  - paragraph [ref=f46e154]: 2892 Screens
+                - article [ref=f46e156] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Stake screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "alias screen"
+                  - heading [level=3] [ref=f46e157]:
+                    - link "Dashboard" [ref=f46e158]:
+                      - /url: /explore/mobile/screens/dashboard
+                  - paragraph [ref=f46e159]: 2561 Screens
+              - button "See more" [ref=f46e160] [cursor=pointer]
+            - article [ref=f46e163]:
+              - heading "Misc" [level=2] [ref=f46e164]
+              - generic [ref=f46e165]:
+                - article [ref=f46e167] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Weverse screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Uber Eats screen"
+                  - heading [level=3] [ref=f46e168]:
+                    - link "Confetti" [ref=f46e169]:
+                      - /url: /explore/mobile/screens/confetti
+                  - paragraph [ref=f46e170]: 561 Screens
+                - article [ref=f46e172] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "TextNow screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Manus screen"
+                  - heading [level=3] [ref=f46e173]:
+                    - link "Dark Mode" [ref=f46e174]:
+                      - /url: /explore/mobile/screens/dark-mode
+                  - paragraph [ref=f46e175]: 2854 Screens
+                - article [ref=f46e177] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Apple Notes screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "TIDE screen"
+                  - heading [level=3] [ref=f46e178]:
+                    - link "Frosted Glass" [ref=f46e179]:
+                      - /url: /explore/mobile/screens/frosted-glass-ui
+              - button "See more" [ref=f46e180] [cursor=pointer]
+            - article [ref=f46e183]:
+              - heading "New User Experience" [level=2] [ref=f46e184]
+              - generic [ref=f46e185]:
+                - article [ref=f46e187] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Snackpass screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Abode screen"
+                  - heading [level=3] [ref=f46e188]:
+                    - link "Account Setup" [ref=f46e189]:
+                      - /url: /explore/mobile/screens/account-setup
+                  - paragraph [ref=f46e190]: 6134 Screens
+                - article [ref=f46e192] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Orb Social screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Amazon Shopping screen"
+                  - heading [level=3] [ref=f46e193]:
+                    - link "Guided Tour & Tutorial" [ref=f46e194]:
+                      - /url: /explore/mobile/screens/guided-tour-tutorial
+                  - paragraph [ref=f46e195]: 1249 Screens
+                - article [ref=f46e197] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Paramount+ screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Yazio screen"
+                  - heading [level=3] [ref=f46e198]:
+                    - link "Signup" [ref=f46e199]:
+                      - /url: /explore/mobile/screens/signup
+                  - paragraph [ref=f46e200]: 2872 Screens
+              - button "See more" [ref=f46e201] [cursor=pointer]
+            - article [ref=f46e204]:
+              - heading "Others" [level=2] [ref=f46e205]
+              - generic [ref=f46e206]:
+                - article [ref=f46e208] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Clue screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Flighty screen"
+                  - heading [level=3] [ref=f46e209]:
+                    - link "App Features" [ref=f46e210]:
+                      - /url: /explore/mobile/screens/app-features
+                - article [ref=f46e212] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "DoorDash Dasher screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "stoic. screen"
+                  - heading [level=3] [ref=f46e213]:
+                    - link "Layout App" [ref=f46e214]:
+                      - /url: /explore/mobile/screens/layout-app
+                - article [ref=f46e216] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Blue Apron screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Play screen"
+                  - heading [level=3] [ref=f46e217]:
+                    - link "Mobile Landing Page" [ref=f46e218]:
+                      - /url: /explore/mobile/screens/mobile-landing-page
+              - button "See more" [ref=f46e219] [cursor=pointer]
+            - article [ref=f46e222]:
+              - heading "Social" [level=2] [ref=f46e223]
+              - generic [ref=f46e224]:
+                - article [ref=f46e226] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Aaptiv screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Uxcel Go screen"
+                  - heading [level=3] [ref=f46e227]:
+                    - link "Achievements & Awards" [ref=f46e228]:
+                      - /url: /explore/mobile/screens/achievements-awards
+                  - paragraph [ref=f46e229]: 700 Screens
+                - article [ref=f46e231] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Discord screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Azar screen"
+                  - heading [level=3] [ref=f46e232]:
+                    - link "Chat Detail" [ref=f46e233]:
+                      - /url: /explore/mobile/screens/chat-detail
+                - article [ref=f46e235] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "TikTok screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Headspace screen"
+                  - heading [level=3] [ref=f46e236]:
+                    - link "Comments" [ref=f46e237]:
+                      - /url: /explore/mobile/screens/comments
+                  - paragraph [ref=f46e238]: 1554 Screens
+              - button "See more" [ref=f46e239] [cursor=pointer]
+            - article [ref=f46e242]:
+              - heading "User Collections" [level=2] [ref=f46e243]
+              - generic [ref=f46e244]:
+                - article [ref=f46e246] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "sweetgreen screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "YouTube screen"
+                  - heading [level=3] [ref=f46e247]:
+                    - link "Bookmarks & Collections" [ref=f46e248]:
+                      - /url: /explore/mobile/screens/bookmarks-collections
+                  - paragraph [ref=f46e249]: 3608 Screens
+                - article [ref=f46e251] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Netflix screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Culture Trip screen"
+                  - heading [level=3] [ref=f46e252]:
+                    - link "Downloads & Available Offline" [ref=f46e253]:
+                      - /url: /explore/mobile/screens/downloads-available-offline
+                  - paragraph [ref=f46e254]: 159 Screens
+                - article [ref=f46e256] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Loona screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Moonly screen"
+                  - heading [level=3] [ref=f46e257]:
+                    - link "Playlists" [ref=f46e258]:
+                      - /url: /explore/mobile/screens/playlists
+                  - paragraph [ref=f46e259]: 247 Screens
+              - button "See more" [ref=f46e260] [cursor=pointer]
+            - article [ref=f46e263]:
+              - heading "Utility" [level=2] [ref=f46e264]
+              - generic [ref=f46e265]:
+                - article [ref=f46e267] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "ChatGPT screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "YouTube screen"
+                  - heading [level=3] [ref=f46e268]:
+                    - link "Audio & Video Recorder" [ref=f46e269]:
+                      - /url: /explore/mobile/screens/audio-video-recorder
+                  - paragraph [ref=f46e270]: 676 Screens
+                - article [ref=f46e272] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Ultrahuman screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "IDAGIO screen"
+                  - heading [level=3] [ref=f46e273]:
+                    - link "Audio Player" [ref=f46e274]:
+                      - /url: /explore/mobile/screens/audio-player
+                  - paragraph [ref=f46e275]: 1292 Screens
+                - article [ref=f46e277] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Shipt screen"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Ground News screen"
+                  - heading [level=3] [ref=f46e278]:
+                    - link "Browser" [ref=f46e279]:
+                      - /url: /explore/mobile/screens/browser
+                  - paragraph [ref=f46e280]: 2907 Screens
+              - button "See more" [ref=f46e281] [cursor=pointer]
+    - contentinfo [ref=f46e284]:
+      - generic [ref=f46e285]:
+        - generic [ref=f46e286]:
+          - img "Mobbin" [ref=f46e287]
+          - paragraph [ref=f46e289]: Design better digital experiences with Mobbin.
+        - generic [ref=f46e290]:
+          - generic [ref=f46e291]:
+            - link "Explore" [ref=f46e292] [cursor=pointer]:
+              - /url: /explore
+            - link "Glossary" [ref=f46e293] [cursor=pointer]:
+              - /url: /glossary
+            - link "Pricing" [ref=f46e294] [cursor=pointer]:
+              - /url: /pricing
+            - link "Changelog" [ref=f46e295] [cursor=pointer]:
+              - /url: /changelog
+            - link "Blog" [ref=f46e296] [cursor=pointer]:
+              - /url: /blog
+            - link "Colors" [ref=f46e297] [cursor=pointer]:
+              - /url: /colors
+            - link "MCP" [ref=f46e298] [cursor=pointer]:
+              - /url: /mcp
+            - link "Finance+" [ref=f46e299] [cursor=pointer]:
+              - /url: /finance
+          - generic [ref=f46e300]:
+            - link "Contact" [ref=f46e301] [cursor=pointer]:
+              - /url: mailto:support@mobbin.com
+            - link "Help center" [ref=f46e302] [cursor=pointer]:
+              - /url: https://help.mobbin.com
+            - link "Careers" [ref=f46e303] [cursor=pointer]:
+              - /url: https://careers.mobbin.com
+            - link "Merch" [ref=f46e304] [cursor=pointer]:
+              - /url: https://merch.mobbin.com
+            - link "X (Twitter)" [ref=f46e305] [cursor=pointer]:
+              - /url: https://x.com/mobbin
+            - link "LinkedIn" [ref=f46e306] [cursor=pointer]:
+              - /url: https://linkedin.com/company/mobbin
+        - paragraph [ref=f46e307]: © Mobbin 2018–2026. All rights reserved
+        - generic [ref=f46e308]:
+          - link "Privacy policy" [ref=f46e309] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=f46e310] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - alert [ref=f46e311]

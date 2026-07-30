@@ -13,26 +13,25 @@ You should think like a senior mobile developer, but explain and implement like 
 
 ## Project Overview
 
-We are building **Africana Driver Connect** — a multi-sided transport marketplace app using Expo.
+We are building **Africana Driver Connect** — a vehicle rental marketplace app using Expo, similar to Airbnb but for vehicles.
 
 The app connects four user roles on one platform:
 
-- **Drivers** seeking job opportunities (chauffeur, truck, bus, school, ride-hailing, corporate, delivery, heavy equipment)
-- **Vehicle Owners** seeking verified drivers to hire
-- **Clients** booking transport or hiring a driver for private occasions (weddings, events, airport runs, daily commute)
-- **Corporate Clients** outsourcing fleets, drivers, or staff transportation
+- **Vehicle Owners** list their vehicles for rent (cars, vans, buses, trucks, motorcycles, heavy equipment)
+- **Drivers** offer their driving services and can be attached to vehicle bookings
+- **Clients** browse and book vehicles, or hire drivers for private occasions (weddings, events, airport runs, daily commute)
+- **Corporate Clients** book fleets or ongoing transport services
 
 Onboarding is the core UX decision point of this app: the role selected during onboarding determines which entire experience, dashboard, and navigation the user is routed into. This is not a minor toggle — it is a full fork in the product.
 
 The app includes:
 
 - role-based onboarding and profile setup
-- driver verification (license, ID, police clearance)
-- vehicle registration and document verification
-- job posting and applications (owner side)
-- transport search and booking (client side)
+- vehicle listing and management (owners)
+- driver profiles and verification (license, ID, police clearance)
+- vehicle search and booking (clients)
 - driver hire (hourly/daily/weekly/monthly)
-- smart matching (proximity, rating, cost, experience)
+- availability calendar management
 - GPS live tracking
 - in-app payments (mobile money + card), wallet, escrow
 - ratings, reviews, and dispute resolution
@@ -43,14 +42,6 @@ This is primarily a learning project. The goal is to teach developers how to bui
 
 ---
 
-## Design References
-
-- An **HTML reference** is provided in the `html-reference/` folder at the root of the project, guiding layout, spacing, and structure of key screens.
-- An **assets reference** is provided in the `image-reference/` folder at the root of the project (icons, illustrations, imagery), guiding the visual system.
-
-Both should be treated as source-of-truth for visual fidelity — see UI Implementation Rules below. When the HTML reference and assets reference conflict with a verbal description, the HTML/assets reference wins.
-
----
 
 ## Tech Stack
 
@@ -63,9 +54,10 @@ Use the following stack:
 - NativeWind / Tailwind CSS
 - Zustand
 - AsyncStorage
-- Clerk for authentication
+- Supabase Auth for authentication
+- Supabase database for user profiles, vehicles, bookings, reviews, and transactions
+- Convex for backend functions and real-time subscriptions
 - Maps/location library (e.g. `react-native-maps` or Google Maps SDK) for GPS tracking, live location, and geofencing
-- Server-side API routes or backend functions for secrets, tokens, payment provider calls, and matching logic
 
 Do not introduce new major libraries unless there is a strong reason.
 
@@ -157,8 +149,6 @@ When unsure, ask:
 ## UI Implementation Rules (VERY IMPORTANT)
 
 For any UI-related task:
-
-- The goal is to **replicate the provided HTML reference and assets reference exactly**
 - Match the UI **pixel-perfectly**
 
 When the user provides a design image, HTML reference, or asset reference:

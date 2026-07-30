@@ -10,7 +10,7 @@ import { useRoleStore, type UserRole } from "@/store/useRoleStore";
  * - owner → owner route group
  * - client → client route group
  * - corporate → corporate route group
- * - no role yet → onboarding welcome
+ * - no role yet → role select
  */
 export function getPostAuthRoute(role: UserRole | null): Href {
   switch (role) {
@@ -23,7 +23,7 @@ export function getPostAuthRoute(role: UserRole | null): Href {
     case "corporate":
       return "/(corporate)/" as Href;
     default:
-      return "/(onboarding)/welcome" as Href;
+      return "/role-select" as Href;
   }
 }
 

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "mcp": {
+    "mobbin": {
+      "type": "remote",
+      "url": "https://api.mobbin.com/mcp",
+      "enabled": true
+    },
+    "convex": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "convex",
+        "mcp",
+        "start",
+        "--project-dir",
+        "/home/joer/Desktop/Software Engineering/driver-connect"
+      ],
+      "enabled": true
+    }
+  }
+}

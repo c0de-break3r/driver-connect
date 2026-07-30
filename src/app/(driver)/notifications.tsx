@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useRef } from "react";
 import {
   Animated,
   Pressable,
@@ -7,12 +7,12 @@ import {
   Text,
   View,
 } from "react-native";
+import { useFocusEffect, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
 import { useNotificationStore, type Notification } from "@/store/useNotificationStore";
+import { impactAsync, ImpactFeedbackStyle } from "expo-haptics";
 
 const NAVY = "#2C3E5B";
 const ORANGE = "#FF7B54";
@@ -44,26 +44,44 @@ function notificationIcon(type: Notification["type"]) {
 
 export default function NotificationsScreen() {
   const entrance = useStaggeredEntrance();
-  const { notifications, markAsRead, markAllAsRead } = useNotificationStore();
+  const navigatingRef = useRef(false);
+  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotificationStore();
 
-  const unread = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications],
+  useFocusEffect(
+    useCallback(() => {
+      markAllAsRead();
+    }, [markAllAsRead])
   );
 
-  useEffect(() => {
-    markAllAsRead();
-  }, [markAllAsRead]);
+  const handleBack = async () => {
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
+    await impactAsync(ImpactFeedbackStyle.Light);
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.push("/(driver)/(tabs)/dashboard");
+    }
+    setTimeout(() => {
+      navigatingRef.current = false;
+    }, 300);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: PEACH }} edges={["top"]}>
+<<<<<<< HEAD
       <View style={styles.headerRow}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={22} color={NAVY} />
+=======
+      <View style={styles.fixedHeader}>
+        <Pressable onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={22} color={NAVY} />
+>>>>>>> 33eb3cd (updates)
         </Pressable>
         <Text style={styles.headerTitle}>Notifications</Text>
         <View style={styles.headerRight}>
-          {unread > 0 && (
+          {unreadCount > 0 && (
             <Pressable onPress={markAllAsRead}>
               <Text style={styles.markAllText}>Mark all read</Text>
             </Pressable>
@@ -121,13 +139,17 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
+  fixedHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 16,
+    paddingBottom: 12,
     gap: 12,
+    backgroundColor: PEACH,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#EAE1D9",
   },
   backButton: {
     width: 40,
@@ -136,11 +158,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
+<<<<<<< HEAD
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+=======
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#EAE1D9",
+>>>>>>> 33eb3cd (updates)
   },
   headerTitle: {
     fontSize: 17,

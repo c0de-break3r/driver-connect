@@ -1,0 +1,417 @@
+- generic [ref=f20e3]:
+  - banner [ref=f20e5]:
+    - navigation [ref=f20e7]:
+      - link [ref=f20e9] [cursor=pointer]:
+        - /url: https://mobbin.com/
+      - generic [ref=f20e14]:
+        - link "Pricing" [ref=f20e16] [cursor=pointer]:
+          - /url: /pricing?redirect_to=%2Fdiscover
+        - link "Awards" [ref=f20e18] [cursor=pointer]:
+          - /url: /awards?redirect_to=%2Fdiscover
+        - link "Log in" [ref=f20e20] [cursor=pointer]:
+          - /url: /login?redirect_to=%2Fdiscover
+  - generic [ref=f20e21]:
+    - generic [ref=f20e23]:
+      - generic [ref=f20e25]:
+        - generic [ref=f20e38]:
+          - heading "Discover real-world design inspiration." [level=1] [ref=f20e40]
+          - heading "Featuring over 1,000 iOS & Web apps, and 200 sites — New content weekly." [level=4] [ref=f20e43]
+        - generic [ref=f20e45]:
+          - link "Join for free" [ref=f20e48] [cursor=pointer]:
+            - /url: /signup?redirect_to=%2Fdiscover
+          - link "See our plans" [ref=f20e52] [cursor=pointer]:
+            - /url: /pricing?redirect_to=%2Fdiscover
+      - paragraph [ref=f20e61]: Trusted by design teams at
+    - generic [ref=f20e92]:
+      - heading "A growing library of" [level=3] [ref=f20e95]
+      - heading "1,428 apps" [level=1] [ref=f20e98]
+      - heading "621,500+ screens" [level=1] [ref=f20e101]
+      - heading "323,900 flows" [level=1] [ref=f20e104]
+    - generic [ref=f20e110]:
+      - generic [ref=f20e112]:
+        - heading "Find design patterns in seconds." [level=1] [ref=f20e115]
+        - generic [ref=f20e118]:
+          - generic [ref=f20e119] [cursor=pointer]: Screens
+          - generic [ref=f20e120] [cursor=pointer]: UI Elements
+          - generic [ref=f20e121] [cursor=pointer]: Flows
+          - generic [ref=f20e122] [cursor=pointer]: Text in Screenshots
+      - generic [ref=f20e124]:
+        - list [ref=f20e127]:
+          - listitem [ref=f20e128]:
+            - paragraph [ref=f20e132]: Collections
+          - listitem [ref=f20e135]:
+            - paragraph [ref=f20e139]: Checkout
+          - listitem [ref=f20e142]:
+            - paragraph [ref=f20e146]: Settings
+          - listitem [ref=f20e149]:
+            - paragraph [ref=f20e153]: Login
+          - listitem [ref=f20e156]:
+            - paragraph [ref=f20e160]: Subscription & Paywall
+          - listitem [ref=f20e163]:
+            - paragraph [ref=f20e167]: Home
+          - listitem [ref=f20e170]:
+            - paragraph [ref=f20e174]: Account Setup
+          - listitem [ref=f20e177]:
+            - paragraph [ref=f20e181]: Welcome
+          - listitem [ref=f20e184]:
+            - paragraph [ref=f20e188]: Wallet
+          - listitem [ref=f20e191]:
+            - paragraph [ref=f20e195]: Profile
+        - generic [ref=f20e198]:
+          - generic:
+            - list:
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Slider
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Carousel
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Sidebar
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Bottom Sheet
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Icon
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Toast
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Progress Indicator
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Dialog
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Tab
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Button
+        - generic [ref=f20e199]:
+          - generic:
+            - list:
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Adding & Creating
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Adding to Cart
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Listening to Audio
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Searching
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Browsing Home
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Starting & Completing
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Browsing Tutorial
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Chatting
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Subscribing
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Onboarding
+        - generic [ref=f20e200]:
+          - generic:
+            - list:
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Follow
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Recommend
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Explore
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Refund
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Payment
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Cashback
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Category
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Pro
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Show All
+              - listitem:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: Pay Later
+    - generic [ref=f20e202]:
+      - generic [ref=f20e206]:
+        - heading "Explore entire user" [level=1] [ref=f20e207]
+        - heading "journeys with flows." [level=1] [ref=f20e208]
+      - generic [ref=f20e210]:
+        - generic [ref=f20e216]:
+          - heading "Video" [level=4] [ref=f20e218]
+          - paragraph [ref=f20e220]: Experience flows in their natural form complete with micro-interactions, animations and more.
+        - generic [ref=f20e226]:
+          - heading "Prototype" [level=4] [ref=f20e228]
+          - paragraph [ref=f20e230]: Go through screen by screen using the interactive hotspots at your own preferred pace.
+    - generic [ref=f20e232]:
+      - heading "From inspiration to creation." [level=1] [ref=f20e237]
+      - generic [ref=f20e239]:
+        - generic [ref=f20e244]:
+          - heading "Copy to Figma" [level=4] [ref=f20e246]
+          - paragraph [ref=f20e248]:
+            - text: Download designs you like or copy it straight into Figma with our new
+            - link "Figma plugin" [ref=f20e249] [cursor=pointer]:
+              - /url: https://www.figma.com/community/plugin/1332649462188834894/mobbin
+            - text: .
+        - generic [ref=f20e254]:
+          - heading "Save to collections" [level=4] [ref=f20e256]
+          - paragraph [ref=f20e258]: Collect your favorite designs and upload your own screenshots into one place.
+        - generic [ref=f20e263]:
+          - heading "Leave comments" [level=4] [ref=f20e265]
+          - paragraph [ref=f20e267]: Take notes upon saving so you'll never forget the context in the future.
+    - generic [ref=f20e269]:
+      - heading "What our users are saying." [level=1] [ref=f20e274]
+      - generic [ref=f20e278]:
+        - generic [ref=f20e279]:
+          - generic [ref=f20e282]:
+            - generic [ref=f20e289]:
+              - paragraph [ref=f20e291]: Sebastian Speier
+              - paragraph [ref=f20e293]: Shop
+            - paragraph [ref=f20e295]: Mobbin is a great resource and it always comes in handy to see what the best practices or standards are for mobile patterns in our current landscape.
+          - generic [ref=f20e298]:
+            - paragraph [ref=f20e305]: Oykun Yilmaz
+            - paragraph [ref=f20e307]: Designing feasible solutions based on real-world products is crucial for our design careers. Mobbin provides the best resources for this approach. I use it daily!
+          - generic [ref=f20e310]:
+            - generic [ref=f20e317]:
+              - paragraph [ref=f20e319]: Josiah Gulden
+              - paragraph [ref=f20e321]: Compound Labs
+            - paragraph [ref=f20e323]: Mobbin is one of the best ways to stay on top of the latest patterns, modalities, and visual trends in mobile product design... it’s an essential resources for my team.
+        - generic [ref=f20e324]:
+          - generic [ref=f20e327]:
+            - generic [ref=f20e334]:
+              - paragraph [ref=f20e336]: Haerin Song
+              - paragraph [ref=f20e338]: Visa
+            - paragraph [ref=f20e340]: By using the Mobbin app, I save both my research time and space in my photo galleries filled with random screenshots. I love how easy it is to search for different patterns and copy and paste flows into Figma. It is a wonderful design tool you cannot live without!
+          - generic [ref=f20e343]:
+            - generic [ref=f20e350]:
+              - paragraph [ref=f20e352]: Taha Hossain
+              - paragraph [ref=f20e354]: Daybreak
+            - paragraph [ref=f20e356]: We can’t imagine a product design process without Mobbin. The quality, clarity and precision it provides make it just as valuable as it is intuitive
+          - generic [ref=f20e359]:
+            - generic [ref=f20e366]:
+              - paragraph [ref=f20e368]: John Bai
+              - paragraph [ref=f20e370]: Plaid
+            - paragraph [ref=f20e372]: All my homies love Mobbin. I mean that. I finally deleted that folder of 1,866 unorganized screenshots and haven’t looked back since. Shout out to Jiho and the team for doing God’s work.
+        - generic [ref=f20e373]:
+          - generic [ref=f20e376]:
+            - generic [ref=f20e383]:
+              - paragraph [ref=f20e385]: Marco Cornacchia
+              - paragraph [ref=f20e387]: Figma
+            - paragraph [ref=f20e389]: Mobbin is one of my favorite resources for product design and ui inspo. I love having access to a ton of "real world examples" to see how different apps and companies handle specific UI patterns and flows
+          - generic [ref=f20e392]:
+            - generic [ref=f20e399]:
+              - paragraph [ref=f20e401]: Meng To
+              - paragraph [ref=f20e403]: DesignCode
+            - paragraph [ref=f20e405]: Mobbin is a game-changer for designers looking to step up their understanding of UX and UI design patterns. It’s so massive, meticulously organized, has deep user flows and even a figma plugin! It’s indispensable in the modern designer’s toolbox.
+          - generic [ref=f20e408]:
+            - generic [ref=f20e415]:
+              - paragraph [ref=f20e417]: Axel Lindmarker
+              - paragraph [ref=f20e419]: Light
+            - paragraph [ref=f20e421]: Mobbin is one of my main tools for finding flows to gain UX and UI insights from. Going there saves me a lot of time from having to do it myself.
+        - generic [ref=f20e422]:
+          - generic [ref=f20e425]:
+            - generic [ref=f20e432]:
+              - paragraph [ref=f20e434]: Daryl Ginn
+              - paragraph [ref=f20e436]: Endless
+            - paragraph [ref=f20e438]: Mobbin has quickly become our favourite inspiration resource for designing mobile apps at endless.design, their advanced filtering is unmatched in the inspiration space.
+          - generic [ref=f20e441]:
+            - generic [ref=f20e448]:
+              - paragraph [ref=f20e450]: Bobby Giangeruso
+              - paragraph [ref=f20e452]: Heart Hands, Inc
+            - paragraph [ref=f20e454]: Mobbin is one of those tabs I never close. It’s the largest up-to-date library of app screens.
+          - generic [ref=f20e457]:
+            - paragraph [ref=f20e464]: Rachel How
+            - paragraph [ref=f20e466]: Mobbin is my go-to reference for app & web design. Apart from saving countless hours, it gives me insights on the design patterns, copywriting, and user flows of world-class products. A must-have for creative inspiration and efficiency!
+    - generic [ref=f20e470]:
+      - generic [ref=f20e472]:
+        - generic [ref=f20e473]:
+          - heading "Never run out of inspiration again." [level=2] [ref=f20e475]
+          - paragraph [ref=f20e477]: Use Mobbin for free as long as you like or get full access with any of our paid plans.
+        - generic [ref=f20e478]:
+          - link "Join for free" [ref=f20e480] [cursor=pointer]:
+            - /url: /signup?redirect_to=%2Fdiscover
+          - link "See our plans" [ref=f20e483] [cursor=pointer]:
+            - /url: /pricing?redirect_to=%2Fdiscover
+      - generic [ref=f20e488]:
+        - list [ref=f20e490]:
+          - listitem [ref=f20e491]:
+            - paragraph [ref=f20e496]: Coinbase
+          - listitem [ref=f20e497]:
+            - paragraph [ref=f20e502]: Wise
+          - listitem [ref=f20e503]:
+            - paragraph [ref=f20e508]: Headspace
+          - listitem [ref=f20e509]:
+            - paragraph [ref=f20e514]: Airbnb
+          - listitem [ref=f20e515]:
+            - paragraph [ref=f20e520]: Uber
+          - listitem [ref=f20e521]:
+            - paragraph [ref=f20e526]: Nike
+          - listitem [ref=f20e527]:
+            - paragraph [ref=f20e532]: Pinterest
+        - list [ref=f20e534]:
+          - listitem [ref=f20e535]:
+            - paragraph [ref=f20e540]: ChatGPT
+          - listitem [ref=f20e541]:
+            - paragraph [ref=f20e546]: Shopify
+          - listitem [ref=f20e547]:
+            - paragraph [ref=f20e552]: Loom
+          - listitem [ref=f20e553]:
+            - paragraph [ref=f20e558]: Creme
+          - listitem [ref=f20e559]:
+            - paragraph [ref=f20e564]: Mailchimp
+          - listitem [ref=f20e565]:
+            - paragraph [ref=f20e570]: Twitch
+        - list [ref=f20e572]:
+          - listitem [ref=f20e573]:
+            - paragraph [ref=f20e578]: Spotify
+          - listitem [ref=f20e579]:
+            - paragraph [ref=f20e584]: Apple TV
+          - listitem [ref=f20e585]:
+            - paragraph [ref=f20e590]: Shop
+          - listitem [ref=f20e591]:
+            - paragraph [ref=f20e596]: Cosmos
+          - listitem [ref=f20e597]:
+            - paragraph [ref=f20e602]: Retro
+          - listitem [ref=f20e603]:
+            - paragraph [ref=f20e608]: Notion
+          - listitem [ref=f20e609]:
+            - paragraph [ref=f20e614]: Dropbox
+  - contentinfo [ref=f20e617]:
+    - generic [ref=f20e618]:
+      - paragraph [ref=f20e622]: Design better digital experiences with Mobbin.
+      - generic [ref=f20e623]:
+        - generic [ref=f20e624]:
+          - link "Explore" [ref=f20e626] [cursor=pointer]:
+            - /url: /explore?redirect_to=%2Fdiscover
+          - paragraph [ref=f20e628]:
+            - link "Glossary" [ref=f20e629] [cursor=pointer]:
+              - /url: ./glossary?redirect_to=%2Fdiscover
+          - link "Pricing" [ref=f20e631] [cursor=pointer]:
+            - /url: /pricing?redirect_to=%2Fdiscover
+          - paragraph [ref=f20e633]:
+            - link "Changelog" [ref=f20e634] [cursor=pointer]:
+              - /url: ./changelog?redirect_to=%2Fdiscover
+          - paragraph [ref=f20e636]:
+            - link "Blog" [ref=f20e637] [cursor=pointer]:
+              - /url: ./blog?redirect_to=%2Fdiscover
+          - paragraph [ref=f20e639]:
+            - link "Colors" [ref=f20e640] [cursor=pointer]:
+              - /url: ./colors?redirect_to=%2Fdiscover
+          - paragraph [ref=f20e642]:
+            - link "MCP" [ref=f20e643] [cursor=pointer]:
+              - /url: ./mcp?redirect_to=%2Fdiscover
+          - paragraph [ref=f20e645]:
+            - link "Finance+" [ref=f20e646] [cursor=pointer]:
+              - /url: ./finance?redirect_to=%2Fdiscover
+        - generic [ref=f20e647]:
+          - paragraph [ref=f20e649]:
+            - link "Contact" [ref=f20e650] [cursor=pointer]:
+              - /url: mailto:support@mobbin.com
+          - paragraph [ref=f20e652]:
+            - link "Help center" [ref=f20e653] [cursor=pointer]:
+              - /url: https://help.mobbin.com/
+          - paragraph [ref=f20e655]:
+            - link "Careers" [ref=f20e656] [cursor=pointer]:
+              - /url: https://careers.mobbin.com/
+          - paragraph [ref=f20e658]:
+            - link "Merch" [ref=f20e659] [cursor=pointer]:
+              - /url: https://merch.mobbin.com/
+          - paragraph [ref=f20e661]:
+            - link "X (Twitter)" [ref=f20e662] [cursor=pointer]:
+              - /url: https://x.com/mobbin
+          - paragraph [ref=f20e664]:
+            - link "LinkedIn" [ref=f20e665] [cursor=pointer]:
+              - /url: https://linkedin.com/company/mobbin
+    - generic [ref=f20e666]:
+      - generic [ref=f20e667]: © Mobbin 2018-2026
+      - generic [ref=f20e670]:
+        - paragraph [ref=f20e673]:
+          - link "Privacy policy" [ref=f20e674] [cursor=pointer]:
+            - /url: ./privacy?redirect_to=%2Fdiscover
+        - paragraph [ref=f20e677]:
+          - link "Terms" [ref=f20e678] [cursor=pointer]:
+            - /url: ./terms?redirect_to=%2Fdiscover

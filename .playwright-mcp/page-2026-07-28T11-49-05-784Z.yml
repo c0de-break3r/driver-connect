@@ -1,0 +1,684 @@
+- generic [active] [ref=f62e1]:
+  - generic [ref=f62e3]:
+    - navigation [ref=f62e6]:
+      - generic [ref=f62e7]:
+        - generic [ref=f62e9]:
+          - link [ref=f62e11] [cursor=pointer]:
+            - /url: ./
+            - img "Banani Logo" [ref=f62e14]
+          - generic [ref=f62e15]:
+            - paragraph [ref=f62e20] [cursor=pointer]: Product
+            - link [ref=f62e23] [cursor=pointer]:
+              - /url: ./pricing
+              - paragraph [ref=f62e25]: Pricing
+            - link [ref=f62e27] [cursor=pointer]:
+              - /url: ./blog
+              - paragraph [ref=f62e29]: Blog
+            - link [ref=f62e31] [cursor=pointer]:
+              - /url: ./company/affiliate-program
+              - paragraph [ref=f62e33]: Affiliate
+            - link [ref=f62e35] [cursor=pointer]:
+              - /url: ./contact-sales
+              - paragraph [ref=f62e37]: Contact sales
+        - generic [ref=f62e38]:
+          - link [ref=f62e40] [cursor=pointer]:
+            - /url: https://app.banani.co/auth/signin
+            - paragraph [ref=f62e42]: Log in
+          - link [ref=f62e44] [cursor=pointer]:
+            - /url: https://app.banani.co/auth/signup
+            - paragraph [ref=f62e46]: Get started
+            - paragraph [ref=f62e48]: free
+    - generic [ref=f62e51]:
+      - heading "Mobbin Alternative Free" [level=1] [ref=f62e53]
+      - paragraph [ref=f62e55]:
+        - strong [ref=f62e56]: Reference app UI screens and flows of the world's best-designed mobile apps,
+        - strong
+        - strong [ref=f62e57]: including
+        - link [ref=f62e58] [cursor=pointer]:
+          - /url: ./references/apps/tinder
+          - strong [ref=f62e59]: Tinder
+        - strong [ref=f62e60]: ","
+        - link [ref=f62e61] [cursor=pointer]:
+          - /url: ./references/apps/duolingo
+          - strong [ref=f62e62]: Duolingo
+        - strong [ref=f62e63]: ","
+        - link [ref=f62e64] [cursor=pointer]:
+          - /url: ./references/apps/airbnb
+          - strong [ref=f62e65]: Airbnb
+        - strong [ref=f62e66]: ","
+        - link [ref=f62e67] [cursor=pointer]:
+          - /url: ./references/apps/pinterest
+          - strong [ref=f62e68]: Pinterest
+        - strong [ref=f62e69]: ", and more. Take"
+        - link [ref=f62e70] [cursor=pointer]:
+          - /url: ./templates/mobile
+          - strong [ref=f62e71]: design inspiration
+        - strong [ref=f62e72]
+        - strong
+        - strong [ref=f62e73]: or
+        - link [ref=f62e74] [cursor=pointer]:
+          - /url: https://www.banani.co/definitions
+          - strong [ref=f62e75]: UI/UX lessons
+        - strong [ref=f62e76]: ", and even edit any app screen with AI. As you would on Mobbin."
+        - strong
+        - strong [ref=f62e77]: But completely free!
+      - link [ref=f62e79] [cursor=pointer]:
+        - /url: https://app.banani.co/auth/signup
+        - paragraph [ref=f62e81]: Edit UI with AI
+        - paragraph [ref=f62e83]: free
+    - generic [ref=f62e86]:
+      - link "App UI Library View all" [ref=f62e87] [cursor=pointer]:
+        - /url: ./references/apps
+        - generic [ref=f62e98]:
+          - heading "App UI Library" [level=2] [ref=f62e100]
+          - heading "View all" [level=2] [ref=f62e102]
+      - link "Tinder NEW Meet New People & Date Singles" [ref=f62e103] [cursor=pointer]:
+        - /url: ./references/apps/tinder
+        - generic [ref=f62e107]:
+          - generic [ref=f62e108]:
+            - heading "Tinder" [level=2] [ref=f62e110]
+            - heading "NEW" [level=2] [ref=f62e113]
+          - heading "Meet New People & Date Singles" [level=2] [ref=f62e115]
+      - link "Calm Sleep, Meditation, Relaxation" [ref=f62e116] [cursor=pointer]:
+        - /url: ./references/apps/calm
+        - generic [ref=f62e120]:
+          - heading "Calm" [level=2] [ref=f62e122]
+          - heading "Sleep, Meditation, Relaxation" [level=2] [ref=f62e124]
+      - link "Threads Share ideas & trends with text" [ref=f62e125] [cursor=pointer]:
+        - /url: ./references/apps/threads
+        - generic [ref=f62e129]:
+          - heading "Threads" [level=2] [ref=f62e131]
+          - heading "Share ideas & trends with text" [level=2] [ref=f62e133]
+      - link "Blinkist Learn something new every day" [ref=f62e134] [cursor=pointer]:
+        - /url: ./references/apps/blinkist
+        - generic [ref=f62e138]:
+          - heading "Blinkist" [level=2] [ref=f62e140]
+          - heading "Learn something new every day" [level=2] [ref=f62e142]
+      - link "ChatGPT The official app by OpenAI" [ref=f62e143] [cursor=pointer]:
+        - /url: ./references/apps/chatgpt
+        - generic [ref=f62e147]:
+          - heading "ChatGPT" [level=2] [ref=f62e149]
+          - heading "The official app by OpenAI" [level=2] [ref=f62e151]
+      - link "Airbnb Vacation Rentals & Experiences" [ref=f62e152] [cursor=pointer]:
+        - /url: ./references/apps/airbnb
+        - generic [ref=f62e156]:
+          - heading "Airbnb" [level=2] [ref=f62e158]
+          - heading "Vacation Rentals & Experiences" [level=2] [ref=f62e160]
+      - link "Things 3 Organize your life" [ref=f62e161] [cursor=pointer]:
+        - /url: ./references/apps/things-3
+        - generic [ref=f62e165]:
+          - heading "Things 3" [level=2] [ref=f62e167]
+          - heading "Organize your life" [level=2] [ref=f62e169]
+      - link "Arc Search Find it, Faster" [ref=f62e170] [cursor=pointer]:
+        - /url: ./references/apps/arc-search
+        - generic [ref=f62e174]:
+          - heading "Arc Search" [level=2] [ref=f62e176]
+          - heading "Find it, Faster" [level=2] [ref=f62e178]
+    - generic [ref=f62e180]:
+      - heading "What is a Mobbin Alternative?" [level=2] [ref=f62e182]
+      - paragraph [ref=f62e184]: Mobbin is one of the most popular app UI design reference libraries. And a Mobbin alternative is a tool or website like Mobbin where designers, PMs and developers can browse real UI screens and UX flows of popular mobile apps. It may have the same library of apps or different ones.
+    - generic [ref=f62e186]:
+      - heading "Why use a free site like Mobbin?" [level=2] [ref=f62e188]
+      - paragraph [ref=f62e190]:
+        - text: Mobbin locks most of its content behind a paid plan; making it inaccessible to many aspiring (and even pro) designers and product developers. A free website like Mobbin gives you a similar set of design references, i.e. actual screenshots of apps like
+        - link "AllTrails" [ref=f62e191] [cursor=pointer]:
+          - /url: ./references/apps/alltrails
+        - text: ","
+        - link "Blinkist" [ref=f62e192] [cursor=pointer]:
+          - /url: ./references/apps/blinkist
+        - text: ","
+        - link "Calm" [ref=f62e193] [cursor=pointer]:
+          - /url: ./references/apps/calm
+        - text: ", and"
+        - link "Substack" [ref=f62e194] [cursor=pointer]:
+          - /url: ./references/apps/substack
+        - text: — but without the cost.
+    - generic [ref=f62e196]:
+      - generic [ref=f62e200]:
+        - heading "Free App Design References" [level=3] [ref=f62e202]
+        - paragraph [ref=f62e204]: Get access to 100+ UI screens without sign-up or paywall.
+      - generic [ref=f62e208]:
+        - heading "Free design inspiration" [level=3] [ref=f62e210]
+        - paragraph [ref=f62e212]: Study the design patterns that actually work for top-performing apps.
+      - generic [ref=f62e216]:
+        - heading "Design UI with AI" [level=2] [ref=f62e218]
+        - paragraph [ref=f62e220]: Edit any app’s screen or design one from scratch with AI.
+    - generic [ref=f62e221]:
+      - generic [ref=f62e222]:
+        - heading "How to use Banani as a free alternative to Mobbin?" [level=2] [ref=f62e224]
+        - generic [ref=f62e225]:
+          - paragraph [ref=f62e226]:
+            - link "Banani" [ref=f62e227] [cursor=pointer]:
+              - /url: http://banani.co/
+            - text: is an AI UI Generator. You can input your idea as plain text or any app’s screenshot, and it generates the relevant UI in its cavas in seconds!
+          - paragraph [ref=f62e228]:
+            - text: Doubling up as a free competitor of Mobbin, Banani lets you save and copy any of the 100s of UI screens for free. You can also edit them just by uploading and chatting with our AI.
+            - link "Vibe design" [ref=f62e229] [cursor=pointer]:
+              - /url: ./blog/vibe-designing
+            - text: ", basically."
+      - generic [ref=f62e232]:
+        - generic [ref=f62e233]:
+          - paragraph [ref=f62e236]: "1"
+          - generic [ref=f62e237]:
+            - heading "Copy a UI Screen" [level=4] [ref=f62e239]
+            - paragraph [ref=f62e242]: Select to download or copy a UI screen you like.
+        - generic [ref=f62e243]:
+          - paragraph [ref=f62e246]: "2"
+          - generic [ref=f62e247]:
+            - heading "Edit UI with AI" [level=4] [ref=f62e249]
+            - paragraph [ref=f62e252]: Upload in Banani and type the changes you want.
+        - generic [ref=f62e253]:
+          - paragraph [ref=f62e256]: "3"
+          - generic [ref=f62e257]:
+            - heading "Figma or Code Export" [level=4] [ref=f62e259]
+            - paragraph [ref=f62e262]: Export the new design as Figma or clean HTML/CSS.
+      - link [ref=f62e264] [cursor=pointer]:
+        - /url: https://app.banani.co/auth/signup
+        - paragraph [ref=f62e266]: Edit UI with Banani AI
+        - paragraph [ref=f62e268]: free
+    - heading "Featured flows" [level=2] [ref=f62e273]
+    - generic [ref=f62e274]:
+      - generic [ref=f62e275]:
+        - link "Airbnb" [ref=f62e276] [cursor=pointer]:
+          - /url: ./references/apps/airbnb
+          - heading "Airbnb" [level=2] [ref=f62e280]
+        - heading [level=2] [ref=f62e283]:
+          - link "Browsing listing flow" [ref=f62e284] [cursor=pointer]:
+            - /url: ./references/apps/airbnb
+      - generic [ref=f62e285]:
+        - link [ref=f62e286] [cursor=pointer]:
+          - /url: ./references/screens/airbnb-listing-screen
+        - link [ref=f62e290] [cursor=pointer]:
+          - /url: ./references/screens/airbnb-listing-screen-2
+        - link [ref=f62e294] [cursor=pointer]:
+          - /url: ./references/screens/airbnb-listing-screen-3
+        - link [ref=f62e298] [cursor=pointer]:
+          - /url: ./references/screens/airbnb-listing-screen-4
+        - link [ref=f62e302] [cursor=pointer]:
+          - /url: ./references/screens/airbnb-listing-screen-5
+        - link [ref=f62e306] [cursor=pointer]:
+          - /url: ./references/screens/airbnb-listing-about
+        - link [ref=f62e310] [cursor=pointer]:
+          - /url: ./references/screens/airbnb-listing-amenities
+    - generic [ref=f62e316]:
+      - link [ref=f62e317] [cursor=pointer]:
+        - /url: ./references/apps/duolingo
+        - link "Duolingo" [ref=f62e318]:
+          - /url: ./references/apps/airbnb
+          - link [ref=f62e319]:
+            - /url: ./references/apps/duolingo
+          - heading [level=2] [ref=f62e322]:
+            - link "Duolingo" [ref=f62e323]:
+              - /url: ./references/apps/duolingo
+        - heading "Lesson gamification" [level=2] [ref=f62e326]
+      - generic [ref=f62e327]:
+        - link [ref=f62e328] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game
+        - link [ref=f62e332] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-2
+        - link [ref=f62e336] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-3
+        - link [ref=f62e340] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-4
+        - link [ref=f62e344] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-5
+        - link [ref=f62e348] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-6
+        - link [ref=f62e352] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-7
+        - link [ref=f62e356] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-8
+        - link [ref=f62e360] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-9
+        - link [ref=f62e364] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-10
+        - link [ref=f62e368] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-11
+        - link [ref=f62e372] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-12
+        - link [ref=f62e376] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-14
+        - link [ref=f62e380] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-15
+        - link [ref=f62e384] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-16
+        - link [ref=f62e388] [cursor=pointer]:
+          - /url: ./references/screens/duolingo-game-17
+    - generic [ref=f62e394]:
+      - link [ref=f62e395] [cursor=pointer]:
+        - /url: ./references/apps/threads
+        - link "Threads" [ref=f62e396]:
+          - /url: ./references/apps/threads
+          - heading "Threads" [level=2] [ref=f62e400]
+        - heading "Browsing feed" [level=2] [ref=f62e403]
+      - generic [ref=f62e404]:
+        - link [ref=f62e405] [cursor=pointer]:
+          - /url: ./references/screens/threads-home
+        - link [ref=f62e409] [cursor=pointer]:
+          - /url: ./references/screens/threads-following
+        - link [ref=f62e413] [cursor=pointer]:
+          - /url: ./references/screens/threads-post
+        - link [ref=f62e417] [cursor=pointer]:
+          - /url: ./references/screens/threads-post-like
+        - link [ref=f62e421] [cursor=pointer]:
+          - /url: ./references/screens/threads-reply
+        - link [ref=f62e425] [cursor=pointer]:
+          - /url: ./references/screens/threads-post-replies
+        - link [ref=f62e429] [cursor=pointer]:
+          - /url: ./references/screens/threads-post-poll
+        - link [ref=f62e433] [cursor=pointer]:
+          - /url: ./references/screens/threads-profile
+        - link [ref=f62e437] [cursor=pointer]:
+          - /url: ./references/screens/threads-profile-suggestions
+        - link [ref=f62e441] [cursor=pointer]:
+          - /url: ./references/screens/threads-profile-photo
+    - generic [ref=f62e447]:
+      - link [ref=f62e448] [cursor=pointer]:
+        - /url: ./references/apps/blinkist
+        - link "Blinkist" [ref=f62e449]:
+          - /url: ./references/apps/blinkist
+          - heading "Blinkist" [level=2] [ref=f62e453]
+        - heading "Browsing books" [level=2] [ref=f62e456]
+      - generic [ref=f62e457]:
+        - link [ref=f62e458] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-home
+        - link [ref=f62e462] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-for-you
+        - link [ref=f62e466] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-for-you-2
+        - link [ref=f62e470] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-book-details
+        - link [ref=f62e474] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-book-details-2
+        - link [ref=f62e478] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-book-details-3
+        - link [ref=f62e482] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-book-details-4
+        - link [ref=f62e486] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-book-details-5
+        - link [ref=f62e490] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-home-2
+        - link [ref=f62e494] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-home-3
+        - link [ref=f62e498] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-playlist
+        - link [ref=f62e502] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-account
+        - link [ref=f62e506] [cursor=pointer]:
+          - /url: ./references/screens/blinkist-settings
+    - generic [ref=f62e512]:
+      - link [ref=f62e513] [cursor=pointer]:
+        - /url: ./references/apps/things-3
+        - link "Things 3" [ref=f62e514]:
+          - /url: ./references/apps/chatgpt
+          - link [ref=f62e515]:
+            - /url: ./references/apps/things-3
+          - heading [level=2] [ref=f62e518]:
+            - link "Things 3" [ref=f62e519]:
+              - /url: ./references/apps/things-3
+        - heading "Creating new task" [level=2] [ref=f62e522]
+      - generic [ref=f62e523]:
+        - link [ref=f62e524] [cursor=pointer]:
+          - /url: ./references/screens/things-new-task
+        - link [ref=f62e528] [cursor=pointer]:
+          - /url: ./references/screens/things-new-task-filled
+        - link [ref=f62e532] [cursor=pointer]:
+          - /url: ./references/screens/things-new-sub-task
+        - link [ref=f62e536] [cursor=pointer]:
+          - /url: ./references/screens/things-tags
+        - link [ref=f62e540] [cursor=pointer]:
+          - /url: ./references/screens/things-tags-selected
+        - link [ref=f62e544] [cursor=pointer]:
+          - /url: ./references/screens/things-deadline
+        - link [ref=f62e548] [cursor=pointer]:
+          - /url: ./references/screens/things-task-full
+        - link [ref=f62e552] [cursor=pointer]:
+          - /url: ./references/screens/things-today
+    - generic [ref=f62e558]:
+      - link [ref=f62e559] [cursor=pointer]:
+        - /url: ./references/apps/chatgpt
+        - link "ChatGPT" [ref=f62e560]:
+          - /url: ./references/apps/chatgpt
+          - heading "ChatGPT" [level=2] [ref=f62e564]
+        - heading [level=2] [ref=f62e567]:
+          - link "Chatting with GPT4" [ref=f62e568]:
+            - /url: ./references/apps/chatgpt
+      - generic [ref=f62e569]:
+        - link [ref=f62e570] [cursor=pointer]:
+          - /url: ./references/screens/chat-gpt-chat
+        - link [ref=f62e574] [cursor=pointer]:
+          - /url: ./references/screens/chat-gpt-chat-suggestions
+        - link [ref=f62e578] [cursor=pointer]:
+          - /url: ./references/screens/chat-gpt-chat-response
+        - link [ref=f62e582] [cursor=pointer]:
+          - /url: ./references/screens/chat-gpt-chat-focused
+        - link [ref=f62e586] [cursor=pointer]:
+          - /url: ./references/screens/chat-gpt-chat-typing
+        - link [ref=f62e590] [cursor=pointer]:
+          - /url: ./references/screens/chat-gpt-chat-responding
+        - link [ref=f62e594] [cursor=pointer]:
+          - /url: ./references/screens/chat-gpt-chat-responding-image
+        - link [ref=f62e598] [cursor=pointer]:
+          - /url: ./references/screens/chat-gpt-chat-response-image
+    - generic [ref=f62e604]:
+      - link [ref=f62e605] [cursor=pointer]:
+        - /url: ./references/apps/arc-search
+        - link "Arc Search" [ref=f62e606]:
+          - /url: ./references/apps/arc-search
+          - heading "Arc Search" [level=2] [ref=f62e610]
+        - heading [level=2] [ref=f62e613]:
+          - link "Browsing websites" [ref=f62e614]:
+            - /url: ./references/apps/arc-search
+      - generic [ref=f62e615]:
+        - link [ref=f62e616] [cursor=pointer]:
+          - /url: ./references/screens/arc-search-loading
+        - link [ref=f62e620] [cursor=pointer]:
+          - /url: ./references/screens/arc-search-results
+        - link [ref=f62e624] [cursor=pointer]:
+          - /url: ./references/screens/arc-search-input
+        - link [ref=f62e628] [cursor=pointer]:
+          - /url: ./references/screens/arc-search-webpage
+        - link [ref=f62e632] [cursor=pointer]:
+          - /url: ./references/screens/arc-search-settings
+        - link [ref=f62e636] [cursor=pointer]:
+          - /url: ./references/screens/arc-search-incognito
+        - link [ref=f62e640] [cursor=pointer]:
+          - /url: ./references/screens/arc-search-tabs
+        - link [ref=f62e644] [cursor=pointer]:
+          - /url: ./references/screens/arc-search-tabs-2
+    - generic [ref=f62e648]:
+      - link "App UI Library View all" [ref=f62e649] [cursor=pointer]:
+        - /url: ./references/apps
+        - generic [ref=f62e660]:
+          - heading "App UI Library" [level=2] [ref=f62e662]
+          - heading "View all" [level=2] [ref=f62e664]
+      - link "Tinder NEW Meet New People & Date Singles" [ref=f62e665] [cursor=pointer]:
+        - /url: ./references/apps/tinder
+        - generic [ref=f62e669]:
+          - generic [ref=f62e670]:
+            - heading "Tinder" [level=2] [ref=f62e672]
+            - heading "NEW" [level=2] [ref=f62e675]
+          - heading "Meet New People & Date Singles" [level=2] [ref=f62e677]
+      - link "Calm Sleep, Meditation, Relaxation" [ref=f62e678] [cursor=pointer]:
+        - /url: ./references/apps/calm
+        - generic [ref=f62e682]:
+          - heading "Calm" [level=2] [ref=f62e684]
+          - heading "Sleep, Meditation, Relaxation" [level=2] [ref=f62e686]
+      - link "Threads Share ideas & trends with text" [ref=f62e687] [cursor=pointer]:
+        - /url: ./references/apps/threads
+        - generic [ref=f62e691]:
+          - heading "Threads" [level=2] [ref=f62e693]
+          - heading "Share ideas & trends with text" [level=2] [ref=f62e695]
+      - link "Blinkist Learn something new every day" [ref=f62e696] [cursor=pointer]:
+        - /url: ./references/apps/blinkist
+        - generic [ref=f62e700]:
+          - heading "Blinkist" [level=2] [ref=f62e702]
+          - heading "Learn something new every day" [level=2] [ref=f62e704]
+      - link "ChatGPT The official app by OpenAI" [ref=f62e705] [cursor=pointer]:
+        - /url: ./references/apps/chatgpt
+        - generic [ref=f62e709]:
+          - heading "ChatGPT" [level=2] [ref=f62e711]
+          - heading "The official app by OpenAI" [level=2] [ref=f62e713]
+      - link "Airbnb Vacation Rentals & Experiences" [ref=f62e714] [cursor=pointer]:
+        - /url: ./references/apps/airbnb
+        - generic [ref=f62e718]:
+          - heading "Airbnb" [level=2] [ref=f62e720]
+          - heading "Vacation Rentals & Experiences" [level=2] [ref=f62e722]
+      - link "Things 3 Organize your life" [ref=f62e723] [cursor=pointer]:
+        - /url: ./references/apps/things-3
+        - generic [ref=f62e727]:
+          - heading "Things 3" [level=2] [ref=f62e729]
+          - heading "Organize your life" [level=2] [ref=f62e731]
+      - link "Arc Search Find it, Faster" [ref=f62e732] [cursor=pointer]:
+        - /url: ./references/apps/arc-search
+        - generic [ref=f62e736]:
+          - heading "Arc Search" [level=2] [ref=f62e738]
+          - heading "Find it, Faster" [level=2] [ref=f62e740]
+    - generic [ref=f62e741]:
+      - generic [ref=f62e743]:
+        - button "Play" [ref=f62e748] [cursor=pointer]
+        - generic [ref=f62e752]:
+          - heading "FAQs on Free Site Like Mobbin" [level=2] [ref=f62e755]
+          - generic [ref=f62e756]:
+            - generic [ref=f62e757]:
+              - heading "What is Mobbin?" [level=3] [ref=f62e759]
+              - paragraph [ref=f62e762]: Mobbin is a design reference library that lets designers browse real UI screenshots from popular mobile apps. It's widely used by product designers for inspiration and UX research. However, most of its library requires a paid subscription to access.
+            - generic [ref=f62e763]:
+              - heading "Can I use Mobbin for free?" [level=3] [ref=f62e765]
+              - paragraph [ref=f62e768]: Yes, you can use Mobbin for free. But it’s free tier had quite limited app references and features.
+            - generic [ref=f62e769]:
+              - heading "What is the best free alternative to Mobbin for mobile apps?" [level=3] [ref=f62e771]
+              - paragraph [ref=f62e774]:
+                - link "Banani" [ref=f62e775] [cursor=pointer]:
+                  - /url: http://banani.co/
+                - text: is the best free alternative to Mobbin for mobile app design references. Both for iOS and Android apps. It offers real UI screens from apps like
+                - link "Things3" [ref=f62e776] [cursor=pointer]:
+                  - /url: ./references/apps/things-3
+                - text: ","
+                - link "Reddit" [ref=f62e777] [cursor=pointer]:
+                  - /url: ./references/apps/reddit
+                - text: ","
+                - link "Perplexity" [ref=f62e778] [cursor=pointer]:
+                  - /url: ./references/apps/perplexity
+                - text: ", and"
+                - link "Threads" [ref=f62e779] [cursor=pointer]:
+                  - /url: ./references/apps/threads
+                - text: . Plus an
+                - link "AI UI Generator" [ref=f62e780] [cursor=pointer]:
+                  - /url: ./product/ai-ui-generator
+                - text: to help you edit and export any of the 100s of UI screen you like.
+            - generic [ref=f62e781]:
+              - heading "Is Mobbin free for students?" [level=3] [ref=f62e783]
+              - paragraph [ref=f62e786]: While not completely free for students, Mobbin offers a generous discount for them. Eligible students and educators can avail up to 50% discount on the Mobbin Pro Plan for up to 2 years.
+            - generic [ref=f62e787]:
+              - heading "What Mobbin alternatives do Reddit users suggest?" [level=3] [ref=f62e789]
+              - generic [ref=f62e791]:
+                - paragraph [ref=f62e792]: Sites similar to Mobbin mentioned on Reddit and Medium include Banani, UXArchive, ScreensDesign, and more.
+                - paragraph [ref=f62e793]:
+                  - link "The list of free & paid alternatives to Mobbin >" [ref=f62e794] [cursor=pointer]:
+                    - /url: https://medium.com/@vpznc/free-mobbin-and-appshots-alternatives-for-ui-references-990d10f9e01f
+      - generic [ref=f62e795]:
+        - generic [ref=f62e797]:
+          - heading "Generate UIs with AI for mobile and desktop. Your imagination is the limit." [level=2] [ref=f62e799]
+          - link [ref=f62e801] [cursor=pointer]:
+            - /url: https://app.banani.co/auth/signup
+            - paragraph [ref=f62e803]: Generate UIs with AI
+        - list [ref=f62e807]:
+          - listitem [ref=f62e808]:
+            - link [ref=f62e809] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e811]:
+            - link [ref=f62e812] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e814]:
+            - link [ref=f62e815] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e817]:
+            - link [ref=f62e818] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e820]:
+            - link [ref=f62e821] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e823]:
+            - link [ref=f62e824] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e826]:
+            - link [ref=f62e827] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e829]:
+            - link [ref=f62e830] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e832]:
+            - link [ref=f62e833] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e835]:
+            - link [ref=f62e836] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+          - listitem [ref=f62e838]:
+            - link [ref=f62e839] [cursor=pointer]:
+              - /url: https://app.banani.co/auth/signup
+    - generic [ref=f62e846]:
+      - generic [ref=f62e847]:
+        - generic [ref=f62e848]:
+          - paragraph [ref=f62e850]: BANANI
+          - paragraph [ref=f62e852]:
+            - link "What's new" [ref=f62e853] [cursor=pointer]:
+              - /url: ./changelog
+          - paragraph [ref=f62e855]:
+            - link "Contact sales" [ref=f62e856] [cursor=pointer]:
+              - /url: ./contact-sales
+          - paragraph [ref=f62e858]:
+            - link "Affiliate" [ref=f62e859] [cursor=pointer]:
+              - /url: ./company/affiliate-program
+          - paragraph [ref=f62e861]:
+            - link "About" [ref=f62e862] [cursor=pointer]:
+              - /url: ./company/about
+          - paragraph [ref=f62e864]:
+            - link "Careers" [ref=f62e865] [cursor=pointer]:
+              - /url: ./company/careers
+          - paragraph [ref=f62e867]:
+            - link "Pricing" [ref=f62e868] [cursor=pointer]:
+              - /url: ./pricing
+          - paragraph [ref=f62e870]:
+            - link "Help" [ref=f62e871] [cursor=pointer]:
+              - /url: ./company/contact
+        - generic [ref=f62e872]:
+          - paragraph [ref=f62e874]: PRODUCT
+          - paragraph [ref=f62e876]:
+            - link "UI design" [ref=f62e877] [cursor=pointer]:
+              - /url: ./product/ai-ui-generator
+          - paragraph [ref=f62e879]:
+            - link "UX design" [ref=f62e880] [cursor=pointer]:
+              - /url: ./product/ai-ux-generator
+          - paragraph [ref=f62e882]:
+            - link "Wireframe" [ref=f62e883] [cursor=pointer]:
+              - /url: ./product/ai-wireframe-generator
+          - paragraph [ref=f62e885]:
+            - link "App design" [ref=f62e886] [cursor=pointer]:
+              - /url: ./product/ai-app-design-generator
+          - paragraph [ref=f62e888]:
+            - link "Web design" [ref=f62e889] [cursor=pointer]:
+              - /url: ./product/ai-website-design-generator
+          - paragraph [ref=f62e891]:
+            - link "Design systems" [ref=f62e892] [cursor=pointer]:
+              - /url: ./product/ai-design-system-generator
+          - paragraph [ref=f62e894]:
+            - link "Prototype" [ref=f62e895] [cursor=pointer]:
+              - /url: ./product/ai-prototype-generator
+          - paragraph [ref=f62e897]:
+            - link "AI agent" [ref=f62e898] [cursor=pointer]:
+              - /url: ./product/ai-ui-agent
+          - paragraph [ref=f62e900]:
+            - link "View all" [ref=f62e901] [cursor=pointer]:
+              - /url: ./product
+        - generic [ref=f62e902]:
+          - paragraph [ref=f62e904]: TOOLS
+          - paragraph [ref=f62e906]:
+            - link "Image to Wireframe" [ref=f62e907] [cursor=pointer]:
+              - /url: ./product/image-to-wireframe
+          - paragraph [ref=f62e909]:
+            - link "Image to UI design" [ref=f62e910] [cursor=pointer]:
+              - /url: ./product/screenshot-to-ui-design
+          - paragraph [ref=f62e912]:
+            - link "Image to" [ref=f62e913] [cursor=pointer]:
+              - /url: ./product/image-to-figma
+            - text: Figma
+          - paragraph [ref=f62e915]:
+            - link "Color wheel" [ref=f62e916] [cursor=pointer]:
+              - /url: ./tool/color-wheel
+          - paragraph [ref=f62e918]:
+            - link "Edit screenshot" [ref=f62e919] [cursor=pointer]:
+              - /url: ./tool/screenshot-editor
+          - paragraph [ref=f62e921]:
+            - link "Templates" [ref=f62e922] [cursor=pointer]:
+              - /url: ./templates/mobile
+          - paragraph [ref=f62e924]:
+            - link "Glossary" [ref=f62e925] [cursor=pointer]:
+              - /url: ./definitions
+        - generic [ref=f62e926]:
+          - paragraph [ref=f62e928]: FOLLOW
+          - paragraph [ref=f62e930]:
+            - link "X/Twitter" [ref=f62e931] [cursor=pointer]:
+              - /url: https://twitter.com/BananiAI
+          - paragraph [ref=f62e933]:
+            - link "LinkedIn" [ref=f62e934] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/banani-ai/
+          - paragraph [ref=f62e936]:
+            - link "Slack" [ref=f62e937] [cursor=pointer]:
+              - /url: https://join.slack.com/t/banani-club/shared_invite/zt-3tott5tph-mO9XYKpyvFYKWrCZ0dydSQ
+      - generic [ref=f62e938]:
+        - generic [ref=f62e939]:
+          - paragraph [ref=f62e941]: READING
+          - paragraph [ref=f62e943]:
+            - link "AI design tools" [ref=f62e944] [cursor=pointer]:
+              - /url: ./blog/best-ai-ui-design-tools
+          - paragraph [ref=f62e946]:
+            - link "AI prototyping tools" [ref=f62e947] [cursor=pointer]:
+              - /url: ./blog/best-ai-prototyping-tools
+          - paragraph [ref=f62e949]:
+            - link "Stitch alternatives" [ref=f62e950] [cursor=pointer]:
+              - /url: ./blog/12-stitch-ai-alternatives
+          - paragraph [ref=f62e952]:
+            - link "Lovable alternatives" [ref=f62e953] [cursor=pointer]:
+              - /url: ./blog/best-lovable-alternatives
+          - paragraph [ref=f62e955]:
+            - link "Base44 alternatives" [ref=f62e956] [cursor=pointer]:
+              - /url: ./blog/best-base44-alternatives-by-use-case
+          - paragraph [ref=f62e958]:
+            - link "Figma Make alternatives" [ref=f62e959] [cursor=pointer]:
+              - /url: ./blog/best-figma-make-ai-alternatives
+          - paragraph [ref=f62e961]:
+            - link "Lovable vs Banani" [ref=f62e962] [cursor=pointer]:
+              - /url: ./compare/lovable-vs-banani
+          - paragraph [ref=f62e964]:
+            - link "Blog" [ref=f62e965] [cursor=pointer]:
+              - /url: ./blog
+        - generic [ref=f62e966]:
+          - paragraph [ref=f62e968]: REFERENCES
+          - paragraph [ref=f62e970]:
+            - link "Tinder" [ref=f62e971] [cursor=pointer]:
+              - /url: ./references/apps/tinder
+          - paragraph [ref=f62e973]:
+            - link "Airbnb" [ref=f62e974] [cursor=pointer]:
+              - /url: ./references/apps/airbnb
+          - paragraph [ref=f62e976]:
+            - link "Pinterest" [ref=f62e977] [cursor=pointer]:
+              - /url: ./references/apps/pinterest
+          - paragraph [ref=f62e979]:
+            - link "ChatGPT" [ref=f62e980] [cursor=pointer]:
+              - /url: ./references/apps/chatgpt
+          - paragraph [ref=f62e982]:
+            - link "Things 3" [ref=f62e983] [cursor=pointer]:
+              - /url: ./references/apps/things-3
+          - paragraph [ref=f62e985]:
+            - link "View all" [ref=f62e986] [cursor=pointer]:
+              - /url: ./references
+        - generic [ref=f62e987]:
+          - paragraph [ref=f62e989]: ©2026
+          - paragraph [ref=f62e991]:
+            - link "Terms of service" [ref=f62e992] [cursor=pointer]:
+              - /url: ./legal/terms-of-service
+          - paragraph [ref=f62e994]:
+            - link "Privacy policy" [ref=f62e995] [cursor=pointer]:
+              - /url: ./legal/privacy-policy
+          - paragraph [ref=f62e997]:
+            - link "Security and data" [ref=f62e998] [cursor=pointer]:
+              - /url: ./legal/security-data-protection
+          - button "Cookie Trigger" [ref=f62e1000] [cursor=pointer]:
+            - generic [ref=f62e1001]: Cookies
+        - generic [ref=f62e1002]:
+          - paragraph [ref=f62e1004]: LANGUAGE
+          - generic [ref=f62e1006]:
+            - generic [ref=f62e1007]: Select Language
+            - combobox "Select Language" [ref=f62e1008]:
+              - option "English" [selected]
+              - option "Spanish"
+              - option "Portuguese"
+              - option "German"
+              - option "French"
+              - option "Japanese"
+              - option "Turkish"
+            - generic: English
+  - generic [ref=f62e1018]:
+    - paragraph [ref=f62e1019]: We use cookies to personalize your experience and to analyze how our website is used.
+    - button "Okay" [ref=f62e1021] [cursor=pointer]

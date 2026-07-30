@@ -1,364 +1,537 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
+  PanResponder,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useAuth } from "@clerk/expo";
+import { impactAsync, ImpactFeedbackStyle } from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "expo-image";
 
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
-import { Card } from "@/components/ui/card";
-import { useStreakStore } from "@/store/useStreakStore";
-import { useDriverStatsStore } from "@/store/useDriverStatsStore";
 import { useDriverOnboardingStore } from "@/store/useDriverOnboardingStore";
+import { useNotificationStore } from "@/store/useNotificationStore";
+import { useTabVisibilityStore } from "@/store/useTabVisibilityStore";
 import { api } from "@/lib/convexApi";
 import { useQuery } from "convex/react";
+import {
+  availableJobs as mockAvailableJobs,
+  filterChips,
+} from "@/data/driverJobs";
 
 const NAVY = "#2C3E5B";
+const ORANGE = "#FF7B54";
+const PEACH = "#FFF8F3";
+const WHITE = "#FFFFFF";
+const MUTED = "#6E7E91";
+const BORDER = "#EAE1D9";
+
+const JOB_STATUS_COLORS: Record<string, { bg: string; text: string; border: string; accent: string }> = {
+  "Find Work": { bg: "#EFF6FF", text: "#1E3A8A", border: "#BFDBFE", accent: "#3B82F6" },
+  "Need Vehicle": { bg: "#FFF7ED", text: "#7C2D12", border: "#FFEDD5", accent: "#F97316" },
+  Sales: { bg: "#F5F3FF", text: "#3B0764", border: "#E9D5FF", accent: "#8B5CF6" },
+  Rentals: { bg: "#ECFDF5", text: "#064E3B", border: "#A7F3D0", accent: "#10B981" },
+};
+
+const CATEGORY_ICONS: Record<string, { name: keyof typeof Ionicons.glyphMap; label: string }> = {
+  "Find Work": { name: "briefcase", label: "Find Work" },
+  "Need Vehicle": { name: "car", label: "Need Vehicle" },
+  Sales: { name: "pricetag", label: "Sales" },
+  Rentals: { name: "key", label: "Rentals" },
+};
+
+type JobCard = {
+  _id?: string;
+  id?: string;
+  title: string;
+  category: string;
+  location: string;
+  distance: string;
+  pay: string;
+  payPeriod: string;
+  postedAgo: string;
+  vehicleType: string;
+  urgent?: boolean;
+  latitude?: number;
+  longitude?: number;
+  image?: any;
+};
+
+const STABLE_FAKE_IDS = [
+  "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+];
 
 export default function DriverDashboard() {
   const entrance = useStaggeredEntrance();
-  const [showProfilePanel] = useState(false);
-  const { isSignedIn, userId } = useAuth();
-  const streak = useStreakStore((s) => s.streak);
-  const stats = useDriverStatsStore((s) => s.stats);
-  const {
-    fullLegalName,
-    licenseClass,
-    licenseNumber,
-    selfieUri: onboardingSelfieUri,
-    preferredJobType,
-    selectedVehicleType,
-    verificationPipelineStatus,
-  } = useDriverOnboardingStore();
-  const convexUser = useQuery(api.users.getByClerkUserId, isSignedIn && userId ? { clerkUserId: userId } : "skip");
-  const convexVerification = useQuery(api.verifications.getByUserId, convexUser ? { userId: convexUser._id } : "skip");
-  const profileAnim = useMemo(() => new Animated.Value(0), []);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [refreshing, setRefreshing] = useState(false);
+  const [useRealData, setUseRealData] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchAnim = useMemo(() => new Animated.Value(0), []);
+  const [refreshToken, setRefreshToken] = useState(0);
+  const { profileImageUri, setProfileImageUri } = useDriverOnboardingStore();
+  const { unreadCount } = useNotificationStore();
+  const tabVisible = useTabVisibilityStore((s) => s.visible);
+  const setTabVisible = useTabVisibilityStore((s) => s.setVisible);
+  const convexJobs = useQuery(api.vehicles.listVehicles, useRealData ? {} : "skip");
+  const lastScrollY = useRef(0);
+  const mapPan = useMemo(() => new Animated.ValueXY({ x: 0, y: 0 }), []);
+  const posRef = useRef({ x: 0, y: 0 });
 
-  const displayVerificationStatus = convexVerification?.status ?? verificationPipelineStatus;
+  /* eslint-disable react-hooks/refs -- PanResponder callbacks are event handlers, not render. */
+  const mapPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderMove: (_, gesture) => {
+          const nextX = posRef.current.x + gesture.dx;
+          const nextY = posRef.current.y + gesture.dy;
+          mapPan.setValue({ x: nextX, y: nextY });
+        },
+        onPanResponderRelease: (_, gesture) => {
+          if (Math.abs(gesture.dx) < 5 && Math.abs(gesture.dy) < 5) {
+            impactAsync(ImpactFeedbackStyle.Light);
+            router.push("/(driver)/(tabs)/map");
+          } else {
+            posRef.current = {
+              x: posRef.current.x + gesture.dx,
+              y: posRef.current.y + gesture.dy,
+            };
+          }
+        },
+      }),
+    [mapPan]
+  );
+  /* eslint-enable react-hooks/refs */
 
-  // Demo: seed some stats on first mount so the dashboard isn't empty.
-  useEffect(() => {
-    const store = useDriverStatsStore.getState();
-    if (store.tripsCompleted === 0) {
-      store.incrementTrips(12);
-      store.addEarnings(1450);
+  const handleScroll = useCallback(
+    (event: any) => {
+      const currentY = event.nativeEvent.contentOffset.y;
+      const delta = currentY - lastScrollY.current;
+
+      if (delta > 5) {
+        setTabVisible(false);
+      } else if (delta < -5) {
+        setTabVisible(true);
+      }
+
+      lastScrollY.current = currentY;
+    },
+    [setTabVisible]
+  );
+
+  const handleFilterPress = async (chip: string) => {
+    await impactAsync(ImpactFeedbackStyle.Light);
+    setActiveFilter(chip);
+  };
+
+  const navigatingRef = useRef(false);
+
+  const handleJobPress = async (jobId: string) => {
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
+    await impactAsync(ImpactFeedbackStyle.Light);
+    router.push({
+      pathname: "/(driver)/job-details",
+      params: { jobId, useRealData: String(useRealData) },
+    });
+    setTimeout(() => {
+      navigatingRef.current = false;
+    }, 300);
+  };
+
+  const handleSearchToggle = async () => {
+    await impactAsync(ImpactFeedbackStyle.Light);
+    const next = !searchExpanded;
+    setSearchExpanded(next);
+    Animated.timing(searchAnim, {
+      toValue: next ? 1 : 0,
+      duration: 320,
+      easing: (t) => 1 - Math.pow(1 - t, 3),
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setActiveFilter("All");
+    setSearchQuery("");
+    setRefreshToken((token) => token + 1);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setRefreshing(false);
+  };
+
+  const handleProfilePress = async () => {
+    await impactAsync(ImpactFeedbackStyle.Light);
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== "granted") {
+      Alert.alert("Permission required", "Please allow access to your photos to update your profile image.");
+      return;
     }
-  }, []);
 
-  const handleVerify = () => {
-    router.push("/(driver)/verify-identity" as any);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileImageUri(result.assets[0].uri);
+    }
   };
 
-  const handleAddVehicle = () => {
-    router.push("/(driver)/add-vehicle" as any);
-  };
+  const allJobs: JobCard[] = useMemo(() => {
+    if (useRealData && convexJobs) {
+      return convexJobs.map((vehicle: any) => ({
+        id: vehicle._id,
+        title: vehicle.title,
+        category: vehicle.category,
+        location: `${vehicle.city}, ${vehicle.region}`,
+        distance: "Nearby",
+        pay: `GHS ${vehicle.pricePerDay.toFixed(2)}`,
+        payPeriod: "per day",
+        postedAgo: "Available",
+        vehicleType: vehicle.category,
+        urgent: false,
+        latitude: vehicle.latitude,
+        longitude: vehicle.longitude,
+      }));
+    }
+    return mockAvailableJobs;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [useRealData, convexJobs, refreshToken]);
 
-  const handleInvite = () => {
-    Alert.alert("Invite Friends", "Share your referral code: DRIVE2026");
-  };
+  const filteredJobs = useMemo(() => {
+    let jobs = allJobs;
 
-  const handleSettings = () => {
-    router.push("/(driver)/settings");
-  };
+    if (activeFilter !== "All") {
+      if (activeFilter === "Nearby") {
+        jobs = jobs.filter((job) => parseFloat(job.distance) <= 5);
+      } else if (activeFilter === "High Pay") {
+        const payValue = (job: JobCard) => parseFloat(job.pay.replace(/[^0-9]/g, "")) || 0;
+        jobs = jobs.filter((job) => payValue(job) >= 200);
+      } else {
+        jobs = jobs.filter((job) => job.category === activeFilter);
+      }
+    }
 
-  const handleNotifications = () => {
-    router.push("/(driver)/notifications");
-  };
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      jobs = jobs.filter(
+        (job) =>
+          job.title.toLowerCase().includes(query) ||
+          job.location.toLowerCase().includes(query) ||
+          job.category.toLowerCase().includes(query) ||
+          job.vehicleType.toLowerCase().includes(query)
+      );
+    }
+
+    return jobs;
+  }, [activeFilter, searchQuery, allJobs]);
+
+  const isEmpty = filteredJobs.length === 0;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF8F3" }} edges={["top"]}>
-      {/* ── Sticky Header ── */}
-      <Animated.View
-        style={[
-          styles.headerRow,
-          {
-            opacity: entrance.headerOpacity,
-            transform: [{ translateY: entrance.headerTranslateY }],
-          },
-        ]}
-      >
-        <View style={styles.headerLeft}>
-          <Pressable style={styles.iconButton} onPress={handleSettings}>
-            <Ionicons name="settings-outline" size={22} color={NAVY} />
-          </Pressable>
-        </View>
-        <View style={styles.headerRight}>
-          <Pressable style={styles.iconButton} onPress={handleNotifications}>
-            <Ionicons name="notifications-outline" size={22} color={NAVY} />
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>1</Text>
-            </View>
-          </Pressable>
-          <View style={styles.streakBadge}>
-            <Ionicons name="flame" size={14} color="#FFFFFF" />
-            <Text style={styles.streakText}>{streak}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: PEACH }} edges={["top"]}>
+      <View style={styles.headerContainer}>
+        <View style={styles.headerRow}>
+          <View style={styles.headerLeft}>
+            <Pressable onPress={handleProfilePress} style={styles.profileAvatar}>
+              {profileImageUri ? (
+                <Image
+                  source={{ uri: profileImageUri }}
+                  style={styles.profileAvatarImage}
+                  contentFit="cover"
+                />
+              ) : (
+                <Ionicons name="person" size={22} color={NAVY} />
+              )}
+            </Pressable>
+          </View>
+          <View style={styles.headerRight}>
+            <Pressable
+              style={styles.iconButton}
+              onPress={() => router.push("/(driver)/notifications")}
+            >
+              <Ionicons name="notifications-outline" size={22} color={NAVY} />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount}</Text>
+                </View>
+              )}
+            </Pressable>
+            <Pressable style={styles.searchToggle} onPress={handleSearchToggle}>
+              <Ionicons name="search" size={22} color={NAVY} />
+            </Pressable>
           </View>
         </View>
-      </Animated.View>
 
-      {/* ── Expandable Profile Panel ── */}
+        {!searchExpanded && (
+          <View style={styles.filtersWrap}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filtersContent}
+            >
+              {filterChips.map((chip) => {
+                const isActive = activeFilter === chip;
+                return (
+                  <Pressable
+                    key={chip}
+                    onPress={() => handleFilterPress(chip)}
+                    style={[styles.chip, isActive ? styles.chipActive : styles.chipInactive]}
+                  >
+                    <Text
+                      style={[styles.chipText, isActive ? styles.chipTextActive : styles.chipTextInactive]}
+                    >
+                      {chip}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+              <Pressable
+                onPress={() => setUseRealData((prev) => !prev)}
+                style={[styles.chip, useRealData ? styles.chipActive : styles.chipInactive]}
+              >
+                <Text
+                  style={[styles.chipText, useRealData ? styles.chipTextActive : styles.chipTextInactive]}
+                >
+                  {useRealData ? "Live Data" : "Mock Data"}
+                </Text>
+              </Pressable>
+            </ScrollView>
+          </View>
+        )}
+
+        <Animated.View
+          pointerEvents={searchExpanded ? "auto" : "none"}
+          style={[
+            styles.searchOverlay,
+            {
+              opacity: searchAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 1],
+              }),
+              transform: [
+                {
+                  scaleX: searchAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.92, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.searchContainer}>
+            <Pressable onPress={handleSearchToggle} hitSlop={8}>
+              <Ionicons name="chevron-back" size={22} color={NAVY} style={styles.searchBackIcon} />
+            </Pressable>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search jobs, locations..."
+              placeholderTextColor={MUTED}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              autoFocus={searchExpanded}
+            />
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery("")} hitSlop={8}>
+                <Ionicons name="close-circle" size={20} color={MUTED} />
+              </Pressable>
+            )}
+          </View>
+        </Animated.View>
+      </View>
+
+      <ScrollView
+        style={{ flex: 1, backgroundColor: PEACH }}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: tabVisible ? 100 : 24 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={ORANGE}
+            colors={[ORANGE]}
+          />
+        }
+      >
+        <Animated.View
+          style={[
+            styles.section,
+            {
+              opacity: entrance.formOpacity,
+              transform: [{ translateY: entrance.formTranslateY }],
+            },
+          ]}
+        >
+          {isEmpty ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="briefcase-outline" size={40} color={MUTED} />
+              </View>
+              <Text style={styles.emptyTitle}>No jobs found</Text>
+              <Text style={styles.emptyBody}>
+                Try adjusting your search or filter to find more opportunities.
+              </Text>
+              <Pressable style={styles.emptyButton} onPress={() => { setActiveFilter("All"); setSearchQuery(""); }}>
+                <Text style={styles.emptyButtonText}>Clear filters</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.masonryGrid}>
+              {filteredJobs.map((job, index) => {
+                const statusColors = JOB_STATUS_COLORS[job.category] ?? JOB_STATUS_COLORS["Find Work"];
+                const categoryIcon = CATEGORY_ICONS[job.category] ?? CATEGORY_ICONS["Find Work"];
+                const jobId = job._id ?? job.id ?? STABLE_FAKE_IDS[index % STABLE_FAKE_IDS.length];
+                const isWide = index % 5 === 0;
+                return (
+                  <Pressable
+                    key={jobId}
+                    onPress={() => handleJobPress(jobId)}
+                    style={({ pressed }) => [styles.pinCard, isWide && styles.pinCardWide, pressed && styles.jobCardPressed]}
+                  >
+                    <View style={[styles.pinImagePlaceholder, { backgroundColor: statusColors.bg }]}>
+                      {job.image ? (
+                        <Image
+                          source={{ uri: job.image }}
+                          style={styles.pinImage}
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <View style={[styles.pinImageIconWrap, { backgroundColor: statusColors.accent }]}>
+                          <Ionicons name={categoryIcon.name} size={24} color="#FFFFFF" />
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.pinBody}>
+                      <Text style={styles.pinTitle} numberOfLines={2}>{job.title}</Text>
+                      <Text style={styles.pinPay}>{job.pay}</Text>
+                      <View style={styles.pinLocationRow}>
+                        <Ionicons name="location-outline" size={14} color={MUTED} />
+                        <Text style={styles.pinLocation} numberOfLines={1}>
+                          {job.location} • {job.distance}
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+        </Animated.View>
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+
       <Animated.View
+        {...mapPanResponder.panHandlers}
         style={[
-          styles.profilePanel,
+          styles.mapToggleWrap,
           {
-            opacity: profileAnim,
+            opacity: entrance.iconOpacity,
             transform: [
-              {
-                translateY: profileAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-12, 0],
-                }),
-              },
+              { scale: entrance.iconScale },
+              { translateX: mapPan.x },
+              { translateY: mapPan.y },
             ],
+            bottom: tabVisible ? 88 : 24,
           },
         ]}
       >
-        {showProfilePanel && (
-          <Card style={styles.profilePanelCard}>
-            <View style={styles.profilePanelRow}>
-              <View style={styles.profilePanelAvatarWrap}>
-                {onboardingSelfieUri ? (
-                  <Image
-                    source={{ uri: onboardingSelfieUri }}
-                    style={styles.profilePanelImage}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <View style={styles.profilePanelPlaceholder}>
-                    <Ionicons name="person" size={28} color={NAVY} />
-                  </View>
-                )}
-              </View>
-              <View style={styles.profilePanelTextWrap}>
-                <Text style={styles.profilePanelName}>
-                  {fullLegalName || "Driver"}
-                </Text>
-                <Text style={styles.profilePanelMeta}>
-                  {licenseClass ? `License Class ${licenseClass}` : "License pending"}
-                </Text>
-                {licenseNumber ? (
-                  <Text style={styles.profilePanelMeta}>{licenseNumber}</Text>
-                ) : null}
-                {(preferredJobType || selectedVehicleType) && (
-                  <Text style={styles.profilePanelMeta}>
-                    {preferredJobType || selectedVehicleType}
-                  </Text>
-                )}
-                <View style={styles.verificationBadge}>
-                  <Ionicons
-                    name={
-                      displayVerificationStatus === "confirmed"
-                        ? "checkmark-circle"
-                        : "time-outline"
-                    }
-                    size={14}
-                    color={
-                      displayVerificationStatus === "confirmed"
-                        ? "#10B981"
-                        : "#6E7E91"
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.verificationBadgeText,
-                      displayVerificationStatus === "confirmed" &&
-                        styles.verificationBadgeTextConfirmed,
-                    ]}
-                  >
-                    {displayVerificationStatus === "confirmed"
-                      ? "Verified"
-                      : "Verification pending"}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </Card>
-        )}
+        <View style={styles.mapToggleButton}>
+          <Ionicons name="map" size={22} color={WHITE} />
+        </View>
       </Animated.View>
-
-      {/* ── Scrollable Content ── */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Quick Stats strip ── */}
-        <Animated.View
-          style={[
-            styles.statsRow,
-            {
-              opacity: entrance.headerOpacity,
-              transform: [{ translateY: entrance.headerTranslateY }],
-            },
-          ]}
-        >
-          {stats.flatMap((item, index) => {
-            if (index === 0) {
-              return [
-                <View key={item.label} style={styles.statPill}>
-                  <Text style={styles.statValue}>{item.value}</Text>
-                  <Text style={styles.statLabel}>{item.label}</Text>
-                </View>,
-              ];
-            }
-            return [
-              <View key={`${item.label}-divider`} style={styles.statDivider} />,
-              <View key={item.label} style={styles.statPill}>
-                <Text style={styles.statValue}>{item.value}</Text>
-                <Text style={styles.statLabel}>{item.label}</Text>
-              </View>,
-            ];
-          })}
-        </Animated.View>
-
-        {/* ── Vehicle Card ── */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: entrance.formOpacity,
-              transform: [{ translateY: entrance.formTranslateY }],
-            },
-          ]}
-        >
-          <Text style={styles.sectionTitle}>My Vehicle</Text>
-          <Card style={styles.vehicleCard}>
-            <View style={styles.vehicleImageWrap}>
-              <Image
-                source={{
-                  uri: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&h=400&fit=crop",
-                }}
-                style={styles.vehicleImage}
-                contentFit="cover"
-                transition={200}
-              />
-              <View style={styles.vehicleOverlayTopRight}>
-                <View style={styles.vehicleCheckBadge}>
-                  <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-                </View>
-              </View>
-              <View style={styles.vehicleOverlayBottomLeft}>
-                <View style={styles.mapMarker}>
-                  <Ionicons name="location" size={18} color="#FF7B54" />
-                </View>
-              </View>
-            </View>
-            <Pressable style={styles.primaryButton} onPress={handleAddVehicle}>
-              <Text style={styles.primaryButtonText}>Add Vehicle Info</Text>
-            </Pressable>
-          </Card>
-        </Animated.View>
-
-        {/* ── Verify ID Card ── */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: entrance.formOpacity,
-              transform: [{ translateY: entrance.formTranslateY }],
-            },
-          ]}
-        >
-          <Text style={styles.sectionTitle}>Verification</Text>
-          <Card style={styles.verifyCard}>
-            <View style={styles.verifyRow}>
-              <View style={styles.verifyIconWrap}>
-                <Ionicons name="shield-checkmark-outline" size={22} color="#1E3A8A" />
-              </View>
-              <View style={styles.verifyTextWrap}>
-                <Text style={styles.verifyTitle}>Verify your identity</Text>
-                <Text style={styles.verifySubtitle}>
-                  Complete face verification to unlock more jobs.
-                </Text>
-              </View>
-              <Pressable
-                style={styles.verifyButton}
-                onPress={handleVerify}
-              >
-                <Text style={styles.verifyButtonText}>Verify</Text>
-              </Pressable>
-            </View>
-          </Card>
-        </Animated.View>
-
-        {/* ── Invite Card ── */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: entrance.footerOpacity,
-              transform: [{ translateY: entrance.formTranslateY }],
-            },
-          ]}
-        >
-          <Card style={styles.inviteCard}>
-            <View style={styles.inviteRow}>
-              <View style={styles.inviteTextWrap}>
-                <Text style={styles.inviteTitle}>Invite & Earn</Text>
-                <Text style={styles.inviteSubtitle}>
-                  Share your referral code. Both you and your friend get rewards when they sign up.
-                </Text>
-                <Pressable style={styles.inviteButton} onPress={handleInvite}>
-                  <Text style={styles.inviteButtonText}>Invite Friends</Text>
-                </Pressable>
-              </View>
-              <View style={styles.inviteIllustration}>
-                <View style={styles.inviteAccent} />
-                <View style={styles.inviteCoin}>
-                  <Ionicons name="cash-outline" size={22} color="#FFFFFF" />
-                </View>
-              </View>
-            </View>
-          </Card>
-        </Animated.View>
-      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
+  headerContainer: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 32,
-    gap: 24,
+    paddingBottom: 12,
+    gap: 14,
+    backgroundColor: PEACH,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: BORDER,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+    zIndex: 10,
+    position: "relative",
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 0,
+    paddingBottom: 100,
+    gap: 16,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 12,
   },
   headerLeft: {
-    flexDirection: "row",
+    flex: 1,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+  profileAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: WHITE,
     alignItems: "center",
-    gap: 8,
-    paddingLeft: 20,
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    overflow: "hidden",
+  },
+  profileAvatarImage: {
+    width: "100%",
+    height: "100%",
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 8,
-    paddingRight: 20,
+    gap: 10,
   },
   iconButton: {
     width: 40,
     height: 40,
+    borderRadius: 12,
+    backgroundColor: WHITE,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#EAE1D9",
+    borderColor: BORDER,
+    position: "relative",
   },
   badge: {
     position: "absolute",
@@ -372,354 +545,228 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: "#FFF8F3",
+    borderColor: PEACH,
   },
   badgeText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: WHITE,
   },
-  streakBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#FF7B54",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  streakText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
+  searchToggle: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    paddingVertical: 16,
-    shadowColor: "#2C3E5B",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
-    shadowRadius: 18,
-    elevation: 3,
-  },
-  statPill: {
-    flex: 1,
-    alignItems: "center",
-    gap: 4,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#2C3E5B",
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6E7E91",
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-  },
-  statDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 28,
-    backgroundColor: "#EAE1D9",
-  },
-  section: {
-    gap: 10,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#6E7E91",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    paddingHorizontal: 4,
-  },
-  profileIconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: WHITE,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#EAE1D9",
-    overflow: "hidden",
+    borderColor: BORDER,
   },
-  profileImageSmall: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  searchOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: PEACH,
+    paddingTop: 16,
+    paddingBottom: 12,
+    paddingHorizontal: 20,
+    zIndex: 20,
   },
-  profileInitialsSmall: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#2C3E5B",
-  },
-  profilePanel: {
-    backgroundColor: "#FFF8F3",
-  },
-  profilePanelCard: {
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  profilePanelRow: {
+  searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-  },
-  profilePanelAvatarWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#F5ECE5",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  profilePanelImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  profilePanelPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#F5ECE5",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  profilePanelTextWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  profilePanelName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#2C3E5B",
-  },
-  profilePanelMeta: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#6E7E91",
-  },
-  vehicleCard: {
-    padding: 0,
-    overflow: "hidden",
-  },
-  vehicleImageWrap: {
-    height: 180,
-    backgroundColor: "#FFF8F3",
-    position: "relative",
-  },
-  vehicleImage: {
-    width: "100%",
-    height: "100%",
-  },
-  vehicleOverlayTopRight: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-  },
-  vehicleCheckBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#10B981",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
-    shadowColor: "#10B981",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  vehicleOverlayBottomLeft: {
-    position: "absolute",
-    bottom: 12,
-    left: 12,
-  },
-  mapMarker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: WHITE,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 48,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  primaryButton: {
-    backgroundColor: "#FF7B54",
-    paddingVertical: 16,
+  searchBackIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 48,
+    fontSize: 15,
+    fontWeight: "600",
+    color: NAVY,
+  },
+  filtersWrap: {
+    gap: 10,
+    overflow: "hidden",
+  },
+  filtersContent: {
+    gap: 10,
+    paddingRight: 20,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  chipActive: {
+    backgroundColor: NAVY,
+    borderColor: NAVY,
+  },
+  chipInactive: {
+    backgroundColor: WHITE,
+    borderColor: BORDER,
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  chipTextActive: {
+    color: WHITE,
+  },
+  chipTextInactive: {
+    color: NAVY,
+  },
+  section: {
+    gap: 12,
+  },
+  masonryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  pinCard: {
+    width: "48%",
+    backgroundColor: WHITE,
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  pinCardWide: {
+    width: "100%",
+  },
+  jobCardPressed: {
+    opacity: 0.92,
+  },
+  pinImagePlaceholder: {
+    width: "100%",
+    height: 140,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  pinImage: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
+  pinImageIconWrap: {
+    width: 56,
+    height: 56,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 16,
-    marginVertical: 16,
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 6,
   },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    letterSpacing: 0.2,
+  pinBody: {
+    padding: 12,
+    gap: 6,
   },
-  verifyCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-  },
-  verifyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
-  },
-  verifyIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#EFF6FF",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#BFDBFE",
-  },
-  verifyTextWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  verifyTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#2C3E5B",
-  },
-  verifySubtitle: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#6E7E91",
-    lineHeight: 18,
-  },
-  verifyButton: {
-    backgroundColor: "#FF7B54",
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 12,
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  verifyButtonText: {
+  pinTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#FFFFFF",
-    letterSpacing: 0.2,
-  },
-  inviteCard: {
-    paddingVertical: 20,
-    paddingHorizontal: 18,
-  },
-  inviteRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  inviteTextWrap: {
-    flex: 1,
-    gap: 8,
-  },
-  inviteTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#2C3E5B",
-  },
-  inviteSubtitle: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#6E7E91",
+    color: NAVY,
     lineHeight: 18,
   },
-  inviteButton: {
-    backgroundColor: "#FF7B54",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-    shadowColor: "#FF7B54",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  inviteButtonText: {
-    fontSize: 13,
+  pinPay: {
+    fontSize: 14,
     fontWeight: "700",
-    color: "#FFFFFF",
-    letterSpacing: 0.2,
+    color: ORANGE,
   },
-  inviteIllustration: {
-    width: 80,
-    height: 80,
+  pinLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  pinLocation: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: MUTED,
+  },
+  emptyState: {
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 32,
+    gap: 12,
   },
-  inviteAccent: {
-    position: "absolute",
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#FFF7ED",
+  emptyIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: "#F5ECE5",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#FFEDD5",
+    borderColor: BORDER,
   },
-  inviteCoin: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#10B981",
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  emptyBody: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: MUTED,
+    textAlign: "center",
+    lineHeight: 20,
+    paddingHorizontal: 24,
+  },
+  emptyButton: {
+    marginTop: 4,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: PEACH,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: BORDER,
+  },
+  emptyButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  mapToggleWrap: {
+    position: "absolute",
+    right: 20,
+    bottom: 24,
+    zIndex: 10,
+  },
+  mapToggleButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: NAVY,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#10B981",
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: NAVY,
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 6,
   },
-  verificationBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 4,
-  },
-  verificationBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6E7E91",
-  },
-  verificationBadgeTextConfirmed: {
-    color: "#10B981",
+  bottomSpacer: {
+    height: 24,
   },
 });

@@ -3,7 +3,7 @@ import { v } from "convex/values";
 
 export default defineSchema({
   users: defineTable({
-    clerkUserId: v.string(),
+    userId: v.string(),
     role: v.union(
       v.literal("driver"),
       v.literal("owner"),
@@ -16,8 +16,9 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_clerk_user_id", ["clerkUserId"]),
+    .index("by_user_id", ["userId"]),
 
+<<<<<<< HEAD
   driverProfiles: defineTable({
     userId: v.id("users"),
     fullLegalName: v.optional(v.string()),
@@ -70,19 +71,134 @@ export default defineSchema({
   }).index("by_code", ["code"]),
 
   ads: defineTable({
+=======
+  vehicles: defineTable({
+    ownerId: v.string(),
+>>>>>>> 33eb3cd (updates)
     title: v.string(),
     description: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
-    targetRole: v.union(
-      v.literal("driver"),
-      v.literal("owner"),
-      v.literal("client"),
-      v.literal("corporate"),
-      v.literal("all")
-    ),
-    isActive: v.boolean(),
-    startDate: v.optional(v.number()),
-    endDate: v.optional(v.number()),
+    category: v.string(),
+    make: v.string(),
+    model: v.string(),
+    year: v.number(),
+    color: v.optional(v.string()),
+    licensePlate: v.optional(v.string()),
+    transmission: v.optional(v.string()),
+    fuelType: v.optional(v.string()),
+    seats: v.optional(v.number()),
+    doors: v.optional(v.number()),
+    hasAc: v.boolean(),
+    hasGps: v.boolean(),
+    features: v.array(v.string()),
+    images: v.array(v.string()),
+    pricePerDay: v.number(),
+    pricePerWeek: v.optional(v.number()),
+    pricePerMonth: v.optional(v.number()),
+    securityDeposit: v.number(),
+    minimumRentDays: v.number(),
+    city: v.string(),
+    region: v.string(),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    status: v.string(),
+    isFeatured: v.boolean(),
+    rating: v.number(),
+    reviewCount: v.number(),
+    totalBookings: v.number(),
     createdAt: v.number(),
-  }).index("by_target_role", ["targetRole"]),
+    updatedAt: v.number(),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_category", ["category"])
+    .index("by_city", ["city"])
+    .index("by_status", ["status"])
+    .index("by_price", ["pricePerDay"])
+    .index("by_location", ["latitude", "longitude"]),
+
+  bookings: defineTable({
+    vehicleId: v.id("vehicles"),
+    renterId: v.string(),
+    driverId: v.optional(v.string()),
+    startDate: v.string(),
+    endDate: v.string(),
+    pickupLocation: v.string(),
+    dropoffLocation: v.string(),
+    status: v.string(),
+    paymentStatus: v.string(),
+    subtotal: v.number(),
+    driverFee: v.number(),
+    serviceFee: v.number(),
+    securityDeposit: v.number(),
+    totalAmount: v.number(),
+    currency: v.string(),
+    specialRequests: v.optional(v.string()),
+    cancellationReason: v.optional(v.string()),
+    cancelledBy: v.optional(v.string()),
+    cancelledAt: v.optional(v.number()),
+    pickupTime: v.optional(v.string()),
+    returnTime: v.optional(v.string()),
+    actualPickupTime: v.optional(v.number()),
+    actualReturnTime: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_vehicle", ["vehicleId"])
+    .index("by_renter", ["renterId"])
+    .index("by_driver", ["driverId"])
+    .index("by_status", ["status"])
+    .index("by_dates", ["startDate", "endDate"]),
+
+  reviews: defineTable({
+    bookingId: v.id("bookings"),
+    reviewerId: v.string(),
+    revieweeId: v.string(),
+    vehicleId: v.optional(v.id("vehicles")),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+    categories: v.optional(v.any()),
+    isPublic: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_reviewee", ["revieweeId"])
+    .index("by_vehicle", ["vehicleId"])
+    .index("by_rating", ["rating"]),
+
+  messages: defineTable({
+    bookingId: v.optional(v.id("bookings")),
+    senderId: v.string(),
+    receiverId: v.string(),
+    content: v.string(),
+    attachmentUrl: v.optional(v.string()),
+    isRead: v.boolean(),
+    readAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_booking", ["bookingId"])
+    .index("by_sender", ["senderId"])
+    .index("by_receiver", ["receiverId"])
+    .index("by_unread", ["receiverId", "isRead"]),
+
+  driverProfiles: defineTable({
+    userId: v.string(),
+    licenseNumber: v.optional(v.string()),
+    licenseClass: v.optional(v.string()),
+    licenseExpiry: v.optional(v.string()),
+    yearsOfExperience: v.optional(v.number()),
+    preferredVehicleTypes: v.array(v.string()),
+    availableForHire: v.boolean(),
+    hourlyRate: v.optional(v.number()),
+    dailyRate: v.optional(v.number()),
+    weeklyRate: v.optional(v.number()),
+    monthlyRate: v.optional(v.number()),
+    bio: v.optional(v.string()),
+    rating: v.number(),
+    totalTrips: v.number(),
+    verificationStatus: v.string(),
+    idDocumentUrl: v.optional(v.string()),
+    selfieUrl: v.optional(v.string()),
+    policeClearanceUrl: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
 });

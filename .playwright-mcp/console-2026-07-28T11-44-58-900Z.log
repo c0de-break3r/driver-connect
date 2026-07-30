@@ -1,0 +1,19 @@
+[    2113ms] [LOG] 
+           █████████████      █████████████
+         ███████████████    ███████████████
+       █████████████████  █████████████████
+     ██████████████████████████████████████
+   ████████████████████████████████████████
+ █████████████████████████████████████████████████
+██████████████████████████████████████████████████
+██████████████████████████████████████████████████
+██████████████████████████████████████████████████
+████████████████  █████████████████  █████████████
+██████████████    ███████████████    █████████████
+████████████      █████████████      █████████████
+
+Join us in empowering the world to design great digital experiences - https://careers.mobbin.com @ https://mobbin.com/_next/static/chunks/62335-d4c245b210ea0002.js?dpl=dpl_H4parQ6Yoao2KTDqco7n6ys6SoPH:17
+[    2273ms] [INFO] Initial session @ https://mobbin.com/_next/static/chunks/62335-d4c245b210ea0002.js?dpl=dpl_H4parQ6Yoao2KTDqco7n6ys6SoPH:17
+[    2274ms] [ERROR] Not signed in with the identity provider. @ https://mobbin.com/explore/mobile/screens:0
+[    2372ms] [LOG] [Churnkey] Embed v1.0.74 @ https://mobbin.com/_next/static/chunks/62335-d4c245b210ea0002.js?dpl=dpl_H4parQ6Yoao2KTDqco7n6ys6SoPH:17
+[   20406ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://mobbin.com/_next/static/chunks/62335-d4c245b210ea0002.js?dpl=dpl_H4parQ6Yoao2KTDqco7n6ys6SoPH:17

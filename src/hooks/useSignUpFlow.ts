@@ -1,18 +1,15 @@
 import { useCallback, useState } from "react";
-import * as Haptics from "expo-haptics";
-import { useSignUp, useSSO } from "@clerk/expo";
-
-import { navigatePostAuth } from "@/lib/routing";
+import { useAuth } from "@/contexts/AuthProvider";
+import { supabase } from "@/lib/supabase";
 
 export type SignUpFlowState = {
   email: string;
   password: string;
-  aliasName: string;
+  fullName: string;
   setEmail: (email: string) => void;
   setPassword: (password: string) => void;
-  setAliasName: (name: string) => void;
+  setFullName: (name: string) => void;
   loading: boolean;
-  googleLoading: boolean;
   error: string | null;
   pendingVerification: boolean;
   code: string;
@@ -23,40 +20,37 @@ export type SignUpFlowState = {
   handleVerify: () => Promise<void>;
   handleResendCode: () => Promise<void>;
   setPendingVerification: (pending: boolean) => void;
-  handleGoogleSignUp: () => Promise<void>;
 };
 
 export function useSignUpFlow(): SignUpFlowState {
-  const { signUp } = useSignUp();
-  const { startSSOFlow } = useSSO();
-
+  const { signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [aliasName, setAliasName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [code, setCode] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
-  const canSubmit = email.trim().length > 0 && password.length >= 8;
+  const canSubmit = email.trim().length > 0 && password.length >= 6 && fullName.trim().length > 0;
   const canVerify = code.trim().length >= 6;
 
   const handleSubmit = useCallback(async () => {
-    if (!signUp || !canSubmit) return;
+    if (!canSubmit) return;
     setError(null);
     setLoading(true);
     try {
-      const { error } = await signUp.password({
-        emailAddress: email.trim(),
-        password,
+      const [firstName, ...lastNameParts] = fullName.trim().split(" ");
+      const lastName = lastNameParts.join(" ") || "";
+      const { error } = await signUp(email.trim(), password, {
+        first_name: firstName,
+        last_name: lastName,
+        full_name: fullName.trim(),
       });
       if (error) {
-        setError(error.longMessage ?? error.message);
-        Haptics.notificationAsync(
-          Haptics.NotificationFeedbackType.Error
-        );
+        setError(error.message);
       } else {
+<<<<<<< HEAD
         const signUpResource = signUp as any;
         const reloadedSignUp = await signUpResource.reload?.();
         const currentSignUp = reloadedSignUp ?? signUpResource;
@@ -71,22 +65,23 @@ export function useSignUpFlow(): SignUpFlowState {
             Haptics.NotificationFeedbackType.Success
           );
         }
+=======
+        setPendingVerification(true);
+>>>>>>> 33eb3cd (updates)
       }
     } catch {
       setError("Failed to create account. Please try again.");
-      Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Error
-      );
     } finally {
       setLoading(false);
     }
-  }, [signUp, email, password, canSubmit]);
+  }, [signUp, email, password, fullName, canSubmit]);
 
   const handleVerify = useCallback(async () => {
-    if (!signUp || !canVerify) return;
+    if (!canVerify) return;
     setError(null);
     setLoading(true);
     try {
+<<<<<<< HEAD
       const signUpResource = signUp as any;
       const reloadedSignUp = await signUpResource.reload?.();
       const activeSignUp = reloadedSignUp ?? signUpResource;
@@ -123,21 +118,30 @@ export function useSignUpFlow(): SignUpFlowState {
         }
       } catch (reloadError) {
         console.warn("Failed to reload sign-up after verify:", reloadError);
+=======
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: code.trim(),
+        type: "email",
+      });
+      if (error) {
+        setError(error.message);
+      } else if (data.session) {
+        setPendingVerification(false);
+      } else {
+>>>>>>> 33eb3cd (updates)
         setError("Verification incomplete. Please try again.");
       }
     } catch {
       setError("Invalid code. Please try again.");
-      Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Error
-      );
     } finally {
       setLoading(false);
     }
-  }, [signUp, code, canVerify]);
+  }, [email, code, canVerify]);
 
   const handleResendCode = useCallback(async () => {
-    if (!signUp) return;
     try {
+<<<<<<< HEAD
       const signUpResource = signUp as any;
       const reloadedSignUp = await signUpResource.reload?.();
       const activeSignUp = reloadedSignUp ?? signUpResource;
@@ -145,50 +149,28 @@ export function useSignUpFlow(): SignUpFlowState {
       Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success
       );
+=======
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+      });
+      if (error) {
+        setError(error.message);
+      }
+>>>>>>> 33eb3cd (updates)
     } catch {
       setError("Failed to resend code.");
     }
-  }, [signUp]);
-
-  const handleGoogleSignUp = useCallback(async () => {
-    setError(null);
-    setGoogleLoading(true);
-    try {
-      const result = await startSSOFlow({
-        strategy: "oauth_google",
-      });
-
-      const createdSessionId = result?.createdSessionId;
-      if (createdSessionId) {
-        await result.setActive?.({ session: createdSessionId });
-        Haptics.notificationAsync(
-          Haptics.NotificationFeedbackType.Success
-        );
-        navigatePostAuth();
-      } else {
-        setError(
-          "Google sign-up did not complete. Please try again or use email."
-        );
-      }
-    } catch {
-      setError("Google sign-up failed. Please try again.");
-      Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Error
-      );
-    } finally {
-      setGoogleLoading(false);
-    }
-  }, [startSSOFlow]);
+  }, [email]);
 
   return {
     email,
     password,
-    aliasName,
+    fullName,
     setEmail,
     setPassword,
-    setAliasName,
+    setFullName,
     loading,
-    googleLoading,
     error,
     pendingVerification,
     code,
@@ -199,6 +181,5 @@ export function useSignUpFlow(): SignUpFlowState {
     handleVerify,
     handleResendCode,
     setPendingVerification,
-    handleGoogleSignUp,
   };
 }

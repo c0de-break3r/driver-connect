@@ -1,18 +1,18 @@
 import { Stack, Redirect } from "expo-router";
-import { useAuth } from "@clerk/expo";
+import { useAuth } from "@/contexts/AuthProvider";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useRoleStore } from "@/store/useRoleStore";
 import { getPostAuthRoute } from "@/lib/routing";
 
 export default function OwnerLayout() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isLoaded, signedIn } = useAuth();
   const role = useRoleStore((s) => s.role);
 
   if (!isLoaded) {
     return null;
   }
 
-  if (!isSignedIn) {
+  if (!signedIn) {
     return <Redirect href={getPostAuthRoute(role)} />;
   }
 

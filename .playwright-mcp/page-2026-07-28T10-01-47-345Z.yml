@@ -1,0 +1,181 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - link [ref=e8] [cursor=pointer]:
+          - /url: https://modelcontextprotocol.io
+          - img "MCP" [ref=e9]
+        - paragraph [ref=e85]: mobbin
+      - radiogroup [ref=e87]:
+        - generic [ref=e89]:
+          - radio "Servers"
+          - generic [ref=e90] [cursor=pointer]: Servers
+        - generic [ref=e92]:
+          - radio "Apps"
+          - generic [ref=e93] [cursor=pointer]: Apps
+        - generic [ref=e95]:
+          - radio "Tools" [checked]
+          - generic [ref=e96] [cursor=pointer]: Tools
+        - generic [ref=e98]:
+          - radio "Resources"
+          - generic [ref=e99] [cursor=pointer]: Resources
+      - generic [ref=e13]:
+        - generic [ref=e101]:
+          - generic "Connected (1333ms)" [ref=e103]
+          - button "Disconnect from server" [ref=e104] [cursor=pointer]
+        - button "Client settings" [ref=e14] [cursor=pointer]
+        - button "Toggle color scheme" [ref=e19] [cursor=pointer]
+        - button "Close monitoring sidebar" [ref=e109] [cursor=pointer]
+  - main [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e303]:
+        - generic [ref=e306]:
+          - heading "Tools" [level=3] [ref=e308]
+          - textbox "Search tools..." [ref=e311]
+          - generic [ref=e315]:
+            - switch "Fetch lists one page at a time" [ref=e316]
+            - generic [ref=e320] [cursor=pointer]: Paginated
+          - generic [ref=e325]:
+            - button [active] [ref=e326] [cursor=pointer]:
+              - generic [ref=e328]:
+                - paragraph [ref=e329]: Search Screens
+                - paragraph [ref=e330]: search_screens
+            - button [ref=e331] [cursor=pointer]:
+              - generic [ref=e333]:
+                - paragraph [ref=e334]: Search Flows
+                - paragraph [ref=e335]: search_flows
+            - button [ref=e336] [cursor=pointer]:
+              - generic [ref=e338]:
+                - paragraph [ref=e339]: Search Sections
+                - paragraph [ref=e340]: search_sections
+        - generic [ref=e345]:
+          - generic [ref=e346]:
+            - generic [ref=e347]:
+              - paragraph [ref=e348]: Search Screens
+              - button "Hide description" [expanded] [ref=e349] [cursor=pointer]
+            - generic [ref=e353]: read-only
+          - generic [ref=e359]:
+            - paragraph [ref=e361]: "Search Mobbin for UI screens using natural language. Returns matching screens with inline images and metadata. Examine the returned images to understand each screen's actual content — do not describe or summarize screens based solely on metadata. Each screen has a `mobbin_url` — the canonical Mobbin link for that screen. When you present results to the user, ALWAYS cite each screen you mention as a markdown link to its `mobbin_url` so the user can open it on Mobbin. On hosts that support MCP Apps, also renders an interactive gallery of the results."
+            - separator [ref=e362]
+            - generic [ref=e363]:
+              - generic [ref=e364]:
+                - generic [ref=e365]: query *
+                - paragraph [ref=e366]: "Describe one screen in plain language — the UI elements you'd see and how they relate. Be specific; detail helps. Good: \"login screen with biometric authentication\", \"checkout page with promo code field and Apple Pay button\". Avoid: combining multiple screens/intents (search separately), negations (\"without ads\"), vague style words (\"modern\", \"clean\"), disconnected keyword lists. Name a specific app to filter results to it (e.g. \"Spotify now-playing screen\"). Do not include platform (ios/web) — use the dedicated parameter."
+                - textbox "query" [ref=e368]
+              - generic [ref=e369]:
+                - generic [ref=e370]: platform *
+                - paragraph [ref=e371]: Platform to search
+                - textbox "platform" [ref=e373] [cursor=pointer]
+              - generic [ref=e374]:
+                - generic [ref=e375]: mode
+                - paragraph [ref=e376]: Search mode. "standard" returns results with low latency. "deep" uses an AI-powered pipeline that interprets intent and scores results for relevance — ideal for nuanced queries. "fast" is a deprecated alias for "standard" and will be removed in a future version — use "standard" instead.
+                - textbox "mode" [ref=e378] [cursor=pointer]: deep
+              - generic [ref=e379]:
+                - generic [ref=e380]: exclude_screen_ids
+                - paragraph [ref=e381]: Screen IDs to exclude from results
+                - textbox "exclude_screen_ids" [ref=e383]: "[]"
+              - generic [ref=e384]:
+                - generic [ref=e385]: limit
+                - paragraph [ref=e386]: Maximum number of screens to return. Higher number of screens returned causes increased context usage.
+                - generic [ref=e387]:
+                  - textbox "limit" [ref=e388]: "20"
+                  - generic [ref=e390]:
+                    - button [ref=e391] [cursor=pointer]
+                    - button [ref=e394] [cursor=pointer]
+              - generic [ref=e397]:
+                - generic [ref=e398]: image_format
+                - paragraph [ref=e399]: Image format. Use jpg if your client does not support webp.
+                - textbox "image_format" [ref=e401] [cursor=pointer]: webp
+          - button "Execute Tool" [ref=e405] [cursor=pointer]
+      - generic [ref=e120]:
+        - separator "Resize monitoring sidebar" [ref=e121]
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - radiogroup "Monitoring screen" [ref=e125]:
+              - generic [ref=e127]:
+                - radio "Protocol" [checked]
+                - generic [ref=e128] [cursor=pointer]: Protocol
+              - generic [ref=e129]:
+                - radio "Network"
+                - generic [ref=e130] [cursor=pointer]: Network
+            - textbox "Search" [ref=e133]:
+              - /placeholder: Search...
+          - generic [ref=e137]:
+            - generic [ref=e138]:
+              - generic [ref=e139]:
+                - heading "Messages" [level=4] [ref=e140]
+                - generic [ref=e141]: Legacy
+              - generic [ref=e143]:
+                - textbox "History sort direction" [ref=e146] [cursor=pointer]: Newest First
+                - button "Clear" [ref=e147] [cursor=pointer]
+                - button "Export" [ref=e150] [cursor=pointer]
+                - button "Expand all" [ref=e153] [cursor=pointer]
+            - generic [ref=e165]:
+              - generic [ref=e168]:
+                - generic [ref=e169]:
+                  - generic [ref=e170]:
+                    - paragraph [ref=e171]: 09:58:34
+                    - generic [ref=e172]: client → server
+                  - generic [ref=e174]:
+                    - paragraph [ref=e175]: 821ms
+                    - generic [ref=e176]: OK
+                - generic [ref=e178]:
+                  - generic [ref=e179]: resources/templates/list
+                  - generic [ref=e182]:
+                    - button "Replay" [ref=e183] [cursor=pointer]
+                    - button "Pin" [ref=e188] [cursor=pointer]
+                    - button "Expand" [ref=e192] [cursor=pointer]
+              - generic [ref=e198]:
+                - generic [ref=e199]:
+                  - generic [ref=e200]:
+                    - paragraph [ref=e201]: 09:58:34
+                    - generic [ref=e202]: client → server
+                  - generic [ref=e204]:
+                    - paragraph [ref=e205]: 823ms
+                    - generic [ref=e206]: OK
+                - generic [ref=e208]:
+                  - generic [ref=e209]: resources/list
+                  - generic [ref=e212]:
+                    - button "Replay" [ref=e213] [cursor=pointer]
+                    - button "Pin" [ref=e218] [cursor=pointer]
+                    - button "Expand" [ref=e222] [cursor=pointer]
+              - generic [ref=e228]:
+                - generic [ref=e229]:
+                  - generic [ref=e230]:
+                    - paragraph [ref=e231]: 09:58:34
+                    - generic [ref=e232]: client → server
+                  - generic [ref=e234]:
+                    - paragraph [ref=e235]: 477ms
+                    - generic [ref=e236]: OK
+                - generic [ref=e238]:
+                  - generic [ref=e239]: tools/list
+                  - generic [ref=e242]:
+                    - button "Replay" [ref=e243] [cursor=pointer]
+                    - button "Pin" [ref=e248] [cursor=pointer]
+                    - button "Expand" [ref=e252] [cursor=pointer]
+              - generic [ref=e258]:
+                - generic [ref=e260]:
+                  - paragraph [ref=e261]: 09:58:33
+                  - generic [ref=e262]: client → server
+                - generic [ref=e264]:
+                  - generic [ref=e265]: notifications/initialized
+                  - generic [ref=e268]:
+                    - button "Pin" [ref=e269] [cursor=pointer]
+                    - button "Expand" [ref=e273] [cursor=pointer]
+              - generic [ref=e279]:
+                - generic [ref=e280]:
+                  - generic [ref=e281]:
+                    - paragraph [ref=e282]: 09:58:32
+                    - generic [ref=e283]: client → server
+                  - generic [ref=e285]:
+                    - paragraph [ref=e286]: 582ms
+                    - generic [ref=e287]: OK
+                - generic [ref=e289]:
+                  - generic [ref=e290]: initialize
+                  - generic [ref=e293]:
+                    - button "Pin" [ref=e294] [cursor=pointer]
+                    - button "Expand" [ref=e298] [cursor=pointer]
+  - contentinfo [ref=e81]:
+    - generic [ref=e82]:
+      - paragraph [ref=e83]: v2.0.0
+      - paragraph [ref=e84]: Copyright © Model Context Protocol a Series of LF Projects, LLC.

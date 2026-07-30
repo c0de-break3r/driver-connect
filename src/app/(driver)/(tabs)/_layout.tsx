@@ -1,10 +1,11 @@
 import { Tabs, Redirect } from "expo-router";
-import { Platform, View, Pressable, StyleSheet } from "react-native";
+import { Platform, View, Pressable, StyleSheet, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { useRef, useState } from "react";
-import { useAuth } from "@clerk/expo";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthProvider";
 import { useRoleStore } from "@/store/useRoleStore";
+import { useTabVisibilityStore } from "@/store/useTabVisibilityStore";
 
 const NAVY = "#2C3E5B";
 
@@ -17,14 +18,23 @@ interface IconConfig {
 const icons: Record<string, IconConfig> = {
   dashboard: { active: "home", inactive: "home-outline", component: "ionicons" },
   map: { active: "map", inactive: "map-outline", component: "ionicons" },
-  activity: { active: "time", inactive: "time-outline", component: "ionicons" },
-  messages: { active: "message", inactive: "message", component: "antdesign" },
   wallet: { active: "wallet", inactive: "wallet-outline", component: "ionicons" },
+  account: { active: "person", inactive: "person-outline", component: "ionicons" },
 };
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const [activeLabelIndex, setActiveLabelIndex] = useState<number | null>(null);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hideTimer = useState<ReturnType<typeof setTimeout> | undefined>(undefined)[0];
+  const setHideTimer = useState<ReturnType<typeof setTimeout> | undefined>(undefined)[1];
+  const tabVisible = useTabVisibilityStore((s) => s.visible);
+  const [animatedValue] = useState(() => new Animated.Value(1));
+
+  useEffect(() => {
+    Animated.spring(animatedValue, {
+      toValue: tabVisible ? 1 : 0,
+      useNativeDriver: true,
+    }).start();
+  }, [tabVisible, animatedValue]);
 
   const handleTap = (index: number, routeName: string) => {
     const isAlreadyActive = state.index === index;
@@ -35,65 +45,83 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
       setActiveLabelIndex(index);
     }
 
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => {
+    if (hideTimer) clearTimeout(hideTimer);
+    const id = setTimeout(() => {
       if (state.index === index) return;
       setActiveLabelIndex(null);
     }, 1500);
+    setHideTimer(id);
   };
 
   return (
-    <View style={styles.tabBar}>
-    {state.routes.map((route: any, index: number) => {
-      const iconConfig = icons[route.name] ?? { active: "ellipse", inactive: "ellipse-outline", component: "ionicons" } as IconConfig;
-      const isFocused = state.index === index;
-      const iconName = isFocused || activeLabelIndex === index ? iconConfig.active : iconConfig.inactive;
+    <Animated.View
+      style={[
+        styles.tabBar,
+        {
+          transform: [
+            {
+              translateY: animatedValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [100, 0],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      {state.routes.map((route: any, index: number) => {
+        const iconConfig = icons[route.name] ?? { active: "ellipse", inactive: "ellipse-outline", component: "ionicons" } as IconConfig;
+        const isFocused = state.index === index;
+        const iconName = isFocused || activeLabelIndex === index ? iconConfig.active : iconConfig.inactive;
 
-      return (
-        <Pressable
-          key={route.key}
-          style={styles.tabItem}
-          onPress={() => handleTap(index, route.name)}
-          hitSlop={8}
-        >
-          <View
-            style={[
-              styles.iconWrap,
-              isFocused && styles.iconWrapActive,
-            ]}
+        return (
+          <Pressable
+            key={route.key}
+            style={styles.tabItem}
+            onPress={() => handleTap(index, route.name)}
+            hitSlop={8}
           >
-            {iconConfig.component === "antdesign" ? (
-              <AntDesign
-                name={iconName as any}
-                size={22}
-                color={isFocused ? "#FFFFFF" : NAVY}
-              />
-            ) : (
-              <Ionicons
-                name={iconName as keyof typeof Ionicons.glyphMap}
-                size={22}
-                color={isFocused ? "#FFFFFF" : NAVY}
-              />
-            )}
-          </View>
-        </Pressable>
-      );
-    })}
-  </View>
+            <View
+              style={[
+                styles.iconWrap,
+                isFocused && styles.iconWrapActive,
+              ]}
+            >
+              {iconConfig.component === "antdesign" ? (
+                <AntDesign
+                  name={iconName as any}
+                  size={22}
+                  color={isFocused ? "#FFFFFF" : NAVY}
+                />
+              ) : (
+                <Ionicons
+                  name={iconName as keyof typeof Ionicons.glyphMap}
+                  size={22}
+                  color={isFocused ? "#FFFFFF" : NAVY}
+                />
+              )}
+            </View>
+          </Pressable>
+        );
+      })}
+    </Animated.View>
   );
 }
 
 export default function DriverTabsLayout() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isLoaded, signedIn } = useAuth();
   const role = useRoleStore((s) => s.role);
 
   if (!isLoaded) {
     return null;
   }
 
-  if (!isSignedIn || role !== "driver") {
-    const href = role === "driver" ? "/(auth)/sign-in" : "/(onboarding)/role-select";
-    return <Redirect href={href as any} />;
+  if (!signedIn) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
+
+  if (role !== "driver") {
+    return <Redirect href="/role-select" />;
   }
 
   return (
@@ -106,22 +134,25 @@ export default function DriverTabsLayout() {
     >
       <Tabs.Screen name="dashboard" options={{ title: "Home" }} />
       <Tabs.Screen name="map" options={{ title: "Map" }} />
-      <Tabs.Screen name="activity" options={{ title: "Activity" }} />
-      <Tabs.Screen name="messages" options={{ title: "Message" }} />
       <Tabs.Screen name="wallet" options={{ title: "Wallet" }} />
+      <Tabs.Screen name="account" options={{ title: "Account" }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
     backgroundColor: "#FFF8F3",
     paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#EAE1D9",
+    borderTopWidth: 0,
     paddingBottom: Platform.OS === "ios" ? 24 : 10,
   },
   tabItem: {

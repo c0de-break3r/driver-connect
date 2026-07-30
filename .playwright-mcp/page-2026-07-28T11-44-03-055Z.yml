@@ -1,0 +1,2048 @@
+- generic [active] [ref=f41e1]:
+  - generic [ref=f41e2]:
+    - navigation [ref=f41e3]:
+      - link [ref=f41e5] [cursor=pointer]:
+        - /url: /
+      - link "Pricing" [ref=f41e9] [cursor=pointer]:
+        - /url: /pricing
+      - link "Awards" [ref=f41e11] [cursor=pointer]:
+        - /url: /awards
+      - link "Log in" [ref=f41e13] [cursor=pointer]:
+        - /url: /login
+      - link "Join for free" [ref=f41e15] [cursor=pointer]:
+        - /url: /signup
+    - main [ref=f41e18]:
+      - generic [ref=f41e20]:
+        - generic [ref=f41e21]:
+          - generic [ref=f41e22]:
+            - generic [ref=f41e23]:
+              - generic [ref=f41e24]:
+                - heading "Explore mobile app designs" [level=1] [ref=f41e25]
+                - paragraph [ref=f41e26]: Discover mobile app UI & UX design ideas & examples from the world’s best apps on Mobbin
+              - radiogroup [ref=f41e27]:
+                - radio "Mobile" [checked] [ref=f41e28] [cursor=pointer]
+                - radio "Web" [ref=f41e29] [cursor=pointer]
+                - radio "Sites" [ref=f41e30] [cursor=pointer]
+            - navigation [ref=f41e32]:
+              - generic [ref=f41e33]:
+                - heading "Browse by category" [level=2] [ref=f41e34]
+                - list [ref=f41e35]:
+                  - listitem [ref=f41e36]:
+                    - link "Categories" [ref=f41e37] [cursor=pointer]:
+                      - /url: /explore/mobile/app-categories
+                  - listitem [ref=f41e42]:
+                    - link "Screens" [ref=f41e43] [cursor=pointer]:
+                      - /url: /explore/mobile/screens
+                  - listitem [ref=f41e49]:
+                    - link "UI Elements" [ref=f41e50] [cursor=pointer]:
+                      - /url: /explore/mobile/ui-elements
+                  - listitem [ref=f41e56]:
+                    - link "Flows" [ref=f41e57] [cursor=pointer]:
+                      - /url: /explore/mobile/flows
+          - generic [ref=f41e64]:
+            - article [ref=f41e65]:
+              - heading "Popular Collections" [level=2] [ref=f41e66]
+              - list [ref=f41e67]:
+                - listitem [ref=f41e68]:
+                  - article [ref=f41e69]:
+                    - link "View collection Fintech" [ref=f41e70] [cursor=pointer]:
+                      - /url: /collections/2c465f76-6c8d-48fb-9bc0-3fd3af8e7ff8/mobile/screens
+                    - generic [ref=f41e72]:
+                      - img "preview screen 0" [ref=f41e73]
+                      - img "preview screen 1" [ref=f41e74]
+                      - img "preview screen 2" [ref=f41e75]
+                    - generic [ref=f41e76]:
+                      - link [ref=f41e77] [cursor=pointer]:
+                        - /url: /@Ezzi
+                        - img "Avatar of Sadad Sayad" [ref=f41e79]
+                      - generic [ref=f41e80]:
+                        - paragraph [ref=f41e81]: Fintech
+                        - link "Sadad Sayad" [ref=f41e82] [cursor=pointer]:
+                          - /url: /@Ezzi
+                - listitem [ref=f41e83]:
+                  - article [ref=f41e84]:
+                    - link "View collection Critical States" [ref=f41e85] [cursor=pointer]:
+                      - /url: /collections/599a2ca5-ca4c-4c99-be6b-3cdc4ee7f080/mobile/screens
+                    - generic [ref=f41e87]:
+                      - img "preview screen 0" [ref=f41e88]
+                      - img "preview screen 1" [ref=f41e89]
+                      - img "preview screen 2" [ref=f41e90]
+                    - generic [ref=f41e91]:
+                      - link [ref=f41e92] [cursor=pointer]:
+                        - /url: /@anamol
+                        - img "Avatar of Anamol Rajbhandari" [ref=f41e94]
+                      - generic [ref=f41e95]:
+                        - paragraph [ref=f41e96]: Critical States
+                        - link "Anamol Rajbhandari" [ref=f41e97] [cursor=pointer]:
+                          - /url: /@anamol
+                - listitem [ref=f41e98]:
+                  - article [ref=f41e99]:
+                    - link "View collection KYC" [ref=f41e100] [cursor=pointer]:
+                      - /url: /collections/b0315c8c-d62d-47b9-abf4-d4b876edde3e/mobile/screens
+                    - generic [ref=f41e102]:
+                      - img "preview screen 0" [ref=f41e103]
+                      - img "preview screen 1" [ref=f41e104]
+                      - img "preview screen 2" [ref=f41e105]
+                    - generic [ref=f41e106]:
+                      - link [ref=f41e107] [cursor=pointer]:
+                        - /url: /@azbelgili
+                        - img "Avatar of Gili Azbel" [ref=f41e109]
+                      - generic [ref=f41e110]:
+                        - paragraph [ref=f41e111]: KYC
+                        - link "Gili Azbel" [ref=f41e112] [cursor=pointer]:
+                          - /url: /@azbelgili
+                - listitem [ref=f41e113]:
+                  - article [ref=f41e114]:
+                    - link "View collection Notification" [ref=f41e115] [cursor=pointer]:
+                      - /url: /collections/c69323ff-216f-4014-9c75-73bb477538fb/mobile/screens
+                    - generic [ref=f41e117]:
+                      - img "preview screen 0" [ref=f41e118]
+                      - img "preview screen 1" [ref=f41e119]
+                      - img "preview screen 2" [ref=f41e120]
+                    - generic [ref=f41e121]:
+                      - img "Avatar of Haotian" [ref=f41e123]
+                      - generic [ref=f41e124]:
+                        - paragraph [ref=f41e125]: Notification
+                        - paragraph [ref=f41e126]: Haotian
+                - listitem [ref=f41e127]:
+                  - article [ref=f41e128]:
+                    - link "View collection Banners" [ref=f41e129] [cursor=pointer]:
+                      - /url: /collections/1707100a-d9bf-4fca-9510-10088f006200/mobile/screens
+                    - generic [ref=f41e131]:
+                      - img "preview screen 0" [ref=f41e132]
+                      - img "preview screen 1" [ref=f41e133]
+                      - img "preview screen 2" [ref=f41e134]
+                    - generic [ref=f41e135]:
+                      - img "Avatar of Phia" [ref=f41e137]
+                      - generic [ref=f41e138]:
+                        - paragraph [ref=f41e139]: Banners
+                        - paragraph [ref=f41e140]: Phia
+                - listitem [ref=f41e141]:
+                  - article [ref=f41e142]:
+                    - link "View collection homepage" [ref=f41e143] [cursor=pointer]:
+                      - /url: /collections/2d5bf94d-b29b-49dc-85e2-3c467327d93a/mobile/screens
+                    - generic [ref=f41e145]:
+                      - img "preview screen 0" [ref=f41e146]
+                      - img "preview screen 1" [ref=f41e147]
+                      - img "preview screen 2" [ref=f41e148]
+                    - generic [ref=f41e149]:
+                      - link [ref=f41e150] [cursor=pointer]:
+                        - /url: /@vickie
+                        - img "Avatar of Jing" [ref=f41e152]
+                      - generic [ref=f41e153]:
+                        - paragraph [ref=f41e154]: homepage
+                        - link "Jing" [ref=f41e155] [cursor=pointer]:
+                          - /url: /@vickie
+            - article [ref=f41e156]:
+              - heading "What’s trending" [level=2] [ref=f41e157]
+              - list [ref=f41e159]:
+                - listitem [ref=f41e160]:
+                  - article [ref=f41e161]:
+                    - generic [ref=f41e162]:
+                      - link "Account Overview" [ref=f41e163] [cursor=pointer]:
+                        - /url: /explore/screens/04517e3b-abac-4250-8af0-433d2c26d7de
+                        - img "KakaoBank iOS screen" [ref=f41e164]
+                      - generic: Open
+                      - generic [ref=f41e165]:
+                        - generic:
+                          - link "Save" [ref=f41e166] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e169] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e173]:
+                      - generic [ref=f41e176]:
+                        - link "Tab Bar" [ref=f41e177] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Top Navigation Bar" [ref=f41e178] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Status Dot" [ref=f41e179] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/status-dot
+                        - link "Divider" [ref=f41e180] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/divider
+                        - link "Wallet & Balance" [ref=f41e181] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/wallet-balance
+                        - link "Home" [ref=f41e182] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Logging In" [ref=f41e183] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                        - link "Editing & Updating" [ref=f41e184] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/editing-updating
+                      - button "Scroll left" [ref=f41e186] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e192] [cursor=pointer]
+                    - link "KakaoBank" [ref=f41e197] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e200]:
+                  - article [ref=f41e201]:
+                    - generic [ref=f41e202]:
+                      - link "Home Feed" [ref=f41e203] [cursor=pointer]:
+                        - /url: /explore/screens/2aeb4bc9-a474-4696-92b6-5f1b3994a0a9
+                        - img "Nextdoor iOS screen" [ref=f41e204]
+                      - generic: Open
+                      - generic [ref=f41e205]:
+                        - generic:
+                          - link "Save" [ref=f41e206] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e209] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e213]:
+                      - generic [ref=f41e216]:
+                        - link "Tab Bar" [ref=f41e217] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Carousel" [ref=f41e218] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/carousel
+                        - link "Top Navigation Bar" [ref=f41e219] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Floating Action Button" [ref=f41e220] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/floating-action-button
+                        - link "Status Dot" [ref=f41e221] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/status-dot
+                        - link "Home" [ref=f41e222] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Publishing" [ref=f41e223] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/publishing
+                        - link "Selecting & Choosing" [ref=f41e224] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/selecting-choosing
+                        - link "Uploading & Downloading" [ref=f41e225] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/uploading-downloading
+                        - link "Listing" [ref=f41e226] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/listing
+                        - link "Filtering & Sorting" [ref=f41e227] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/filtering-sorting
+                        - link "Searching & Finding" [ref=f41e228] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Logging In" [ref=f41e229] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e231] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e237] [cursor=pointer]
+                    - link "Nextdoor" [ref=f41e242] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e245]:
+                  - article [ref=f41e246]:
+                    - generic [ref=f41e247]:
+                      - link "Morning Homepage" [ref=f41e248] [cursor=pointer]:
+                        - /url: /explore/screens/839dd8c6-fd52-486a-a599-39f5242de9ba
+                        - img "stoic. iOS screen" [ref=f41e249]
+                      - generic: Open
+                      - generic [ref=f41e250]:
+                        - generic:
+                          - link "Save" [ref=f41e251] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e254] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e258]:
+                      - generic [ref=f41e261]:
+                        - link "Top Navigation Bar" [ref=f41e262] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Tab" [ref=f41e263] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab
+                        - link "Tab Bar" [ref=f41e264] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Calendar" [ref=f41e265] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/calendar
+                        - link "Home" [ref=f41e266] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Logging & Tracking" [ref=f41e267] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-tracking
+                        - link "Subscribing & Upgrading" [ref=f41e268] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/subscribing-upgrading
+                      - button "Scroll left" [ref=f41e270] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e276] [cursor=pointer]
+                    - link "stoic." [ref=f41e281] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e284]:
+                  - article [ref=f41e285]:
+                    - generic [ref=f41e286]:
+                      - link "Updated Dashboard" [ref=f41e287] [cursor=pointer]:
+                        - /url: /explore/screens/025e71c5-5d90-4e28-84cb-a92cf2ebd165
+                        - img "Plata Card iOS screen" [ref=f41e288]
+                      - generic: Open
+                      - generic [ref=f41e289]:
+                        - generic:
+                          - link "Save" [ref=f41e290] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e293] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e297]:
+                      - generic [ref=f41e300]:
+                        - link "Tab Bar" [ref=f41e301] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Home" [ref=f41e302] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                      - button "Scroll left" [ref=f41e304] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e309] [cursor=pointer]
+                    - link "Plata Card" [ref=f41e314] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e317]:
+                  - article [ref=f41e318]:
+                    - generic [ref=f41e319]:
+                      - link "Food Ordering Homepage" [ref=f41e320] [cursor=pointer]:
+                        - /url: /explore/screens/2701660c-de0a-4fe9-a1fb-88f97be59df6
+                        - img "Swiggy iOS screen" [ref=f41e321]
+                      - generic: Open
+                      - generic [ref=f41e322]:
+                        - generic:
+                          - link "Save" [ref=f41e323] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e326] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e330]:
+                      - generic [ref=f41e333]:
+                        - link "Avatar" [ref=f41e334] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/avatar
+                        - link "Tab Bar" [ref=f41e335] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Segmented Control" [ref=f41e336] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/segmented-control
+                        - link "Browse & Discover" [ref=f41e337] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/browse-discover
+                        - link "Home" [ref=f41e338] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Logging In" [ref=f41e339] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                        - link "Searching & Finding" [ref=f41e340] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Recording Audio & Video" [ref=f41e341] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/recording-audio-video
+                        - link "Creating Account" [ref=f41e342] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e343] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Adding & Creating" [ref=f41e344] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-creating
+                      - button "Scroll left" [ref=f41e346] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e352] [cursor=pointer]
+                    - link "Swiggy" [ref=f41e357] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e360]:
+                  - article [ref=f41e361]:
+                    - generic [ref=f41e362]:
+                      - link "Home Dashboard" [ref=f41e363] [cursor=pointer]:
+                        - /url: /explore/screens/5596d892-ccc6-40ad-b4aa-ce0c63b934a6
+                        - img "Origin iOS screen" [ref=f41e364]
+                      - generic: Open
+                      - generic [ref=f41e365]:
+                        - generic:
+                          - link "Save" [ref=f41e366] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e369] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e373]:
+                      - generic [ref=f41e376]:
+                        - link "Tab" [ref=f41e377] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab
+                        - link "Banner" [ref=f41e378] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/banner
+                        - link "Tab Bar" [ref=f41e379] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Empty State" [ref=f41e380] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/empty-state
+                        - link "Home" [ref=f41e381] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Creating Account" [ref=f41e382] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e383] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e385] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e391] [cursor=pointer]
+                    - link "Origin" [ref=f41e396] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e399]:
+                  - article [ref=f41e400]:
+                    - generic [ref=f41e401]:
+                      - link "Wallet options" [ref=f41e402] [cursor=pointer]:
+                        - /url: /explore/screens/a7ef7a7a-76fb-4eac-8548-b8628f287cd4
+                      - generic: Open
+                      - generic [ref=f41e405]:
+                        - generic:
+                          - link "Save" [ref=f41e406] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e409] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e413]:
+                      - generic [ref=f41e416]:
+                        - link "Illustration" [ref=f41e417] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/illustration
+                        - link "Button" [ref=f41e418] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/button
+                        - link "Welcome & Get Started" [ref=f41e419] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/welcome-get-started
+                        - link "Creating Account" [ref=f41e420] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e421] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Logging In" [ref=f41e422] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e424] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e430] [cursor=pointer]
+                    - link "Trust Wallet" [ref=f41e435] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e438]:
+                  - article [ref=f41e439]:
+                    - generic [ref=f41e440]:
+                      - link "Sleep Data Dashboard" [ref=f41e441] [cursor=pointer]:
+                        - /url: /explore/screens/36e5a755-9c0d-4afb-ba4e-dff42cd39a47
+                        - img "Ultrahuman iOS screen" [ref=f41e442]
+                      - generic: Open
+                      - generic [ref=f41e443]:
+                        - generic:
+                          - link "Save" [ref=f41e444] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e447] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e451]:
+                      - generic [ref=f41e454]:
+                        - link "Tab Bar" [ref=f41e455] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Dashboard" [ref=f41e456] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/dashboard
+                        - link "Charts" [ref=f41e457] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/charts
+                        - link "Home" [ref=f41e458] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Logging & Tracking" [ref=f41e459] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-tracking
+                        - link "Editing & Updating" [ref=f41e460] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/editing-updating
+                        - link "Logging In" [ref=f41e461] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e463] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e469] [cursor=pointer]
+                    - link "Ultrahuman" [ref=f41e474] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e477]:
+                  - article [ref=f41e478]:
+                    - generic [ref=f41e479]:
+                      - link "Product Listing" [ref=f41e480] [cursor=pointer]:
+                        - /url: /explore/screens/e3a007ee-7cae-4e46-9789-699e00e5fcad
+                        - img "On iOS screen" [ref=f41e481]
+                      - generic: Open
+                      - generic [ref=f41e482]:
+                        - generic:
+                          - link "Save" [ref=f41e483] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e486] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e490]:
+                      - generic [ref=f41e493]:
+                        - link "Tab Bar" [ref=f41e494] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Top Navigation Bar" [ref=f41e495] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Toolbar" [ref=f41e496] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/toolbar
+                        - link "Banner" [ref=f41e497] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/banner
+                        - link "Floating Action Button" [ref=f41e498] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/floating-action-button
+                        - link "Browse & Discover" [ref=f41e499] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/browse-discover
+                        - link "Shop & Storefront" [ref=f41e500] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/shop-storefront
+                        - link "Filtering & Sorting" [ref=f41e501] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/filtering-sorting
+                        - link "Searching & Finding" [ref=f41e502] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Creating Account" [ref=f41e503] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e504] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Logging In" [ref=f41e505] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                        - link "Switching View" [ref=f41e506] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/switching-view
+                      - button "Scroll left" [ref=f41e508] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e514] [cursor=pointer]
+                    - link "On" [ref=f41e519] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e522]:
+                  - article [ref=f41e523]:
+                    - generic [ref=f41e524]:
+                      - link "Premium Offer" [ref=f41e525] [cursor=pointer]:
+                        - /url: /explore/screens/bdde362c-43a6-42f2-8ede-4e6500ae90fd
+                        - img "stoic. iOS screen" [ref=f41e526]
+                      - generic: Open
+                      - generic [ref=f41e527]:
+                        - generic:
+                          - link "Save" [ref=f41e528] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e531] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e535]:
+                      - generic [ref=f41e538]:
+                        - link "Segmented Control" [ref=f41e539] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/segmented-control
+                        - link "Full-Screen Overlay" [ref=f41e540] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/full-screen-overlay
+                        - link "Subscription & Paywall" [ref=f41e541] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/subscription-paywall
+                        - link "Scheduling" [ref=f41e542] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/scheduling
+                        - link "Onboarding" [ref=f41e543] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Subscribing & Upgrading" [ref=f41e544] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/subscribing-upgrading
+                      - button "Scroll left" [ref=f41e546] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e552] [cursor=pointer]
+                    - link "stoic." [ref=f41e557] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e560]:
+                  - article [ref=f41e561]:
+                    - generic [ref=f41e562]:
+                      - link "Menu Items" [ref=f41e563] [cursor=pointer]:
+                        - /url: /explore/screens/c47471c4-382f-4115-93b3-d941047be8ba
+                        - img "Chipotle iOS screen" [ref=f41e564]
+                      - generic: Open
+                      - generic [ref=f41e565]:
+                        - generic:
+                          - link "Save" [ref=f41e566] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e569] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e573]:
+                      - generic [ref=f41e576]:
+                        - link "Stacked List" [ref=f41e577] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/stacked-list
+                        - link "Browse & Discover" [ref=f41e578] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/browse-discover
+                        - link "Copying & Duplicating" [ref=f41e579] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/copying-duplicating
+                        - link "Adding & Creating" [ref=f41e580] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-creating
+                        - link "Sharing" [ref=f41e581] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/sharing
+                        - link "Adding to Cart & Bag" [ref=f41e582] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-to-cart-bag
+                        - link "Selecting & Choosing" [ref=f41e583] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/selecting-choosing
+                      - button "Scroll left" [ref=f41e585] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e591] [cursor=pointer]
+                    - link "Chipotle" [ref=f41e596] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e599]:
+                  - article [ref=f41e600]:
+                    - generic [ref=f41e601]:
+                      - link "App Introduction" [ref=f41e602] [cursor=pointer]:
+                        - /url: /explore/screens/b5ffe641-6299-43fa-95ab-bcf09ed1527b
+                      - generic: Open
+                      - generic [ref=f41e605]:
+                        - generic:
+                          - link "Save" [ref=f41e606] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e609] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e613]:
+                      - generic [ref=f41e616]:
+                        - link "Illustration" [ref=f41e617] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/illustration
+                        - link "Splash Screen" [ref=f41e618] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/splash-page-examples
+                        - link "Scheduling" [ref=f41e619] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/scheduling
+                        - link "Onboarding" [ref=f41e620] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e622] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e628] [cursor=pointer]
+                    - link "stoic." [ref=f41e633] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e636]:
+                  - article [ref=f41e637]:
+                    - generic [ref=f41e638]:
+                      - link "Walmart Homepage" [ref=f41e639] [cursor=pointer]:
+                        - /url: /explore/screens/539a9bad-2658-4773-a8b7-41545061e219
+                        - img "Walmart iOS screen" [ref=f41e640]
+                      - generic: Open
+                      - generic [ref=f41e641]:
+                        - generic:
+                          - link "Save" [ref=f41e642] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e645] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e649]:
+                      - generic [ref=f41e652]:
+                        - link "Status Dot" [ref=f41e653] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/status-dot
+                        - link "Tab Bar" [ref=f41e654] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Search Bar" [ref=f41e655] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/search-bar
+                        - link "Top Navigation Bar" [ref=f41e656] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Home" [ref=f41e657] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Browse & Discover" [ref=f41e658] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/browse-discover
+                        - link "Shop & Storefront" [ref=f41e659] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/shop-storefront
+                        - link "Pricing" [ref=f41e660] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/pricing
+                        - link "Searching & Finding" [ref=f41e661] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Scanning" [ref=f41e662] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/scanning
+                        - link "Creating Account" [ref=f41e663] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e664] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Subscribing & Upgrading" [ref=f41e665] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/subscribing-upgrading
+                        - link "Watching Video" [ref=f41e666] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/watching-video
+                        - link "Logging In" [ref=f41e667] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e669] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e675] [cursor=pointer]
+                    - link "Walmart" [ref=f41e680] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e683]:
+                  - article [ref=f41e684]:
+                    - generic [ref=f41e685]:
+                      - link "Welcome screen" [ref=f41e686] [cursor=pointer]:
+                        - /url: /explore/screens/2a7ef919-41a1-4157-8517-bb0d3e8f6466
+                        - img "On iOS screen" [ref=f41e687]
+                      - generic: Open
+                      - generic [ref=f41e688]:
+                        - generic:
+                          - link "Save" [ref=f41e689] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e692] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e696]:
+                      - generic [ref=f41e699]:
+                        - link "Button" [ref=f41e700] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/button
+                        - link "Welcome & Get Started" [ref=f41e701] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/welcome-get-started
+                        - link "Creating Account" [ref=f41e702] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e703] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e705] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e711] [cursor=pointer]
+                    - link "On" [ref=f41e716] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e719]:
+                  - article [ref=f41e720]:
+                    - generic [ref=f41e721]:
+                      - link "Chipotle Homepage" [ref=f41e722] [cursor=pointer]:
+                        - /url: /explore/screens/b347c161-f687-4d7e-bd4e-6edc524cc39e
+                        - img "Chipotle iOS screen" [ref=f41e723]
+                      - generic: Open
+                      - generic [ref=f41e724]:
+                        - generic:
+                          - link "Save" [ref=f41e725] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e728] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e732]:
+                      - generic [ref=f41e735]:
+                        - link "Tab Bar" [ref=f41e736] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Photo" [ref=f41e737] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/photo
+                        - link "Top Navigation Bar" [ref=f41e738] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Home" [ref=f41e739] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Creating Account" [ref=f41e740] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e741] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Adding & Creating" [ref=f41e742] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-creating
+                      - button "Scroll left" [ref=f41e744] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e750] [cursor=pointer]
+                    - link "Chipotle" [ref=f41e755] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e758]:
+                  - article [ref=f41e759]:
+                    - generic [ref=f41e760]:
+                      - link "Scheduled Events" [ref=f41e761] [cursor=pointer]:
+                        - /url: /explore/screens/8a1dfb72-930d-4665-8de0-c67e54416dfd
+                        - img "Saturn Calendar iOS screen" [ref=f41e762]
+                      - generic: Open
+                      - generic [ref=f41e763]:
+                        - generic:
+                          - link "Save" [ref=f41e764] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e767] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e771]:
+                      - generic [ref=f41e774]:
+                        - link "Bottom Sheet" [ref=f41e775] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/bottom-sheet
+                        - link "Divider" [ref=f41e776] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/divider
+                        - link "Tab Bar" [ref=f41e777] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Card" [ref=f41e778] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/card
+                        - link "Top Navigation Bar" [ref=f41e779] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Date & Time" [ref=f41e780] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/date-time
+                        - link "Home" [ref=f41e781] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                      - button "Scroll left" [ref=f41e783] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e789] [cursor=pointer]
+                    - link "Saturn Calendar" [ref=f41e794] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e797]:
+                  - article [ref=f41e798]:
+                    - generic [ref=f41e799]:
+                      - link "Home Dashboard" [ref=f41e800] [cursor=pointer]:
+                        - /url: /explore/screens/28a542d5-06b8-4208-8b3f-2c3a70bbafca
+                        - img "Ubank Money App iOS screen" [ref=f41e801]
+                      - generic: Open
+                      - generic [ref=f41e802]:
+                        - generic:
+                          - link "Save" [ref=f41e803] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e806] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e810]:
+                      - generic [ref=f41e813]:
+                        - link "Banner" [ref=f41e814] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/banner
+                        - link "Tab Bar" [ref=f41e815] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Top Navigation Bar" [ref=f41e816] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Wallet & Balance" [ref=f41e817] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/wallet-balance
+                        - link "Feature Info" [ref=f41e818] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/feature-info
+                        - link "Home" [ref=f41e819] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Empty State" [ref=f41e820] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/empty-state
+                        - link "Creating Account" [ref=f41e821] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e822] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Logging In" [ref=f41e823] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e825] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e831] [cursor=pointer]
+                    - link "Ubank Money App" [ref=f41e836] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e839]:
+                  - article [ref=f41e840]:
+                    - generic [ref=f41e841]:
+                      - link "Splash screen" [ref=f41e842] [cursor=pointer]:
+                        - /url: /explore/screens/d28929fd-52aa-4d82-a849-1b6def8d2b76
+                        - img "On iOS screen" [ref=f41e843]
+                      - generic: Open
+                      - generic [ref=f41e844]:
+                        - generic:
+                          - link "Save" [ref=f41e845] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e848] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e852]:
+                      - generic [ref=f41e855]:
+                        - link "Splash Screen" [ref=f41e856] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/splash-page-examples
+                        - link "Creating Account" [ref=f41e857] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e858] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e860] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e866] [cursor=pointer]
+                    - link "On" [ref=f41e871] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e874]:
+                  - article [ref=f41e875]:
+                    - generic [ref=f41e876]:
+                      - link "Selected interests" [ref=f41e877] [cursor=pointer]:
+                        - /url: /explore/screens/87f59516-6839-41ae-ac90-639b0e372844
+                        - img "On iOS screen" [ref=f41e878]
+                      - generic: Open
+                      - generic [ref=f41e879]:
+                        - generic:
+                          - link "Save" [ref=f41e880] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e883] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e887]:
+                      - generic [ref=f41e890]:
+                        - link "Chip" [ref=f41e891] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/chip
+                        - link "Select" [ref=f41e892] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/select
+                        - link "Account Setup" [ref=f41e893] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/account-setup
+                        - link "Creating Account" [ref=f41e894] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e895] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e897] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e903] [cursor=pointer]
+                    - link "On" [ref=f41e908] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e911]:
+                  - article [ref=f41e912]:
+                    - generic [ref=f41e913]:
+                      - link "Home Page" [ref=f41e914] [cursor=pointer]:
+                        - /url: /explore/screens/3c30bbb1-e158-4df3-9feb-98f512e41919
+                        - img "Vipps iOS screen" [ref=f41e915]
+                      - generic: Open
+                      - generic [ref=f41e916]:
+                        - generic:
+                          - link "Save" [ref=f41e917] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e920] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e924]:
+                      - generic [ref=f41e927]:
+                        - link "Toolbar" [ref=f41e928] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/toolbar
+                        - link "Carousel" [ref=f41e929] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/carousel
+                        - link "Button" [ref=f41e930] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/button
+                        - link "Tab Bar" [ref=f41e931] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Card" [ref=f41e932] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/card
+                        - link "Home" [ref=f41e933] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Saving to Collection" [ref=f41e934] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/saving-to-collection
+                        - link "Searching & Finding" [ref=f41e935] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Deleting & Removing" [ref=f41e936] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/deleting-removing
+                        - link "Misc" [ref=f41e937] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/misc
+                        - link "Logging In" [ref=f41e938] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e940] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e946] [cursor=pointer]
+                    - link "Vipps" [ref=f41e951] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e954]:
+                  - article [ref=f41e955]:
+                    - generic [ref=f41e956]:
+                      - link "Home Feed" [ref=f41e957] [cursor=pointer]:
+                        - /url: /explore/screens/c2a535cc-6e63-4ac5-88ee-38ba48e9f946
+                        - img "Orb Social iOS screen" [ref=f41e958]
+                      - generic: Open
+                      - generic [ref=f41e959]:
+                        - generic:
+                          - link "Save" [ref=f41e960] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e963] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e967]:
+                      - generic [ref=f41e970]:
+                        - link "Card" [ref=f41e971] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/card
+                        - link "Top Navigation Bar" [ref=f41e972] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Stacked List" [ref=f41e973] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/stacked-list
+                        - link "Home" [ref=f41e974] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Date & Time" [ref=f41e975] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/date-time
+                        - link "Social Feed" [ref=f41e976] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/social-feed
+                        - link "Publishing" [ref=f41e977] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/publishing
+                        - link "Uploading & Downloading" [ref=f41e978] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/uploading-downloading
+                        - link "Creating Account" [ref=f41e979] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e980] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Filtering & Sorting" [ref=f41e981] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/filtering-sorting
+                      - button "Scroll left" [ref=f41e983] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e989] [cursor=pointer]
+                    - link "Orb Social" [ref=f41e994] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e997]:
+                  - article [ref=f41e998]:
+                    - generic [ref=f41e999]:
+                      - link "App Homepage" [ref=f41e1000] [cursor=pointer]:
+                        - /url: /explore/screens/8726d8d6-4d59-411e-96a0-8967c9704517
+                        - img "iFood iOS screen" [ref=f41e1001]
+                      - generic: Open
+                      - generic [ref=f41e1002]:
+                        - generic:
+                          - link "Save" [ref=f41e1003] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1006] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1010]:
+                      - generic [ref=f41e1013]:
+                        - link "Carousel" [ref=f41e1014] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/carousel
+                        - link "Banner" [ref=f41e1015] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/banner
+                        - link "Home" [ref=f41e1016] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Creating Account" [ref=f41e1017] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e1018] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Searching & Finding" [ref=f41e1019] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Logging In" [ref=f41e1020] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e1022] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1028] [cursor=pointer]
+                    - link "iFood" [ref=f41e1033] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1036]:
+                  - article [ref=f41e1037]:
+                    - generic [ref=f41e1038]:
+                      - link "Payment Options" [ref=f41e1039] [cursor=pointer]:
+                        - /url: /explore/screens/a75472e0-58fa-4b29-82a2-9c9276d97e63
+                        - img "Plata Card iOS screen" [ref=f41e1040]
+                      - generic: Open
+                      - generic [ref=f41e1041]:
+                        - generic:
+                          - link "Save" [ref=f41e1042] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1045] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1049]:
+                      - link "Wallet & Balance" [ref=f41e1053] [cursor=pointer]:
+                        - /url: /explore/mobile/screens/wallet-balance
+                      - button "Scroll left" [ref=f41e1055] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1060] [cursor=pointer]
+                    - link "Plata Card" [ref=f41e1065] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1068]:
+                  - article [ref=f41e1069]:
+                    - generic [ref=f41e1070]:
+                      - link "Increased Balance View" [ref=f41e1071] [cursor=pointer]:
+                        - /url: /explore/screens/4c8338c3-0d7b-4ae5-b7be-fb646f9642dc
+                        - img "Trust Wallet iOS screen" [ref=f41e1072]
+                      - generic: Open
+                      - generic [ref=f41e1073]:
+                        - generic:
+                          - link "Save" [ref=f41e1074] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1077] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1081]:
+                      - generic [ref=f41e1084]:
+                        - link "Button" [ref=f41e1085] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/button
+                        - link "Top Navigation Bar" [ref=f41e1086] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Tab Bar" [ref=f41e1087] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Home" [ref=f41e1088] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Wallet & Balance" [ref=f41e1089] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/wallet-balance
+                        - link "Pricing" [ref=f41e1090] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/pricing
+                        - link "Searching & Finding" [ref=f41e1091] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Misc" [ref=f41e1092] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/misc
+                      - button "Scroll left" [ref=f41e1094] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1100] [cursor=pointer]
+                    - link "Trust Wallet" [ref=f41e1105] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1108]:
+                  - article [ref=f41e1109]:
+                    - generic [ref=f41e1110]:
+                      - link "Car Search Homepage" [ref=f41e1111] [cursor=pointer]:
+                        - /url: /explore/screens/d8823960-980e-41ea-8932-2b7fb3444d5d
+                        - img "Turo iOS screen" [ref=f41e1112]
+                      - generic: Open
+                      - generic [ref=f41e1113]:
+                        - generic:
+                          - link "Save" [ref=f41e1114] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1117] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1121]:
+                      - generic [ref=f41e1124]:
+                        - link "Tab Bar" [ref=f41e1125] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Search Bar" [ref=f41e1126] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/search-bar
+                        - link "Card" [ref=f41e1127] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/card
+                        - link "Carousel" [ref=f41e1128] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/carousel
+                        - link "Pricing" [ref=f41e1129] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/pricing
+                        - link "Home" [ref=f41e1130] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                      - button "Scroll left" [ref=f41e1132] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1138] [cursor=pointer]
+                    - link "Turo" [ref=f41e1143] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1146]:
+                  - article [ref=f41e1147]:
+                    - generic [ref=f41e1148]:
+                      - link "Homepage" [ref=f41e1149] [cursor=pointer]:
+                        - /url: /explore/screens/c0a85493-55b1-42dd-bd15-e63258ca8869
+                        - img "Honest Greens iOS screen" [ref=f41e1150]
+                      - generic: Open
+                      - generic [ref=f41e1151]:
+                        - generic:
+                          - link "Save" [ref=f41e1152] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1155] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1159]:
+                      - generic [ref=f41e1162]:
+                        - link "Badge" [ref=f41e1163] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/badge
+                        - link "Photo" [ref=f41e1164] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/photo
+                        - link "Top Navigation Bar" [ref=f41e1165] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Home" [ref=f41e1166] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Creating Account" [ref=f41e1167] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e1168] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Showing & Hiding" [ref=f41e1169] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/showing-hiding
+                      - button "Scroll left" [ref=f41e1171] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1177] [cursor=pointer]
+                    - link "Honest Greens" [ref=f41e1182] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1185]:
+                  - article [ref=f41e1186]:
+                    - generic [ref=f41e1187]:
+                      - link "Spending Overview" [ref=f41e1188] [cursor=pointer]:
+                        - /url: /explore/screens/d9ac8ded-f15f-474d-ac19-62f1b603a66f
+                        - img "Origin iOS screen" [ref=f41e1189]
+                      - generic: Open
+                      - generic [ref=f41e1190]:
+                        - generic:
+                          - link "Save" [ref=f41e1191] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1194] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1198]:
+                      - generic [ref=f41e1201]:
+                        - link "Top Navigation Bar" [ref=f41e1202] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Dashboard" [ref=f41e1203] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/dashboard
+                        - link "Charts" [ref=f41e1204] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/charts
+                      - button "Scroll left" [ref=f41e1206] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1211] [cursor=pointer]
+                    - link "Origin" [ref=f41e1216] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1219]:
+                  - article [ref=f41e1220]:
+                    - generic [ref=f41e1221]:
+                      - link "Splash screen" [ref=f41e1222] [cursor=pointer]:
+                        - /url: /explore/screens/e61c2bc5-54dc-4a67-b32c-f77f0af4393d
+                        - img "Plata Card iOS screen" [ref=f41e1223]
+                      - generic: Open
+                      - generic [ref=f41e1224]:
+                        - generic:
+                          - link "Save" [ref=f41e1225] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1228] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1232]:
+                      - generic [ref=f41e1235]:
+                        - link "Splash Screen" [ref=f41e1236] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/splash-page-examples
+                        - link "Logging In" [ref=f41e1237] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                        - link "Onboarding" [ref=f41e1238] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e1240] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1245] [cursor=pointer]
+                    - link "Plata Card" [ref=f41e1250] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1253]:
+                  - article [ref=f41e1254]:
+                    - generic [ref=f41e1255]:
+                      - link "Wallet ready" [ref=f41e1256] [cursor=pointer]:
+                        - /url: /explore/screens/79a8869d-1766-41f1-9777-ec5d515cfb49
+                      - generic: Open
+                      - generic [ref=f41e1259]:
+                        - generic:
+                          - link "Save" [ref=f41e1260] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1263] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1267]:
+                      - generic [ref=f41e1270]:
+                        - link "Acknowledgement & Success" [ref=f41e1271] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/acknowledgement-success
+                        - link "Confetti" [ref=f41e1272] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/confetti
+                        - link "Creating Account" [ref=f41e1273] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e1274] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e1276] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1282] [cursor=pointer]
+                    - link "Trust Wallet" [ref=f41e1287] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1290]:
+                  - article [ref=f41e1291]:
+                    - generic [ref=f41e1292]:
+                      - link "Nearby store list" [ref=f41e1293] [cursor=pointer]:
+                        - /url: /explore/screens/222a1563-a2d7-42ee-809d-88b50d59f26e
+                        - img "Shipt iOS screen" [ref=f41e1294]
+                      - generic: Open
+                      - generic [ref=f41e1295]:
+                        - generic:
+                          - link "Save" [ref=f41e1296] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1299] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1303]:
+                      - generic [ref=f41e1306]:
+                        - link "Tab Bar" [ref=f41e1307] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tab-bar
+                        - link "Banner" [ref=f41e1308] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/banner
+                        - link "Home" [ref=f41e1309] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Creating Account" [ref=f41e1310] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e1311] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e1313] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1319] [cursor=pointer]
+                    - link "Shipt" [ref=f41e1324] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1327]:
+                  - article [ref=f41e1328]:
+                    - generic [ref=f41e1329]:
+                      - link "Transaction List" [ref=f41e1330] [cursor=pointer]:
+                        - /url: /explore/screens/10204323-cbf2-4471-9377-9ba9657709d5
+                        - img "KakaoBank iOS screen" [ref=f41e1331]
+                      - generic: Open
+                      - generic [ref=f41e1332]:
+                        - generic:
+                          - link "Save" [ref=f41e1333] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1336] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1340]:
+                      - generic [ref=f41e1343]:
+                        - link "Toolbar" [ref=f41e1344] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/toolbar
+                        - link "Wallet & Balance" [ref=f41e1345] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/wallet-balance
+                        - link "Searching & Finding" [ref=f41e1346] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Filtering & Sorting" [ref=f41e1347] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/filtering-sorting
+                        - link "Selecting & Choosing" [ref=f41e1348] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/selecting-choosing
+                        - link "Misc" [ref=f41e1349] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/misc
+                      - button "Scroll left" [ref=f41e1351] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1357] [cursor=pointer]
+                    - link "KakaoBank" [ref=f41e1362] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1365]:
+                  - article [ref=f41e1366]:
+                    - generic [ref=f41e1367]:
+                      - link "Secret Phrase Safety Confirmed" [ref=f41e1368] [cursor=pointer]:
+                        - /url: /explore/screens/65033428-e390-41d8-be93-64ee3901c221
+                        - img "Trust Wallet iOS screen" [ref=f41e1369]
+                      - generic: Open
+                      - generic [ref=f41e1370]:
+                        - generic:
+                          - link "Save" [ref=f41e1371] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1374] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1378]:
+                      - generic [ref=f41e1381]:
+                        - link "Checkbox" [ref=f41e1382] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/checkbox
+                        - link "Bottom Sheet" [ref=f41e1383] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/bottom-sheet
+                        - link "Logging In" [ref=f41e1384] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e1386] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1391] [cursor=pointer]
+                    - link "Trust Wallet" [ref=f41e1396] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1399]:
+                  - article [ref=f41e1400]:
+                    - generic [ref=f41e1401]:
+                      - link "Sleep Index Dashboard" [ref=f41e1402] [cursor=pointer]:
+                        - /url: /explore/screens/0799f6e7-19ce-4ac1-8582-eef54d0a2955
+                        - img "Ultrahuman iOS screen" [ref=f41e1403]
+                      - generic: Open
+                      - generic [ref=f41e1404]:
+                        - generic:
+                          - link "Save" [ref=f41e1405] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1408] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1412]:
+                      - generic [ref=f41e1415]:
+                        - link "Badge" [ref=f41e1416] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/badge
+                        - link "Dashboard" [ref=f41e1417] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/dashboard
+                        - link "Charts" [ref=f41e1418] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/charts
+                      - button "Scroll left" [ref=f41e1420] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1425] [cursor=pointer]
+                    - link "Ultrahuman" [ref=f41e1430] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1433]:
+                  - article [ref=f41e1434]:
+                    - generic [ref=f41e1435]:
+                      - link "Circadian Rhythm Data" [ref=f41e1436] [cursor=pointer]:
+                        - /url: /explore/screens/7d3e9291-99d5-4fcc-8b7e-6607c636952e
+                      - generic: Open
+                      - generic [ref=f41e1439]:
+                        - generic:
+                          - link "Save" [ref=f41e1440] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1443] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1447]:
+                      - generic [ref=f41e1450]:
+                        - link "Floating Action Button" [ref=f41e1451] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/floating-action-button
+                        - link "Logging & Tracking" [ref=f41e1452] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-tracking
+                        - link "Searching & Finding" [ref=f41e1453] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Starting & Completing" [ref=f41e1454] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/starting-completing
+                      - button "Scroll left" [ref=f41e1456] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1462] [cursor=pointer]
+                    - link "Ultrahuman" [ref=f41e1467] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1470]:
+                  - article [ref=f41e1471]:
+                    - generic [ref=f41e1472]:
+                      - link "App Logo" [ref=f41e1473] [cursor=pointer]:
+                        - /url: /explore/screens/17c44897-6add-4cde-8da0-f9be8249c3bc
+                      - generic: Open
+                      - generic [ref=f41e1476]:
+                        - generic:
+                          - link "Save" [ref=f41e1477] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1480] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1484]:
+                      - generic [ref=f41e1487]:
+                        - link "Splash Screen" [ref=f41e1488] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/splash-page-examples
+                        - link "Onboarding" [ref=f41e1489] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Connecting & Linking" [ref=f41e1490] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/connecting-linking
+                      - button "Scroll left" [ref=f41e1492] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1498] [cursor=pointer]
+                    - link "Ultrahuman" [ref=f41e1503] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1506]:
+                  - article [ref=f41e1507]:
+                    - generic [ref=f41e1508]:
+                      - link "Welcome screen" [ref=f41e1509] [cursor=pointer]:
+                        - /url: /explore/screens/cc8342c4-3cbf-40e2-b0ce-c2628a2636bc
+                        - img "Origin iOS screen" [ref=f41e1510]
+                      - generic: Open
+                      - generic [ref=f41e1511]:
+                        - generic:
+                          - link "Save" [ref=f41e1512] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1515] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1519]:
+                      - generic [ref=f41e1522]:
+                        - link "Illustration" [ref=f41e1523] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/illustration
+                        - link "Carousel" [ref=f41e1524] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/carousel
+                        - link "Welcome & Get Started" [ref=f41e1525] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/welcome-get-started
+                        - link "Creating Account" [ref=f41e1526] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e1527] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e1529] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1535] [cursor=pointer]
+                    - link "Origin" [ref=f41e1540] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1543]:
+                  - article [ref=f41e1544]:
+                    - generic [ref=f41e1545]:
+                      - link "Add to bag" [ref=f41e1546] [cursor=pointer]:
+                        - /url: /explore/screens/4b1c79f9-4de8-48b7-b477-f03613904f4c
+                        - img "On iOS screen" [ref=f41e1547]
+                      - generic: Open
+                      - generic [ref=f41e1548]:
+                        - generic:
+                          - link "Save" [ref=f41e1549] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1552] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1556]:
+                      - generic [ref=f41e1559]:
+                        - link "Carousel" [ref=f41e1560] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/carousel
+                        - link "Photo" [ref=f41e1561] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/photo
+                        - link "Product Detail" [ref=f41e1562] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/product-detail
+                        - link "Adding to Cart & Bag" [ref=f41e1563] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-to-cart-bag
+                        - link "Selecting & Choosing" [ref=f41e1564] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/selecting-choosing
+                        - link "Favoriting & Pinning" [ref=f41e1565] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/favoriting-pinning
+                      - button "Scroll left" [ref=f41e1567] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1573] [cursor=pointer]
+                    - link "On" [ref=f41e1578] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1581]:
+                  - article [ref=f41e1582]:
+                    - generic [ref=f41e1583]:
+                      - link "Time Slot Selection" [ref=f41e1584] [cursor=pointer]:
+                        - /url: /explore/screens/24f9ddbc-31c3-4175-b4cb-5787137abc8a
+                        - img "Plata Card iOS screen" [ref=f41e1585]
+                      - generic: Open
+                      - generic [ref=f41e1586]:
+                        - generic:
+                          - link "Save" [ref=f41e1587] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1590] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1594]:
+                      - generic [ref=f41e1597]:
+                        - link "Date Picker" [ref=f41e1598] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/date-picker
+                        - link "Tile" [ref=f41e1599] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/tile
+                        - link "Bottom Sheet" [ref=f41e1600] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/bottom-sheet
+                        - link "Set" [ref=f41e1601] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/set
+                        - link "Schedule" [ref=f41e1602] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/schedule
+                        - link "Scheduling" [ref=f41e1603] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/scheduling
+                      - button "Scroll left" [ref=f41e1605] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1611] [cursor=pointer]
+                    - link "Plata Card" [ref=f41e1616] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1619]:
+                  - article [ref=f41e1620]:
+                    - generic [ref=f41e1621]:
+                      - link "Location Details" [ref=f41e1622] [cursor=pointer]:
+                        - /url: /explore/screens/3be80ac9-232d-4167-95be-41a4ca8c67da
+                        - img "Chipotle iOS screen" [ref=f41e1623]
+                      - generic: Open
+                      - generic [ref=f41e1624]:
+                        - generic:
+                          - link "Save" [ref=f41e1625] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1628] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1632]:
+                      - generic [ref=f41e1635]:
+                        - link "Badge" [ref=f41e1636] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/badge
+                        - link "Map Pin" [ref=f41e1637] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/map-pin
+                        - link "Map" [ref=f41e1638] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/map
+                        - link "Date & Time" [ref=f41e1639] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/date-time
+                        - link "Location & Address" [ref=f41e1640] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/location-address
+                        - link "Adding & Creating" [ref=f41e1641] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-creating
+                      - button "Scroll left" [ref=f41e1643] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1649] [cursor=pointer]
+                    - link "Chipotle" [ref=f41e1654] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1657]:
+                  - article [ref=f41e1658]:
+                    - generic [ref=f41e1659]:
+                      - link "Adjusted Sleep Rating" [ref=f41e1660] [cursor=pointer]:
+                        - /url: /explore/screens/ff6c11c1-3550-4c9e-b943-2d585d20522e
+                      - generic: Open
+                      - generic [ref=f41e1663]:
+                        - generic:
+                          - link "Save" [ref=f41e1664] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1667] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1671]:
+                      - generic [ref=f41e1674]:
+                        - link "Slider" [ref=f41e1675] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/slider
+                        - link "Logging & Tracking" [ref=f41e1676] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-tracking
+                      - button "Scroll left" [ref=f41e1678] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1683] [cursor=pointer]
+                    - link "stoic." [ref=f41e1688] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1691]:
+                  - article [ref=f41e1692]:
+                    - generic [ref=f41e1693]:
+                      - link "Investment Dashboard" [ref=f41e1694] [cursor=pointer]:
+                        - /url: /explore/screens/6609ef6e-f7a4-48ee-a071-30028e9abce6
+                        - img "KakaoBank iOS screen" [ref=f41e1695]
+                      - generic: Open
+                      - generic [ref=f41e1696]:
+                        - generic:
+                          - link "Save" [ref=f41e1697] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1700] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1704]:
+                      - generic [ref=f41e1707]:
+                        - link "Illustration" [ref=f41e1708] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/illustration
+                        - link "Full-Screen Overlay" [ref=f41e1709] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/full-screen-overlay
+                        - link "Scheduling" [ref=f41e1710] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/scheduling
+                      - button "Scroll left" [ref=f41e1712] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1717] [cursor=pointer]
+                    - link "KakaoBank" [ref=f41e1722] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1725]:
+                  - article [ref=f41e1726]:
+                    - generic [ref=f41e1727]:
+                      - link "Partner list" [ref=f41e1728] [cursor=pointer]:
+                        - /url: /explore/screens/816019bf-a8ef-4f04-b878-aaaffa9e2361
+                        - img "Plata Card iOS screen" [ref=f41e1729]
+                      - generic: Open
+                      - generic [ref=f41e1730]:
+                        - generic:
+                          - link "Save" [ref=f41e1731] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1734] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1738]:
+                      - link "Bottom Sheet" [ref=f41e1742] [cursor=pointer]:
+                        - /url: /explore/mobile/ui-elements/bottom-sheet
+                      - button "Scroll left" [ref=f41e1744] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1749] [cursor=pointer]
+                    - link "Plata Card" [ref=f41e1754] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1757]:
+                  - article [ref=f41e1758]:
+                    - generic [ref=f41e1759]:
+                      - link "Payments Screen" [ref=f41e1760] [cursor=pointer]:
+                        - /url: /explore/screens/b7b04c52-7eab-49f3-a5ba-b9af42b67271
+                        - img "Plata Card iOS screen" [ref=f41e1761]
+                      - generic: Open
+                      - generic [ref=f41e1762]:
+                        - generic:
+                          - link "Save" [ref=f41e1763] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1766] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1770]:
+                      - generic [ref=f41e1773]:
+                        - link "Button" [ref=f41e1774] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/button
+                        - link "Browse & Discover" [ref=f41e1775] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/browse-discover
+                        - link "Saving to Collection" [ref=f41e1776] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/saving-to-collection
+                      - button "Scroll left" [ref=f41e1778] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1784] [cursor=pointer]
+                    - link "Plata Card" [ref=f41e1789] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1792]:
+                  - article [ref=f41e1793]:
+                    - generic [ref=f41e1794]:
+                      - link "Loading Screen" [ref=f41e1795] [cursor=pointer]:
+                        - /url: /explore/screens/a81c86e7-bd9f-4cac-aa95-91ea368121ee
+                        - img "Nextdoor iOS screen" [ref=f41e1796]
+                      - generic: Open
+                      - generic [ref=f41e1797]:
+                        - generic:
+                          - link "Save" [ref=f41e1798] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1801] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1805]:
+                      - generic [ref=f41e1808]:
+                        - link "Splash Screen" [ref=f41e1809] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/splash-page-examples
+                        - link "Creating Account" [ref=f41e1810] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Joining & Accepting" [ref=f41e1811] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/joining-accepting
+                        - link "Onboarding" [ref=f41e1812] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e1814] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1820] [cursor=pointer]
+                    - link "Nextdoor" [ref=f41e1825] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1828]:
+                  - article [ref=f41e1829]:
+                    - generic [ref=f41e1830]:
+                      - link "Transaction List" [ref=f41e1831] [cursor=pointer]:
+                        - /url: /explore/screens/894b1b01-38c5-4414-b0fa-36be7cdec3a3
+                        - img "Plata Card iOS screen" [ref=f41e1832]
+                      - generic: Open
+                      - generic [ref=f41e1833]:
+                        - generic:
+                          - link "Save" [ref=f41e1834] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1837] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1841]:
+                      - link "Dashboard" [ref=f41e1845] [cursor=pointer]:
+                        - /url: /explore/mobile/screens/dashboard
+                      - button "Scroll left" [ref=f41e1847] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1852] [cursor=pointer]
+                    - link "Plata Card" [ref=f41e1857] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1860]:
+                  - article [ref=f41e1861]:
+                    - generic [ref=f41e1862]:
+                      - link "Subscription options" [ref=f41e1863] [cursor=pointer]:
+                        - /url: /explore/screens/b3ebe000-42ff-431e-9d6b-8b27338ba9c5
+                        - img "Origin iOS screen" [ref=f41e1864]
+                      - generic: Open
+                      - generic [ref=f41e1865]:
+                        - generic:
+                          - link "Save" [ref=f41e1866] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1869] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1873]:
+                      - generic [ref=f41e1876]:
+                        - link "Progress Indicator" [ref=f41e1877] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/progress-indicator
+                        - link "Pricing" [ref=f41e1878] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/pricing
+                        - link "Subscription & Paywall" [ref=f41e1879] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/subscription-paywall
+                        - link "Creating Account" [ref=f41e1880] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e1881] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Subscribing & Upgrading" [ref=f41e1882] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/subscribing-upgrading
+                      - button "Scroll left" [ref=f41e1884] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1890] [cursor=pointer]
+                    - link "Origin" [ref=f41e1895] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1898]:
+                  - article [ref=f41e1899]:
+                    - generic [ref=f41e1900]:
+                      - link "Asset Allocation" [ref=f41e1901] [cursor=pointer]:
+                        - /url: /explore/screens/b9c441c0-0f74-483b-9851-8bd4d03d8928
+                        - img "Plata Card iOS screen" [ref=f41e1902]
+                      - generic: Open
+                      - generic [ref=f41e1903]:
+                        - generic:
+                          - link "Save" [ref=f41e1904] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1907] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1911]:
+                      - generic [ref=f41e1914]:
+                        - link "Charts" [ref=f41e1915] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/charts
+                        - link "Dashboard" [ref=f41e1916] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/dashboard
+                      - button "Scroll left" [ref=f41e1918] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1923] [cursor=pointer]
+                    - link "Plata Card" [ref=f41e1928] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1931]:
+                  - article [ref=f41e1932]:
+                    - generic [ref=f41e1933]:
+                      - link "Loading screen" [ref=f41e1934] [cursor=pointer]:
+                        - /url: /explore/screens/c364764e-3f2d-4ccb-9956-051afc53d3b4
+                        - img "Origin iOS screen" [ref=f41e1935]
+                      - generic: Open
+                      - generic [ref=f41e1936]:
+                        - generic:
+                          - link "Save" [ref=f41e1937] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1940] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1944]:
+                      - generic [ref=f41e1947]:
+                        - link "Splash Screen" [ref=f41e1948] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/splash-page-examples
+                        - link "Creating Account" [ref=f41e1949] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e1950] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                      - button "Scroll left" [ref=f41e1952] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1958] [cursor=pointer]
+                    - link "Origin" [ref=f41e1963] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e1966]:
+                  - article [ref=f41e1967]:
+                    - generic [ref=f41e1968]:
+                      - link "Profile Setup Page" [ref=f41e1969] [cursor=pointer]:
+                        - /url: /explore/screens/a1a199f9-9429-41f0-bc64-ff228b62f44e
+                        - img "Nextdoor iOS screen" [ref=f41e1970]
+                      - generic: Open
+                      - generic [ref=f41e1971]:
+                        - generic:
+                          - link "Save" [ref=f41e1972] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e1975] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e1979]:
+                      - generic [ref=f41e1982]:
+                        - link "Divider" [ref=f41e1983] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/divider
+                        - link "Progress Indicator" [ref=f41e1984] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/progress-indicator
+                        - link "Stacked List" [ref=f41e1985] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/stacked-list
+                        - link "Progress" [ref=f41e1986] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/progress
+                        - link "Guided Tour & Tutorial" [ref=f41e1987] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/guided-tour-tutorial
+                        - link "Editing & Updating" [ref=f41e1988] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/editing-updating
+                        - link "Uploading & Downloading" [ref=f41e1989] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/uploading-downloading
+                      - button "Scroll left" [ref=f41e1991] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e1997] [cursor=pointer]
+                    - link "Nextdoor" [ref=f41e2002] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2005]:
+                  - article [ref=f41e2006]:
+                    - generic [ref=f41e2007]:
+                      - link "Car Detail" [ref=f41e2008] [cursor=pointer]:
+                        - /url: /explore/screens/2f73a921-3732-4349-93dc-c76dc27eabfe
+                        - img "Turo iOS screen" [ref=f41e2009]
+                      - generic: Open
+                      - generic [ref=f41e2010]:
+                        - generic:
+                          - link "Save" [ref=f41e2011] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2014] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2018]:
+                      - generic [ref=f41e2021]:
+                        - link "Divider" [ref=f41e2022] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/divider
+                        - link "Carousel" [ref=f41e2023] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/carousel
+                        - link "Top Navigation Bar" [ref=f41e2024] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Toolbar" [ref=f41e2025] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/toolbar
+                        - link "Product Detail" [ref=f41e2026] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/product-detail
+                        - link "Pricing" [ref=f41e2027] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/pricing
+                        - link "Saving to Collection" [ref=f41e2028] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/saving-to-collection
+                        - link "Editing & Updating" [ref=f41e2029] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/editing-updating
+                      - button "Scroll left" [ref=f41e2031] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2037] [cursor=pointer]
+                    - link "Turo" [ref=f41e2042] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2045]:
+                  - article [ref=f41e2046]:
+                    - generic [ref=f41e2047]:
+                      - link "Order Type Selection" [ref=f41e2048] [cursor=pointer]:
+                        - /url: /explore/screens/f77f30a0-2aa5-461e-863f-12f159dd6599
+                        - img "Shake Shack iOS screen" [ref=f41e2049]
+                      - generic: Open
+                      - generic [ref=f41e2050]:
+                        - generic:
+                          - link "Save" [ref=f41e2051] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2054] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2058]:
+                      - generic [ref=f41e2061]:
+                        - link "Photo" [ref=f41e2062] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/photo
+                        - link "Banner" [ref=f41e2063] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/banner
+                        - link "Button" [ref=f41e2064] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/button
+                        - link "Top Navigation Bar" [ref=f41e2065] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Home" [ref=f41e2066] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/home
+                        - link "Creating Account" [ref=f41e2067] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e2068] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Searching & Finding" [ref=f41e2069] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Adding to Cart & Bag" [ref=f41e2070] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-to-cart-bag
+                        - link "Logging In" [ref=f41e2071] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-in
+                      - button "Scroll left" [ref=f41e2073] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2079] [cursor=pointer]
+                    - link "Shake Shack" [ref=f41e2084] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2087]:
+                  - article [ref=f41e2088]:
+                    - generic [ref=f41e2089]:
+                      - link "Updated Overview" [ref=f41e2090] [cursor=pointer]:
+                        - /url: /explore/screens/413f86df-ddd9-4956-8dfa-515256bd949d
+                        - img "Origin iOS screen" [ref=f41e2091]
+                      - generic: Open
+                      - generic [ref=f41e2092]:
+                        - generic:
+                          - link "Save" [ref=f41e2093] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2096] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2100]:
+                      - generic [ref=f41e2103]:
+                        - link "Stacked List" [ref=f41e2104] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/stacked-list
+                        - link "Progress Indicator" [ref=f41e2105] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/progress-indicator
+                        - link "Card" [ref=f41e2106] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/card
+                        - link "Dashboard" [ref=f41e2107] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/dashboard
+                        - link "Progress" [ref=f41e2108] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/progress
+                        - link "Adding & Creating" [ref=f41e2109] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-creating
+                      - button "Scroll left" [ref=f41e2111] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2117] [cursor=pointer]
+                    - link "Origin" [ref=f41e2122] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2125]:
+                  - article [ref=f41e2126]:
+                    - generic [ref=f41e2127]:
+                      - link "User Profile" [ref=f41e2128] [cursor=pointer]:
+                        - /url: /explore/screens/329b84ac-47bd-4b3e-b878-1e5ed9935651
+                        - img "Honest Greens iOS screen" [ref=f41e2129]
+                      - generic: Open
+                      - generic [ref=f41e2130]:
+                        - generic:
+                          - link "Save" [ref=f41e2131] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2134] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2138]:
+                      - generic [ref=f41e2141]:
+                        - link "Avatar" [ref=f41e2142] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/avatar
+                        - link "Button" [ref=f41e2143] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/button
+                        - link "Progress Indicator" [ref=f41e2144] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/progress-indicator
+                        - link "Date & Time" [ref=f41e2145] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/date-time
+                        - link "Promotions & Rewards" [ref=f41e2146] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/promotions-rewards
+                        - link "Progress" [ref=f41e2147] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/progress
+                        - link "Goal & Task" [ref=f41e2148] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/goal-task
+                        - link "Referring Friends" [ref=f41e2149] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/referring-friends
+                      - button "Scroll left" [ref=f41e2151] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2157] [cursor=pointer]
+                    - link "Honest Greens" [ref=f41e2162] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2165]:
+                  - article [ref=f41e2166]:
+                    - generic [ref=f41e2167]:
+                      - link "Booked Trips" [ref=f41e2168] [cursor=pointer]:
+                        - /url: /explore/screens/0817b979-f444-4c88-8151-b1ff15891f4b
+                        - img "Turo iOS screen" [ref=f41e2169]
+                      - generic: Open
+                      - generic [ref=f41e2170]:
+                        - generic:
+                          - link "Save" [ref=f41e2171] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2174] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2178]:
+                      - generic [ref=f41e2181]:
+                        - link "Stacked List" [ref=f41e2182] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/stacked-list
+                        - link "Floating Action Button" [ref=f41e2183] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/floating-action-button
+                        - link "Card" [ref=f41e2184] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/card
+                      - button "Scroll left" [ref=f41e2186] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2191] [cursor=pointer]
+                    - link "Turo" [ref=f41e2196] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2199]:
+                  - article [ref=f41e2200]:
+                    - generic [ref=f41e2201]:
+                      - link "Homepage" [ref=f41e2202] [cursor=pointer]:
+                        - /url: /explore/screens/5bb27450-577c-4492-b926-ae034e263c4a
+                        - img "stoic. iOS screen" [ref=f41e2203]
+                      - generic: Open
+                      - generic [ref=f41e2204]:
+                        - generic:
+                          - link "Save" [ref=f41e2205] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2208] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2212]:
+                      - generic [ref=f41e2215]:
+                        - link "Search Bar" [ref=f41e2216] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/search-bar
+                        - link "Card" [ref=f41e2217] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/card
+                        - link "Badge" [ref=f41e2218] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/badge
+                        - link "Browse & Discover" [ref=f41e2219] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/browse-discover
+                        - link "Suggestions & Similar Items" [ref=f41e2220] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/suggestions-similar-items
+                        - link "Searching & Finding" [ref=f41e2221] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                      - button "Scroll left" [ref=f41e2223] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2229] [cursor=pointer]
+                    - link "stoic." [ref=f41e2234] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2237]:
+                  - article [ref=f41e2238]:
+                    - generic [ref=f41e2239]:
+                      - link "Updated Dashboard" [ref=f41e2240] [cursor=pointer]:
+                        - /url: /explore/screens/2ee0cc30-eb3a-4dae-a982-77f06b296615
+                        - img "Monarch iOS screen" [ref=f41e2241]
+                      - generic: Open
+                      - generic [ref=f41e2242]:
+                        - generic:
+                          - link "Save" [ref=f41e2243] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2246] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2250]:
+                      - generic [ref=f41e2253]:
+                        - link "Progress Indicator" [ref=f41e2254] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/progress-indicator
+                        - link "Guided Tour & Tutorial" [ref=f41e2255] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/guided-tour-tutorial
+                        - link "Progress" [ref=f41e2256] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/progress
+                        - link "Setting Up" [ref=f41e2257] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/setting-up
+                        - link "Searching & Finding" [ref=f41e2258] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Connecting & Linking" [ref=f41e2259] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/connecting-linking
+                      - button "Scroll left" [ref=f41e2261] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2267] [cursor=pointer]
+                    - link "Monarch" [ref=f41e2272] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2275]:
+                  - article [ref=f41e2276]:
+                    - generic [ref=f41e2277]:
+                      - link "Filled Summary" [ref=f41e2278] [cursor=pointer]:
+                        - /url: /explore/screens/031adb37-b0a4-4362-a7e6-10c535b883b8
+                        - img "stoic. iOS screen" [ref=f41e2279]
+                      - generic: Open
+                      - generic [ref=f41e2280]:
+                        - generic:
+                          - link "Save" [ref=f41e2281] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2284] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2288]:
+                      - generic [ref=f41e2291]:
+                        - link "Progress Indicator" [ref=f41e2292] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/progress-indicator
+                        - link "Toolbar" [ref=f41e2293] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/toolbar
+                        - link "Top Navigation Bar" [ref=f41e2294] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/top-navigation-bar
+                        - link "Text Field" [ref=f41e2295] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/text-field
+                        - link "Progress" [ref=f41e2296] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/progress
+                        - link "Add & Create" [ref=f41e2297] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/add-create
+                        - link "Upload & Download" [ref=f41e2298] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/upload-download
+                        - link "Note Detail" [ref=f41e2299] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/note-detail
+                        - link "Logging & Tracking" [ref=f41e2300] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/logging-tracking
+                        - link "Uploading & Downloading" [ref=f41e2301] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/uploading-downloading
+                      - button "Scroll left" [ref=f41e2303] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2309] [cursor=pointer]
+                    - link "stoic." [ref=f41e2314] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2317]:
+                  - article [ref=f41e2318]:
+                    - generic [ref=f41e2319]:
+                      - link "Walmart Plus Promotion" [ref=f41e2320] [cursor=pointer]:
+                        - /url: /explore/screens/5cc3f5e2-d618-45c9-b806-be83844809e7
+                        - img "Walmart iOS screen" [ref=f41e2321]
+                      - generic: Open
+                      - generic [ref=f41e2322]:
+                        - generic:
+                          - link "Save" [ref=f41e2323] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2326] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2330]:
+                      - generic [ref=f41e2333]:
+                        - link "Subscription & Paywall" [ref=f41e2334] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/subscription-paywall
+                        - link "Creating Account" [ref=f41e2335] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/creating-account
+                        - link "Onboarding" [ref=f41e2336] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/onboarding
+                        - link "Subscribing & Upgrading" [ref=f41e2337] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/subscribing-upgrading
+                        - link "Watching Video" [ref=f41e2338] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/watching-video
+                      - button "Scroll left" [ref=f41e2340] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2346] [cursor=pointer]
+                    - link "Walmart" [ref=f41e2351] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2354]:
+                  - article [ref=f41e2355]:
+                    - generic [ref=f41e2356]:
+                      - link "Search Result" [ref=f41e2357] [cursor=pointer]:
+                        - /url: /explore/screens/6d8441ef-3c49-4337-8065-5bef12101b34
+                        - img "Swiggy iOS screen" [ref=f41e2358]
+                      - generic: Open
+                      - generic [ref=f41e2359]:
+                        - generic:
+                          - link "Save" [ref=f41e2360] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2363] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2367]:
+                      - generic [ref=f41e2370]:
+                        - link "Badge" [ref=f41e2371] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/badge
+                        - link "Switch" [ref=f41e2372] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/switch
+                        - link "Search Bar" [ref=f41e2373] [cursor=pointer]:
+                          - /url: /explore/mobile/ui-elements/search-bar
+                        - link "Search" [ref=f41e2374] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/search
+                        - link "Searching & Finding" [ref=f41e2375] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/searching-finding
+                        - link "Recording Audio & Video" [ref=f41e2376] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/recording-audio-video
+                        - link "Filtering & Sorting" [ref=f41e2377] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/filtering-sorting
+                        - link "Misc" [ref=f41e2378] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/misc
+                      - button "Scroll left" [ref=f41e2380] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2386] [cursor=pointer]
+                    - link "Swiggy" [ref=f41e2391] [cursor=pointer]:
+                      - /url: /signup/modal
+                - listitem [ref=f41e2394]:
+                  - article [ref=f41e2395]:
+                    - generic [ref=f41e2396]:
+                      - link "Magnet Selection" [ref=f41e2397] [cursor=pointer]:
+                        - /url: /explore/screens/c11138c5-05ad-400c-ac00-2fa96ff8a91e
+                        - img "Abode iOS screen" [ref=f41e2398]
+                      - generic: Open
+                      - generic [ref=f41e2399]:
+                        - generic:
+                          - link "Save" [ref=f41e2400] [cursor=pointer]:
+                            - /url: /signup/modal
+                          - link "Copy" [ref=f41e2403] [cursor=pointer]:
+                            - /url: /signup/modal
+                    - generic [ref=f41e2407]:
+                      - generic [ref=f41e2410]:
+                        - link "Add & Create" [ref=f41e2411] [cursor=pointer]:
+                          - /url: /explore/mobile/screens/add-create
+                        - link "Adding & Creating" [ref=f41e2412] [cursor=pointer]:
+                          - /url: /explore/mobile/flows/adding-creating
+                      - button "Scroll left" [ref=f41e2414] [cursor=pointer]
+                      - button "Scroll right" [ref=f41e2419] [cursor=pointer]
+                    - link "Abode" [ref=f41e2424] [cursor=pointer]:
+                      - /url: /signup/modal
+        - generic [ref=f41e2428]:
+          - generic [ref=f41e2429]:
+            - img "ChatGPT logo" [ref=f41e2432]
+            - img "Headspace logo" [ref=f41e2435]
+            - img "Dropbox logo" [ref=f41e2438]
+            - img "Mailchimp logo" [ref=f41e2441]
+            - img "Airbnb logo" [ref=f41e2444]
+            - img "Retro logo" [ref=f41e2447]
+            - img "Wise logo" [ref=f41e2450]
+            - img "Apple TV logo" [ref=f41e2453]
+            - img "Cosmos logo" [ref=f41e2456]
+            - img "Creme logo" [ref=f41e2459]
+          - generic [ref=f41e2463]:
+            - heading "Log in or join for free to continue browsing" [level=2] [ref=f41e2464]
+            - generic [ref=f41e2465]:
+              - generic [ref=f41e2466]:
+                - button "Continue with Google" [ref=f41e2467] [cursor=pointer]
+                - link "See other options" [ref=f41e2476] [cursor=pointer]:
+                  - /url: /signup
+              - paragraph [ref=f41e2479]:
+                - text: By continuing, you agree to Mobbin’s
+                - link "Terms of Service" [ref=f41e2480] [cursor=pointer]:
+                  - /url: /terms
+                - text: and
+                - link "Privacy Policy" [ref=f41e2481] [cursor=pointer]:
+                  - /url: /privacy
+                - text: .
+    - contentinfo [ref=f41e2482]:
+      - generic [ref=f41e2483]:
+        - generic [ref=f41e2484]:
+          - img "Mobbin" [ref=f41e2485]
+          - paragraph [ref=f41e2487]: Design better digital experiences with Mobbin.
+        - generic [ref=f41e2488]:
+          - generic [ref=f41e2489]:
+            - link "Explore" [ref=f41e2490] [cursor=pointer]:
+              - /url: /explore
+            - link "Glossary" [ref=f41e2491] [cursor=pointer]:
+              - /url: /glossary
+            - link "Pricing" [ref=f41e2492] [cursor=pointer]:
+              - /url: /pricing
+            - link "Changelog" [ref=f41e2493] [cursor=pointer]:
+              - /url: /changelog
+            - link "Blog" [ref=f41e2494] [cursor=pointer]:
+              - /url: /blog
+            - link "Colors" [ref=f41e2495] [cursor=pointer]:
+              - /url: /colors
+            - link "MCP" [ref=f41e2496] [cursor=pointer]:
+              - /url: /mcp
+            - link "Finance+" [ref=f41e2497] [cursor=pointer]:
+              - /url: /finance
+          - generic [ref=f41e2498]:
+            - link "Contact" [ref=f41e2499] [cursor=pointer]:
+              - /url: mailto:support@mobbin.com
+            - link "Help center" [ref=f41e2500] [cursor=pointer]:
+              - /url: https://help.mobbin.com
+            - link "Careers" [ref=f41e2501] [cursor=pointer]:
+              - /url: https://careers.mobbin.com
+            - link "Merch" [ref=f41e2502] [cursor=pointer]:
+              - /url: https://merch.mobbin.com
+            - link "X (Twitter)" [ref=f41e2503] [cursor=pointer]:
+              - /url: https://x.com/mobbin
+            - link "LinkedIn" [ref=f41e2504] [cursor=pointer]:
+              - /url: https://linkedin.com/company/mobbin
+        - paragraph [ref=f41e2505]: © Mobbin 2018–2026. All rights reserved
+        - generic [ref=f41e2506]:
+          - link "Privacy policy" [ref=f41e2507] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=f41e2508] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - alert [ref=f41e2509]

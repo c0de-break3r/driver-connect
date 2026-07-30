@@ -19,8 +19,8 @@ export function useConvexRoleSync({
   const setRole = useRoleStore((s) => s.setRole);
 
   const convexUser = useQuery(
-    api.users.getByClerkUserId,
-    isSignedIn && userId ? { clerkUserId: userId } : "skip"
+    api.users.getByUserId,
+    isSignedIn && userId ? { userId } : "skip"
   );
 
   const upsertUser = useMutation(api.users.upsert);
@@ -49,7 +49,7 @@ export function useConvexRoleSync({
     if (currentRole) {
       syncedUserId.current = userId;
       upsertUser({
-        clerkUserId: userId,
+        userId,
         role: currentRole,
         onboardingComplete: roleStore.onboardingComplete,
       }).catch(() => {

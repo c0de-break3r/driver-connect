@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { Animated } from "react-native";
 
 /**
@@ -27,19 +27,26 @@ import { Animated } from "react-native";
  * ```
  */
 export function useStaggeredEntrance() {
-  // Animated values — created once, stable across renders
-  const headerOpacity = useMemo(() => new Animated.Value(0), []);
-  const headerTranslateY = useMemo(() => new Animated.Value(20), []);
-  const iconOpacity = useMemo(() => new Animated.Value(0), []);
-  const iconScale = useMemo(() => new Animated.Value(0.85), []);
-  const formOpacity = useMemo(() => new Animated.Value(0), []);
-  const formTranslateY = useMemo(() => new Animated.Value(20), []);
-  const footerOpacity = useMemo(() => new Animated.Value(0), []);
-  const footerTranslateY = useMemo(() => new Animated.Value(20), []);
+  const headerOpacity = useMemo(() => new Animated.Value(1), []);
+  const headerTranslateY = useMemo(() => new Animated.Value(0), []);
+  const iconOpacity = useMemo(() => new Animated.Value(1), []);
+  const iconScale = useMemo(() => new Animated.Value(1), []);
+  const formOpacity = useMemo(() => new Animated.Value(1), []);
+  const formTranslateY = useMemo(() => new Animated.Value(0), []);
+  const footerOpacity = useMemo(() => new Animated.Value(1), []);
+  const footerTranslateY = useMemo(() => new Animated.Value(0), []);
 
-  useEffect(() => {
+  const start = useCallback(() => {
+    headerOpacity.setValue(0);
+    headerTranslateY.setValue(20);
+    iconOpacity.setValue(0);
+    iconScale.setValue(0.85);
+    formOpacity.setValue(0);
+    formTranslateY.setValue(20);
+    footerOpacity.setValue(0);
+    footerTranslateY.setValue(20);
+
     Animated.parallel([
-      // Layer 1: header / back button
       Animated.sequence([
         Animated.delay(100),
         Animated.parallel([
@@ -55,7 +62,6 @@ export function useStaggeredEntrance() {
           }),
         ]),
       ]),
-      // Layer 2: icon / mascot with scale spring
       Animated.sequence([
         Animated.delay(200),
         Animated.parallel([
@@ -72,7 +78,6 @@ export function useStaggeredEntrance() {
           }),
         ]),
       ]),
-      // Layer 3: form fade + slide up
       Animated.sequence([
         Animated.delay(400),
         Animated.parallel([
@@ -88,7 +93,6 @@ export function useStaggeredEntrance() {
           }),
         ]),
       ]),
-      // Layer 4: footer fade + slide up
       Animated.sequence([
         Animated.delay(600),
         Animated.parallel([
@@ -105,10 +109,13 @@ export function useStaggeredEntrance() {
         ]),
       ]),
     ]).start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [headerOpacity, headerTranslateY, iconOpacity, iconScale, formOpacity, formTranslateY, footerOpacity, footerTranslateY]);
 
-  return {
+  useEffect(() => {
+    start();
+  }, [start]);
+
+  return useMemo(() => ({
     headerOpacity,
     headerTranslateY,
     iconOpacity,
@@ -117,5 +124,6 @@ export function useStaggeredEntrance() {
     formTranslateY,
     footerOpacity,
     footerTranslateY,
-  };
+    start,
+  }), [headerOpacity, headerTranslateY, iconOpacity, iconScale, formOpacity, formTranslateY, footerOpacity, footerTranslateY, start]);
 }

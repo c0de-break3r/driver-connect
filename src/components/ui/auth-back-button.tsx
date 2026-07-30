@@ -7,12 +7,14 @@ export type AuthBackButtonProps = {
   opacity: Animated.Value;
   /**
    * Where to navigate on back press.
-   * - `"welcome"` → goes to Welcome screen
-   * - `"identity"` → goes to Provide Your Identity screen
    * - `"sign-in"` → goes to sign-in screen
    * - Custom function for full control
    */
+<<<<<<< HEAD
   goBack: "welcome" | "identity" | "sign-in" | "forgot-password" | (() => void);
+=======
+  goBack: "sign-in" | (() => void);
+>>>>>>> 33eb3cd (updates)
 };
 
 /**
@@ -29,6 +31,7 @@ export function AuthBackButton({ opacity, goBack }: AuthBackButtonProps) {
       return;
     }
 
+<<<<<<< HEAD
     const target = goBack === "welcome"
       ? "/(onboarding)/welcome"
       : goBack === "identity"
@@ -37,6 +40,9 @@ export function AuthBackButton({ opacity, goBack }: AuthBackButtonProps) {
           ? "/(auth)/forgot-password"
           : "/(auth)/sign-in";
 
+=======
+    const target = "/(auth)/sign-in";
+>>>>>>> 33eb3cd (updates)
     router.replace(target as Href);
   };
 

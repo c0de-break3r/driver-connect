@@ -1,5 +1,9 @@
 import { Image } from "expo-image";
+<<<<<<< HEAD
 import { Href, router, useLocalSearchParams } from "expo-router";
+=======
+import { Link } from "expo-router";
+>>>>>>> 33eb3cd (updates)
 import {
     ActivityIndicator,
     Animated,
@@ -19,7 +23,6 @@ import {
     AuthBackButton,
     AuthFooter,
     AuthInput,
-    AuthSocialButtons,
     PrimaryButton,
 } from "@/components/ui";
 import { images } from "@/constants/images";
@@ -29,6 +32,7 @@ import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
 export default function SignIn() {
   const entrance = useStaggeredEntrance();
   const flow = useSignInFlow();
+<<<<<<< HEAD
   const params = useLocalSearchParams<{ from?: string }>();
   const fromWelcome = params.from === "welcome";
   const fromDriverIdentity = params.from === "driver-identity";
@@ -40,10 +44,12 @@ export default function SignIn() {
     : fromForgotPassword
       ? "forgot-password"
       : "welcome";
+=======
+>>>>>>> 33eb3cd (updates)
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF8F3" }} edges={["top"]}>
-      <AuthBackButton opacity={entrance.headerOpacity} goBack={backTarget} />
+      <AuthBackButton opacity={entrance.headerOpacity} goBack="sign-in" />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -129,6 +135,7 @@ export default function SignIn() {
         </Animated.View>
 
         <Animated.View style={{ opacity: entrance.footerOpacity }}>
+<<<<<<< HEAD
           <AuthSocialButtons
             loading={flow.googleLoading}
             onGooglePress={flow.handleGoogleSignIn}
@@ -140,6 +147,10 @@ export default function SignIn() {
             <AuthFooter variant="sign-up-link" from={undefined} />
           </Animated.View>
         )}
+=======
+          <AuthFooter variant="sign-up-link" />
+        </Animated.View>
+>>>>>>> 33eb3cd (updates)
       </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

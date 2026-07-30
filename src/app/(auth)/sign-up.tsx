@@ -17,21 +17,22 @@ import {
     AuthBackButton,
     AuthFooter,
     AuthInput,
-    AuthSocialButtons,
     PrimaryButton,
 } from "@/components/ui";
 import { images } from "@/constants/images";
 import { useSignUpFlow } from "@/hooks/useSignUpFlow";
 import { useStaggeredEntrance } from "@/hooks/useStaggeredEntrance";
-import { useLocalSearchParams } from "expo-router";
 
 export default function SignUp() {
   const entrance = useStaggeredEntrance();
   const flow = useSignUpFlow();
+<<<<<<< HEAD
   const params = useLocalSearchParams<{ from?: string }>();
   const fromDriverIdentity = params.from === "driver-identity";
 
   const backTarget: "welcome" | "identity" = fromDriverIdentity ? "identity" : "welcome";
+=======
+>>>>>>> 33eb3cd (updates)
 
   if (flow.pendingVerification) {
     return (
@@ -175,10 +176,10 @@ export default function SignUp() {
           ]}
         >
           <AuthInput
-            label="Alias Name"
-            value={flow.aliasName}
-            onChangeText={flow.setAliasName}
-            placeholder="Enter your alias name"
+            label="Full Name"
+            value={flow.fullName}
+            onChangeText={flow.setFullName}
+            placeholder="Enter your full name"
             icon={<Ionicons name="person-outline" size={18} color="#6E7E91" />}
           />
 
@@ -217,6 +218,7 @@ export default function SignUp() {
         </Animated.View>
 
         <Animated.View style={{ opacity: entrance.footerOpacity }}>
+<<<<<<< HEAD
           <AuthSocialButtons
             loading={flow.googleLoading}
             onGooglePress={flow.handleGoogleSignUp}
@@ -228,6 +230,10 @@ export default function SignUp() {
             <AuthFooter variant="sign-in-link" from={undefined} />
           </Animated.View>
         )}
+=======
+          <AuthFooter variant="sign-in-link" />
+        </Animated.View>
+>>>>>>> 33eb3cd (updates)
 
         <View nativeID="clerk-captcha" />
       </ScrollView>

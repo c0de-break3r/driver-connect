@@ -56,6 +56,7 @@ export default function DriverIdentityScreen() {
   const [gender, setGender] = useState("");
   const [showGenderModal, setShowGenderModal] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const navigatingRef = useRef(false);
 
   const formFields = useMemo(
     () => [
@@ -142,12 +143,21 @@ export default function DriverIdentityScreen() {
     router.push("/(auth)/sign-up?from=driver-identity");
   };
 
+  const handleBack = async () => {
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
+    router.back();
+    setTimeout(() => {
+      navigatingRef.current = false;
+    }, 300);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* ── Fixed Header ── */}
-      <View style={styles.header}>
+      <View style={styles.fixedHeader}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
         >
           <Ionicons name="chevron-back" size={22} color="#2C3E5B" />
@@ -671,13 +681,15 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
     gap: 24,
   },
-  header: {
+  fixedHeader: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 26,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 16,
+    paddingBottom: 12,
     backgroundColor: "#FFF8F3",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#EAE1D9",
   },
   backButton: {
     width: 40,
