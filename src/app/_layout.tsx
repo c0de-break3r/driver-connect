@@ -1,45 +1,28 @@
-import "@/global.css";
-
+import { useMemo } from "react";
 import { ConvexProviderWithAuth } from "convex/react";
-import { enableScreens } from "react-native-screens";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import * as WebBrowser from "expo-web-browser";
+
 import { convex } from "@/lib/convex";
 import { useConvexRoleSync } from "@/hooks/useConvexRoleSync";
-<<<<<<< HEAD
-import { useSessionManager } from "@/hooks/useSessionManager";
-=======
 import { AuthProvider, useAuth } from "@/contexts/AuthProvider";
->>>>>>> 33eb3cd (updates)
 
-enableScreens(false);
+WebBrowser.maybeCompleteAuthSession();
 
 function ConvexAuthWrapper({ children }: { children: React.ReactNode }) {
-  const { isLoaded, signedIn } = useAuth();
+  const auth = useAuth();
 
-<<<<<<< HEAD
-if (!publishableKey) {
-  throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in .env");
-}
-
-const clerkKey: string = publishableKey;
-
-function ConvexAuthBridge({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-
-=======
->>>>>>> 33eb3cd (updates)
-  const convexAuth = {
-    isLoading: !isLoaded,
-    isAuthenticated: signedIn,
+  const convexAuth = useMemo(() => ({
+    isLoading: !auth.isLoaded,
+    isAuthenticated: auth.signedIn,
     fetchAccessToken: async () => {
-      const {
-        data: { session },
-      } = await (await import("@/lib/supabase")).supabase.auth.getSession();
+      const { supabase } = await import("@/lib/supabase");
+      const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token ?? null;
     },
-  };
+  }), [auth.isLoaded, auth.signedIn]);
 
   return (
     <ConvexProviderWithAuth client={convex} useAuth={() => convexAuth}>
@@ -51,32 +34,18 @@ function ConvexAuthBridge({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-<<<<<<< HEAD
-      <ClerkProvider publishableKey={clerkKey}>
-        <ConvexAuthBridge>
-          <AppInner />
-        </ConvexAuthBridge>
-      </ClerkProvider>
-=======
       <AuthProvider>
         <ConvexAuthWrapper>
           <AppInner />
         </ConvexAuthWrapper>
       </AuthProvider>
->>>>>>> 33eb3cd (updates)
     </GestureHandlerRootView>
   );
 }
 
 function AppInner() {
-<<<<<<< HEAD
-  const { isSignedIn, isLoaded, userId } = useAuth();
-  useConvexRoleSync({ isLoaded, isSignedIn, userId });
-  useSessionManager({ isLoaded, isSignedIn, userId });
-=======
   const auth = useAuth();
   useConvexRoleSync({ isLoaded: auth.isLoaded, isSignedIn: auth.signedIn, userId: auth.userId });
->>>>>>> 33eb3cd (updates)
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

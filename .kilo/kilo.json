@@ -7,15 +7,6 @@
       "enabled": true
     },
     "convex": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "convex",
-        "mcp",
-        "start",
-        "--project-dir",
-        "/home/joer/Desktop/Software Engineering/driver-connect"
-      ],
       "enabled": true
     }
   }

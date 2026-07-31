@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: "https://intensity-loughborough-6.clerk.accounts.dev",
+      domain: "https://ndwpoxtfgqllzpvmgdog.supabase.co/auth/v1",
       applicationID: "convex",
     },
   ],

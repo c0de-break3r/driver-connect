@@ -18,63 +18,71 @@ export default defineSchema({
   })
     .index("by_user_id", ["userId"]),
 
-<<<<<<< HEAD
   driverProfiles: defineTable({
-    userId: v.id("users"),
-    fullLegalName: v.optional(v.string()),
-    licenseClass: v.optional(v.string()),
+    userId: v.string(),
     licenseNumber: v.optional(v.string()),
-    selfieUri: v.optional(v.string()),
-    preferredJobType: v.optional(v.string()),
-    selectedVehicleType: v.optional(v.string()),
-    verificationStatus: v.optional(v.string()),
-  }).index("by_user_id", ["userId"]),
+    licenseClass: v.optional(v.string()),
+    licenseExpiry: v.optional(v.string()),
+    yearsOfExperience: v.optional(v.number()),
+    preferredVehicleTypes: v.array(v.string()),
+    availableForHire: v.boolean(),
+    hourlyRate: v.optional(v.number()),
+    dailyRate: v.optional(v.number()),
+    weeklyRate: v.optional(v.number()),
+    monthlyRate: v.optional(v.number()),
+    bio: v.optional(v.string()),
+    rating: v.number(),
+    totalTrips: v.number(),
+    verificationStatus: v.string(),
+    idDocumentUrl: v.optional(v.string()),
+    selfieUrl: v.optional(v.string()),
+    policeClearanceUrl: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
 
   ownerProfiles: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),
     companyName: v.optional(v.string()),
     fleetSize: v.optional(v.number()),
     referralCode: v.optional(v.string()),
   }).index("by_user_id", ["userId"]),
 
   clientProfiles: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),
     preferredOccasion: v.optional(v.string()),
     frequentRoutes: v.optional(v.string()),
   }).index("by_user_id", ["userId"]),
 
   corporateProfiles: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),
     companyName: v.optional(v.string()),
     orgSize: v.optional(v.string()),
     department: v.optional(v.string()),
   }).index("by_user_id", ["userId"]),
 
-  verifications: defineTable({
-    userId: v.id("users"),
-    documentType: v.optional(v.string()),
-    status: v.string(),
-    livenessPassed: v.optional(v.boolean()),
-    confidence: v.optional(v.number()),
-    smileIdJobId: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }).index("by_user_id", ["userId"]),
-
-  referralCodes: defineTable({
+  referrals: defineTable({
+    referrerId: v.string(),
+    referredUserId: v.string(),
     code: v.string(),
-    description: v.optional(v.string()),
-    discountPercent: v.optional(v.number()),
-    isActive: v.boolean(),
+    status: v.string(),
     createdAt: v.number(),
-    expiresAt: v.optional(v.number()),
-  }).index("by_code", ["code"]),
+  })
+    .index("by_referrer", ["referrerId"])
+    .index("by_code", ["code"]),
 
   ads: defineTable({
-=======
+    title: v.string(),
+    description: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    targetUrl: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }),
+
   vehicles: defineTable({
     ownerId: v.string(),
->>>>>>> 33eb3cd (updates)
     title: v.string(),
     description: v.optional(v.string()),
     category: v.string(),
@@ -178,27 +186,4 @@ export default defineSchema({
     .index("by_sender", ["senderId"])
     .index("by_receiver", ["receiverId"])
     .index("by_unread", ["receiverId", "isRead"]),
-
-  driverProfiles: defineTable({
-    userId: v.string(),
-    licenseNumber: v.optional(v.string()),
-    licenseClass: v.optional(v.string()),
-    licenseExpiry: v.optional(v.string()),
-    yearsOfExperience: v.optional(v.number()),
-    preferredVehicleTypes: v.array(v.string()),
-    availableForHire: v.boolean(),
-    hourlyRate: v.optional(v.number()),
-    dailyRate: v.optional(v.number()),
-    weeklyRate: v.optional(v.number()),
-    monthlyRate: v.optional(v.number()),
-    bio: v.optional(v.string()),
-    rating: v.number(),
-    totalTrips: v.number(),
-    verificationStatus: v.string(),
-    idDocumentUrl: v.optional(v.string()),
-    selfieUrl: v.optional(v.string()),
-    policeClearanceUrl: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }).index("by_user", ["userId"]),
 });

@@ -1,34 +1,15 @@
 import { router, type Href } from "expo-router";
 
-import { useRoleStore, type UserRole } from "@/store/useRoleStore";
-
 /**
- * Returns the route a user should land on after authentication,
- * based on their selected role.
+ * Returns the route a user should land on after authentication.
  *
- * - driver → location permission first, then dashboard
- * - owner → owner route group
- * - client → client route group
- * - corporate → corporate route group
- * - no role yet → role select
+ * For now the app is simplified to a single home screen.
  */
-export function getPostAuthRoute(role: UserRole | null): Href {
-  switch (role) {
-    case "driver":
-      return "/(driver)/location-permission" as Href;
-    case "owner":
-      return "/(owner)/" as Href;
-    case "client":
-      return "/(client)/" as Href;
-    case "corporate":
-      return "/(corporate)/" as Href;
-    default:
-      return "/role-select" as Href;
-  }
+export function getPostAuthRoute(_role: string | null): Href {
+  return "/home" as Href;
 }
 
-/** Navigate to the correct post-auth destination based on the current role. */
+/** Navigate to the home screen after authentication. */
 export function navigatePostAuth(): void {
-  const role = useRoleStore.getState().role;
-  router.replace(getPostAuthRoute(role));
+  router.replace(getPostAuthRoute(null));
 }
