@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     height: SCREEN_HEIGHT,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: WHITE,
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 24,
     paddingBottom: 48,
     zIndex: 1000,

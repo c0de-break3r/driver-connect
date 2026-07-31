@@ -289,10 +289,10 @@ function Card({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   header: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
     paddingTop: 16,
     paddingBottom: 12,
   },
@@ -312,6 +312,8 @@ const styles = StyleSheet.create({
     height: 52,
     gap: 12,
     marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   searchInput: {
     flex: 1,

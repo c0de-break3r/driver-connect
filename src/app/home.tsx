@@ -167,10 +167,11 @@ function NavItem({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
+    backgroundColor: "#FFFFFF",
   },
   bottomNav: {
     position: "absolute",
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   comingSoonText: {
     fontSize: 16,
