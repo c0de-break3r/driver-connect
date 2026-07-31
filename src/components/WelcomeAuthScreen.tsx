@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   KeyboardAvoidingView,
@@ -12,14 +13,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 import { images } from "@/constants/images";
 import { useAuthEntryFlow } from "@/hooks/useAuthEntryFlow";
-import { HomeScreenContent } from "./HomeScreenContent";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -27,14 +27,37 @@ const ACCENT = "#2C3E5B";
 const DARK = "#2C3E5B";
 const WHITE = "#FFFFFF";
 
-function HomeScreenPeek() {
-  return <HomeScreenContent />;
-}
-
-export default function WelcomeAuthScreen() {
+export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => void }) {
   const flow = useAuthEntryFlow();
   const [sheetState, setSheetState] = useState<"open" | "dismissed">("open");
   const sheetAnim = useMemo(() => new Animated.Value(0), []);
+  const closeRotateAnim = useMemo(() => new Animated.Value(0), []);
+
+  const dismiss = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSheetState("dismissed");
+    Animated.parallel([
+      Animated.timing(sheetAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 2100,
+        useNativeDriver: true,
+        easing: (t) => 1 - Math.pow(1 - t, 3),
+      }),
+      Animated.timing(closeRotateAnim, {
+        toValue: 1,
+        duration: 2100,
+        useNativeDriver: true,
+        easing: (t) => 1 - Math.pow(1 - t, 3),
+      }),
+    ]).start(() => {
+      if (onDismiss) {
+        onDismiss();
+      } else {
+        router.replace("/home");
+      }
+    });
+  }, [sheetAnim, closeRotateAnim, onDismiss]);
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
@@ -66,17 +89,8 @@ export default function WelcomeAuthScreen() {
           }
         },
       }),
-    [sheetState, sheetAnim]
+    [sheetState, sheetAnim, dismiss]
   );
-
-  useEffect(() => {
-    Animated.spring(sheetAnim, {
-      toValue: sheetState === "dismissed" ? SCREEN_HEIGHT : 0,
-      useNativeDriver: true,
-      damping: 20,
-      stiffness: 90,
-    }).start();
-  }, [sheetState, sheetAnim]);
 
   const sheetStyle = {
     transform: [
@@ -86,28 +100,28 @@ export default function WelcomeAuthScreen() {
     ],
   } as any;
 
-  function dismiss() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSheetState("dismissed");
-    router.replace("/home");
-  }
-
-  useEffect(() => {
-    if (sheetState === "dismissed") {
-      const id = setTimeout(() => {
-        router.replace("/home");
-      }, 320);
-      return () => clearTimeout(id);
-    }
-  }, [sheetState]);
-
   return (
     <View style={styles.root}>
-      <HomeScreenPeek />
       <Animated.View style={[styles.sheet, sheetStyle]} {...panResponder.panHandlers}>
         <View style={styles.headerRow}>
           <Pressable onPress={dismiss} hitSlop={8} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕</Text>
+            <Animated.Text
+              style={[
+                styles.closeText,
+                {
+                  transform: [
+                    {
+                      rotate: closeRotateAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ["0deg", "360deg"],
+                      }),
+                    },
+                  ],
+                } as any,
+              ]}
+            >
+              ✕
+            </Animated.Text>
           </Pressable>
           <View style={styles.handle} />
         </View>
@@ -132,6 +146,10 @@ export default function WelcomeAuthScreen() {
               </View>
 
               <Text style={styles.title}>Log in or sign up</Text>
+
+              {flow.loading && (
+                <ActivityIndicator size="small" color="#F97316" style={{ marginBottom: 16 }} />
+              )}
 
               <View style={styles.form}>
                 <TextInputBase
@@ -257,7 +275,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   headerRow: {
-    paddingTop: 24,
+    paddingTop: 40,
     paddingBottom: 6,
     flexDirection: "row",
     alignItems: "center",
@@ -265,7 +283,7 @@ const styles = StyleSheet.create({
   },
   handle: {
     position: "absolute",
-    top: 16,
+    top: 32,
     left: "50%",
     marginLeft: -18,
     width: 36,
@@ -276,7 +294,7 @@ const styles = StyleSheet.create({
   closeButton: {
     position: "absolute",
     right: 12,
-    top: 12,
+    top: 24,
     paddingVertical: 8,
     paddingHorizontal: 12,
     zIndex: 1,
