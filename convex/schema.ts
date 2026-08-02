@@ -3,7 +3,7 @@ import { v } from "convex/values";
 
 export default defineSchema({
   users: defineTable({
-    userId: v.string(),
+    clerkUserId: v.string(),
     role: v.union(
       v.literal("driver"),
       v.literal("owner"),
@@ -16,7 +16,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_user_id", ["userId"]),
+    .index("by_user_id", ["clerkUserId"]),
 
   driverProfiles: defineTable({
     userId: v.string(),

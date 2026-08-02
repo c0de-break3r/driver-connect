@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useAuth as useClerkAuth, useUser, useSignIn } from "@clerk/expo";
 
 type AuthState = {
   userId: string | null;
   email: string | null;
+  firstName: string | null;
   isLoaded: boolean;
   signedIn: boolean;
   signIn: (emailInput: string, password: string) => Promise<{ error: Error | null }>;
@@ -15,112 +16,90 @@ type AuthState = {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const clerkAuth = useClerkAuth();
+  const { user } = useUser();
+  const signInHook = useSignIn();
+  const [userId, setUserId] = useState<string | null>(clerkAuth.userId ?? null);
+  const [email, setEmail] = useState<string | null>(user?.primaryEmailAddress?.emailAddress ?? null);
+  const [firstName, setFirstName] = useState<string | null>(user?.firstName ?? null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mountedRef.current) return;
-      setUserId(session?.user?.id ?? null);
-      setEmail(session?.user?.email ?? null);
-    });
-
-    let timeoutId: ReturnType<typeof setTimeout>;
-
-    const init = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-
-        if (!mountedRef.current) return;
-
-        if (!error && data.session) {
-          setUserId(data.session.user.id);
-          setEmail(data.session.user.email ?? null);
-        }
-      } catch {
-        // ignore
-      } finally {
-        if (mountedRef.current) {
-          setLoading(false);
-        }
-      }
-    };
-
-    timeoutId = setTimeout(() => {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }, 3000);
-
-    init();
+    setUserId(clerkAuth.userId ?? null);
+    setEmail(user?.primaryEmailAddress?.emailAddress ?? null);
+    setFirstName(user?.firstName ?? null);
 
     return () => {
-      clearTimeout(timeoutId);
       mountedRef.current = false;
-      subscription.unsubscribe();
     };
-  }, []);
+  }, [clerkAuth.userId, user?.primaryEmailAddress?.emailAddress, user?.firstName]);
 
   const signIn = async (emailInput: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: emailInput.trim(),
-      password,
-    });
-    if (!error) {
-      const { data } = await supabase.auth.getSession();
-      setUserId(data.session?.user?.id ?? null);
-      setEmail(data.session?.user?.email ?? null);
+    try {
+      if (!signInHook.signIn) {
+        return { error: new Error("Sign in not initialized") };
+      }
+      await signInHook.signIn.create({
+        identifier: emailInput.trim(),
+      });
+      await signInHook.signIn.password({
+        identifier: emailInput.trim(),
+        password,
+      });
+      await signInHook.signIn.finalize();
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error("Sign in failed") };
     }
-    return { error: error ?? null };
   };
 
   const signUp = async (emailInput: string, password: string, metadata?: Record<string, any>) => {
-    const { error } = await supabase.auth.signUp({
-      email: emailInput.trim(),
-      password,
-      options: {
-        data: metadata,
-      },
-    });
-    if (!error) {
-      const { data } = await supabase.auth.getSession();
-      setUserId(data.session?.user?.id ?? null);
-      setEmail(data.session?.user?.email ?? null);
+    try {
+      if (!signInHook.signIn) {
+        return { error: new Error("Sign in not initialized") };
+      }
+      await signInHook.signIn.create({
+        identifier: emailInput.trim(),
+        signUpIfMissing: true,
+      });
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error("Sign up failed") };
     }
-    return { error: error ?? null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUserId(null);
-    setEmail(null);
+    await clerkAuth.signOut();
   };
 
   const resetPassword = async (emailInput: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(emailInput.trim(), {
-      redirectTo: "driverconnect://reset-password",
-    });
-    return { error: error ?? null };
+    try {
+      if (!signInHook.signIn) {
+        return { error: new Error("Sign in not initialized") };
+      }
+      await signInHook.signIn.create({
+        identifier: emailInput.trim(),
+      });
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error("Password reset failed") };
+    }
   };
 
   const value = useMemo<AuthState>(
     () => ({
-      userId,
-      email,
-      isLoaded: !loading,
-      signedIn: !!userId,
+      userId: clerkAuth.userId ?? null,
+      email: user?.primaryEmailAddress?.emailAddress ?? null,
+      firstName: user?.firstName ?? null,
+      isLoaded: clerkAuth.isLoaded,
+      signedIn: clerkAuth.isSignedIn ?? false,
       signIn,
       signUp,
       signOut,
       resetPassword,
     }),
-    [userId, email, loading]
+    [clerkAuth.userId, user?.primaryEmailAddress?.emailAddress, clerkAuth.isLoaded, clerkAuth.isSignedIn, user?.firstName]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

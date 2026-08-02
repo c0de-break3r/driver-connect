@@ -17,7 +17,7 @@ const VEHICLES = [
     title: "SUV in Kumasi",
     location: "Kumasi, Ghana",
     price: "GH₵1,466",
-    period: "for 2 nights",
+    period: "for 2 days",
     rating: 4.98,
     image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
   },
@@ -26,7 +26,7 @@ const VEHICLES = [
     title: "Van in Accra",
     location: "Accra, Ghana",
     price: "GH₵911",
-    period: "for 2 nights",
+    period: "for 2 days",
     rating: 4.88,
     image: "https://images.unsplash.com/photo-1551522435-a13afa82f300?w=800&q=80",
   },
@@ -35,9 +35,47 @@ const VEHICLES = [
     title: "Luxury Sedan",
     location: "Kumasi, Ghana",
     price: "GH₵720",
-    period: "for 2 nights",
+    period: "for 2 days",
     rating: 4.95,
     image: "https://images.unsplash.com/photo-1563720223185-1103d5164cdb?w=800&q=80",
+  },
+  {
+    id: "4",
+    title: "Bus in Tamale",
+    location: "Tamale, Ghana",
+    price: "GH₵2,200",
+    period: "for 3 days",
+    rating: 4.85,
+    image: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
+  },
+  {
+    id: "5",
+    title: "Motorcycle in Cape Coast",
+    location: "Cape Coast, Ghana",
+    price: "GH₵350",
+    period: "for 1 day",
+    rating: 4.92,
+    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
+  },
+  {
+    id: "6",
+    title: "Truck in Tema",
+    location: "Tema, Ghana",
+    price: "GH₵1,800",
+    period: "for 2 days",
+    rating: 4.78,
+    image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&q=80",
+  },
+  {
+    id: "7",
+    title: "Find your perfect ride",
+    message: "Explore vehicles near you",
+    images: [
+      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&q=80",
+      "https://images.unsplash.com/photo-1532581140115-ca39d166e46a?w=400&q=80",
+      "https://images.unsplash.com/photo-1503376763036-066120622c74?w=400&q=80",
+      "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&q=80",
+    ],
   },
 ];
 
@@ -72,6 +110,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const [focused, setFocused] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const { signedIn } = useAuth();
   const iconAnim = useRef(new Animated.Value(ICON_SIZE_BASE)).current;
 
@@ -110,6 +149,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
       return;
     }
     setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleImageError = (id: string) => {
+    setImageErrors((prev) => ({ ...prev, [id]: true }));
   };
 
   const iconScale = iconAnim.interpolate({
@@ -187,7 +230,13 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 source={{ uri: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80" }}
                 style={styles.continueImage}
                 contentFit="cover"
+                onError={() => handleImageError("continue")}
               />
+              {imageErrors["continue"] && (
+                <View style={styles.imageFallback}>
+                  <Ionicons name="image-outline" size={24} color="#9CA3AF" />
+                </View>
+              )}
             </View>
           </View>
         </Card>
@@ -204,31 +253,63 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalList}
+          style={styles.horizontalScrollView}
         >
-          {VEHICLES.map((vehicle) => (
-            <Pressable
-              key={vehicle.id}
-              style={styles.vehicleCard}
-              onPress={() => handleVehiclePress(vehicle.id)}
-            >
-              <Image
-                source={{ uri: vehicle.image }}
-                style={styles.vehicleImage}
-                contentFit="cover"
-              />
+          {VEHICLES.map((vehicle) => {
+            if (vehicle.id === "7") {
+              return (
+                <Pressable key={vehicle.id} style={styles.mosaicCard} onPress={() => handleVehiclePress(vehicle.id)}>
+                  <View style={styles.mosaicGrid}>
+                    <View style={styles.mosaicItem}>
+                      <Image source={{ uri: vehicle.images?.[0] }} style={styles.mosaicImage} contentFit="cover" />
+                    </View>
+                    <View style={styles.mosaicItem}>
+                      <Image source={{ uri: vehicle.images?.[1] }} style={styles.mosaicImage} contentFit="cover" />
+                    </View>
+                    <View style={styles.mosaicItem}>
+                      <Image source={{ uri: vehicle.images?.[2] }} style={styles.mosaicImage} contentFit="cover" />
+                    </View>
+                    <View style={styles.mosaicItem}>
+                      <Image source={{ uri: vehicle.images?.[3] }} style={styles.mosaicImage} contentFit="cover" />
+                    </View>
+                  </View>
+                  <View style={styles.mosaicOverlay}>
+                    <Text style={styles.mosaicTitle}>{vehicle.title}</Text>
+                    <Text style={styles.mosaicMessage}>{vehicle.message}</Text>
+                  </View>
+                </Pressable>
+              );
+            }
+
+            return (
               <Pressable
-                style={styles.favoriteBadge}
-                onPress={() => handleFavoritePress(vehicle.id)}
+                key={vehicle.id}
+                style={styles.vehicleCard}
+                onPress={() => handleVehiclePress(vehicle.id)}
               >
-                <Ionicons
-                  name={favorites[vehicle.id] ? "heart" : "heart-outline"}
-                  size={14}
-                  color={favorites[vehicle.id] ? "#E74C3C" : "#FFFFFF"}
+                <Image
+                  source={{ uri: vehicle.image }}
+                  style={styles.vehicleImage}
+                  contentFit="cover"
+                  onError={() => handleImageError(vehicle.id)}
                 />
-              </Pressable>
-              <Text style={styles.vehicleTitle}>{vehicle.title}</Text>
-              <Text style={styles.vehicleLocation}>{vehicle.location}</Text>
-              <View style={styles.vehicleFooter}>
+                {imageErrors[vehicle.id] && (
+                  <View style={styles.imageFallback}>
+                    <Ionicons name="image-outline" size={24} color="#9CA3AF" />
+                  </View>
+                )}
+                <Pressable
+                  style={styles.favoriteBadge}
+                  onPress={() => handleFavoritePress(vehicle.id)}
+                >
+                  <Ionicons
+                    name={favorites[vehicle.id] ? "heart" : "heart-outline"}
+                    size={22}
+                    color={favorites[vehicle.id] ? "#E74C3C" : "#FFFFFF"}
+                  />
+                </Pressable>
+                <Text style={styles.vehicleTitle}>{vehicle.title}</Text>
+                <Text style={styles.vehicleLocation}>{vehicle.location}</Text>
                 <Text style={styles.vehiclePrice}>
                   {vehicle.price}{" "}
                   <Text style={styles.vehiclePeriod}>{vehicle.period}</Text>
@@ -237,9 +318,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   <Ionicons name="star" size={12} color="#FFB800" />
                   <Text style={styles.ratingText}>{vehicle.rating}</Text>
                 </View>
-              </View>
-            </Pressable>
-          ))}
+              </Pressable>
+            );
+          })}
         </ScrollView>
 
         {/* Stay near section */}
@@ -254,6 +335,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.horizontalList}
+          style={styles.horizontalScrollView}
         >
           {POPULAR.map((item) => (
             <Pressable key={item.id} style={styles.popularCard}>
@@ -261,7 +343,13 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 source={{ uri: item.image }}
                 style={styles.popularImage}
                 contentFit="cover"
+                onError={() => handleImageError(item.id)}
               />
+              {imageErrors[item.id] && (
+                <View style={styles.imageFallback}>
+                  <Ionicons name="image-outline" size={24} color="#9CA3AF" />
+                </View>
+              )}
               <Text style={styles.popularTitle}>{item.title}</Text>
               <Text style={styles.popularSubtitle}>{item.subtitle}</Text>
             </Pressable>
@@ -410,17 +498,19 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingHorizontal: 20,
   },
+  horizontalScrollView: {
+    backgroundColor: "transparent",
+    marginHorizontal: -20,
+  },
 
   /* Vehicle cards */
   vehicleCard: {
-    width: 200,
+    width: 140,
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderRadius: 14,
     overflow: "hidden",
-    gap: 8,
-    paddingBottom: 12,
+    gap: 4,
+    paddingBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -429,45 +519,50 @@ const styles = StyleSheet.create({
   },
   vehicleImage: {
     width: "100%",
-    height: 120,
+    height: 90,
   },
   favoriteBadge: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(0,0,0,0.25)",
+    top: 8,
+    right: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
   },
+  imageFallback: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3F4F6",
+  },
   vehicleTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: NAVY,
-    paddingHorizontal: 12,
-    marginTop: 4,
+    paddingHorizontal: 10,
+    marginTop: 2,
   },
   vehicleLocation: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#6B7280",
-    paddingHorizontal: 12,
-  },
-  vehicleFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    marginTop: 4,
+    paddingHorizontal: 10,
+    marginTop: 2,
   },
   vehiclePrice: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: NAVY,
+    paddingHorizontal: 10,
+    marginTop: 4,
   },
   vehiclePeriod: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
     color: "#6B7280",
   },
@@ -475,23 +570,77 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    paddingHorizontal: 10,
+    marginTop: 2,
   },
   ratingText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     color: NAVY,
   },
 
+  /* Mosaic message card */
+  mosaicCard: {
+    width: 120,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  mosaicGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: "100%",
+    height: 80,
+  },
+  mosaicItem: {
+    width: "50%",
+    height: "50%",
+    padding: 1,
+  },
+  mosaicImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 2,
+  },
+  mosaicOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8,
+  },
+  mosaicTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 2,
+  },
+  mosaicMessage: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    textAlign: "center",
+    opacity: 0.95,
+  },
+
   /* Popular cards */
   popularCard: {
-    width: 160,
+    width: 140,
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderRadius: 14,
     overflow: "hidden",
-    gap: 8,
-    paddingBottom: 12,
+    gap: 6,
+    paddingBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -500,18 +649,18 @@ const styles = StyleSheet.create({
   },
   popularImage: {
     width: "100%",
-    height: 100,
+    height: 80,
   },
   popularTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: NAVY,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   popularSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#6B7280",
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
 
   /* Generic card */

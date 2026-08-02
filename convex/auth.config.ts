@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: "https://ndwpoxtfgqllzpvmgdog.supabase.co/auth/v1",
+      domain: "https://YOUR_CLERK_DOMAIN.clerk.accounts.dev",
       applicationID: "convex",
     },
   ],

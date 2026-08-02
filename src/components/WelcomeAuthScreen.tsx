@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Dimensions,
   KeyboardAvoidingView,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
   PanResponder,
   Platform,
   Pressable,
@@ -19,7 +20,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { images } from "@/constants/images";
-import { useAuthEntryFlow } from "@/hooks/useAuthEntryFlow";
+import { useAuthEntryFlow, AuthEntryFlowState } from "@/hooks/useAuthEntryFlow";
+import { useAuth } from "@/contexts/AuthProvider";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -27,11 +29,62 @@ const ACCENT = "#2C3E5B";
 const DARK = "#2C3E5B";
 const WHITE = "#FFFFFF";
 
+function Avatar({ name }: { name?: string }) {
+  const letter = name ? name.charAt(0).toUpperCase() : "?";
+  return (
+    <View style={styles.avatar}>
+      <Text style={styles.avatarText}>{letter}</Text>
+    </View>
+  );
+}
+
+function ButtonLoadingIndicator({ color = WHITE, size = 20 }: { color?: string; size?: number } = {}) {
+  const shimmer = useMemo(() => new Animated.Value(0), []);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(shimmer, {
+        toValue: 1,
+        duration: 1200,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shimmer]);
+
+  const translateX = shimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-120, 120],
+  });
+
+  return (
+    <View style={[styles.loadingButtonContent, { height: size }]}>
+      <Animated.View
+        style={[
+          styles.shimmerSweep,
+          { width: size * 4, backgroundColor: "#FFFFFF" },
+          { transform: [{ translateX }] },
+        ]}
+      />
+      <Text style={[styles.loadingButtonText, { color }]}>Continue</Text>
+    </View>
+  );
+}
+
 export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => void }) {
   const flow = useAuthEntryFlow();
+  const { signedIn, isLoaded } = useAuth();
   const [sheetState, setSheetState] = useState<"open" | "dismissed">("open");
   const sheetAnim = useMemo(() => new Animated.Value(0), []);
   const closeRotateAnim = useMemo(() => new Animated.Value(0), []);
+  const scrollAtTopRef = useRef(true);
+
+  useEffect(() => {
+    if (isLoaded && signedIn && sheetState !== "dismissed") {
+      dismiss();
+    }
+  }, [isLoaded, signedIn]);
 
   const dismiss = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -39,13 +92,13 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
     Animated.parallel([
       Animated.timing(sheetAnim, {
         toValue: SCREEN_HEIGHT,
-        duration: 2100,
+        duration: 350,
         useNativeDriver: true,
         easing: (t) => 1 - Math.pow(1 - t, 3),
       }),
       Animated.timing(closeRotateAnim, {
         toValue: 1,
-        duration: 2100,
+        duration: 350,
         useNativeDriver: true,
         easing: (t) => 1 - Math.pow(1 - t, 3),
       }),
@@ -58,15 +111,28 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
     });
   }, [sheetAnim, closeRotateAnim, onDismiss]);
 
+  const goBack = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    flow.reset();
+  }, [flow]);
+
+  const switchUser = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    flow.reset();
+  }, [flow]);
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponder: (_, gesture) => {
-          return (
-            Math.abs(gesture.dy) > Math.abs(gesture.dx) &&
-            gesture.dy > 0 &&
-            sheetState !== "dismissed"
-          );
+          if (sheetState === "dismissed") return false;
+          const isVertical = Math.abs(gesture.dy) > Math.abs(gesture.dx);
+          if (!isVertical) return false;
+          if (scrollAtTopRef.current || gesture.dy > 0) {
+            return true;
+          }
+          return false;
         },
         onPanResponderMove: (_, gesture) => {
           if (sheetState !== "dismissed") {
@@ -100,120 +166,258 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
     ],
   } as any;
 
+  const isVerifyStep = flow.step === "verify";
+
   return (
     <View style={styles.root}>
       <Animated.View style={[styles.sheet, sheetStyle]} {...panResponder.panHandlers}>
-        <View style={styles.headerRow}>
-          <Pressable onPress={dismiss} hitSlop={8} style={styles.closeButton}>
-            <Animated.Text
-              style={[
-                styles.closeText,
-                {
-                  transform: [
-                    {
-                      rotate: closeRotateAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ["0deg", "360deg"],
-                      }),
-                    },
-                  ],
-                } as any,
-              ]}
-            >
-              ✕
-            </Animated.Text>
-          </Pressable>
-          <View style={styles.handle} />
-        </View>
+        {!isVerifyStep && (
+          <View style={styles.headerRow}>
+            <Pressable onPress={dismiss} hitSlop={8} style={styles.closeButton}>
+              <Animated.Text
+                style={[
+                  styles.closeText,
+                  {
+                    transform: [
+                      {
+                        rotate: closeRotateAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ["0deg", "360deg"],
+                        }),
+                      },
+                    ],
+                  } as any,
+                ]}
+              >
+                ✕
+              </Animated.Text>
+            </Pressable>
+            <View style={styles.handle} />
+          </View>
+        )}
+
+        {isVerifyStep && (
+          <View style={styles.verifyHeaderRow}>
+            <Pressable onPress={goBack} hitSlop={8} style={styles.iconButton}>
+              <Ionicons name="arrow-back" size={22} color={DARK} />
+            </Pressable>
+            <Pressable onPress={dismiss} hitSlop={8} style={styles.iconButton}>
+              <Ionicons name="close" size={22} color={DARK} />
+            </Pressable>
+          </View>
+        )}
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
           keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.topSection}>
-              <View style={styles.logoWrap}>
-                <Image
-                  source={images.appIcon}
-                  style={styles.logo}
-                  contentFit="contain"
-                />
-              </View>
+          {isVerifyStep ? (
+            <View style={styles.verifyContainer}>
+               <ScrollView
+                 contentContainerStyle={styles.verifyContent}
+                 showsVerticalScrollIndicator={false}
+                 keyboardShouldPersistTaps="handled"
+                 onScroll={(e) => {
+                   scrollAtTopRef.current = e.nativeEvent.contentOffset.y <= 0;
+                 }}
+                 scrollEventThrottle={16}
+               >
 
-              <Text style={styles.title}>Log in or sign up</Text>
+                <Text style={styles.verifyTitle}>Confirm it's you</Text>
+                <Text style={styles.verifySubtitle}>
+                  We sent a code to {flow.identifier}
+                </Text>
 
-              {flow.loading && (
-                <ActivityIndicator size="small" color="#F97316" style={{ marginBottom: 16 }} />
-              )}
-
-              <View style={styles.form}>
-                <TextInputBase
-                  value={flow.identifier}
-                  onChangeText={flow.setIdentifier}
-                  editable={!flow.loading}
-                />
+                <View style={styles.otpWrap}>
+                  <TextInput
+                    value={flow.otp}
+                    onChangeText={flow.setOtp}
+                    editable={!flow.loading}
+                    autoCapitalize="none"
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    style={styles.otpInput}
+                    placeholder="------"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
 
                 {flow.error && <Text style={styles.errorText}>{flow.error}</Text>}
 
-                <View style={styles.buttonSpacer}>
-                  {flow.loading ? (
-                    <View style={styles.primaryButton}>
-                      <Text style={styles.primaryButtonText}>Loading…</Text>
-                    </View>
+                <View style={styles.resendRow}>
+                  <Text style={styles.resendText}>Didn't get it? </Text>
+                  {flow.resendCooldown > 0 ? (
+                    <Text style={styles.resendLink}>Resend in {flow.resendCooldown}s</Text>
                   ) : (
-                    <Pressable
-                      onPress={flow.handleMagicLink}
-                      disabled={!flow.canSubmit}
-                      style={({ pressed }) => [
-                        styles.primaryButton,
-                        pressed && { opacity: 0.85 },
-                        !flow.canSubmit && styles.primaryButtonDisabled,
-                      ]}
-                    >
-                      <Text style={styles.primaryButtonText}>Continue</Text>
+                    <Pressable onPress={flow.handleSendCode} disabled={flow.loading}>
+                      <Text style={[styles.resendLink, styles.resendLinkActive]}>Send a new code</Text>
                     </Pressable>
                   )}
                 </View>
-              </View>
+              </ScrollView>
             </View>
+          ) : (
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              onScroll={(e) => {
+                scrollAtTopRef.current = e.nativeEvent.contentOffset.y <= 0;
+              }}
+              scrollEventThrottle={16}
+            >
+              {flow.recognizedUser ? (
+                <View style={styles.welcomeBackContent}>
+                  <Avatar name={flow.recognizedUser.firstName} />
+                  <Text style={styles.welcomeTitle}>
+                    Welcome back, {flow.recognizedUser.firstName}
+                  </Text>
+                  <View style={styles.welcomeEmailRow}>
+                    <Ionicons name="mail-outline" size={18} color="#6B7280" />
+                    <Text style={styles.welcomeEmail}>
+                      {flow.identifier}
+                    </Text>
+                  </View>
+                  <Text style={styles.welcomeSubtitle}>
+                    We may email or text you a code to log you in.
+                  </Text>
+                  <View style={styles.buttonSpacer}>
+                    <Pressable
+                      onPress={flow.handleLogin}
+                      disabled={flow.loadingProvider === "email" && flow.loading}
+                      style={({ pressed }) => [
+                        styles.primaryButton,
+                        pressed && { opacity: 0.85 },
+                        flow.loadingProvider === "email" && flow.loading && styles.primaryButtonDisabled,
+                      ]}
+                    >
+                      {flow.loadingProvider === "email" && flow.loading ? (
+                        <ButtonLoadingIndicator />
+                      ) : (
+                        <Text style={styles.primaryButtonText}>Log in</Text>
+                      )}
+                    </Pressable>
+                  </View>
+                  <Pressable onPress={switchUser} disabled={flow.loading}>
+                    <Text style={styles.notYouText}>Not you?</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.topSection}>
+                    <View style={styles.logoWrap}>
+                      <Image
+                        source={images.appIcon}
+                        style={styles.logo}
+                        contentFit="contain"
+                      />
+                    </View>
 
-            <View style={styles.bottomSection}>
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or</Text>
-                <View style={styles.dividerLine} />
-              </View>
+                    <Text style={styles.title}>Log in or sign up</Text>
 
-              <View style={styles.socialRow}>
-                <Pressable
-                  style={styles.socialButton}
-                  onPress={() => flow.handleGoogleSignIn()}
-                  disabled={flow.loading}
-                >
-                  <Image
-                    source={images.googleG}
-                    style={styles.googleIcon}
-                    contentFit="contain"
-                  />
-                  <Text style={styles.socialBtnText}>Google</Text>
-                </Pressable>
+                    {flow.loading && (
+                      <View style={{ marginBottom: 16 }}>
+                        <ButtonLoadingIndicator />
+                      </View>
+                    )}
 
-                <Pressable
-                  style={styles.socialButton}
-                  onPress={() => {}}
-                  disabled={flow.loading}
-                >
-                  <Ionicons name="logo-apple" size={20} color={DARK} />
-                  <Text style={styles.socialBtnText}>Apple</Text>
-                </Pressable>
-              </View>
-            </View>
-          </ScrollView>
+                      {flow.success && !flow.loading && (
+                        <Text style={styles.successText}>
+                          Code sent! Check your {flow.identifier.includes("@") && flow.identifier.includes(".") ? "email" : "phone"}.
+                        </Text>
+                      )}
+
+
+                    <View style={styles.form}>
+                      <TextInputBase
+                        value={flow.identifier}
+                        onChangeText={flow.setIdentifier}
+                        editable={!flow.loading}
+                        autoCapitalize="none"
+                        keyboardType={flow.identifier.includes("@") && flow.identifier.includes(".") ? "email-address" : "default"}
+                      />
+                      {flow.error && <Text style={styles.errorText}>{flow.error}</Text>}
+                      <View style={styles.buttonSpacer}>
+                      <Pressable
+                        onPress={flow.handleSendCode}
+                        disabled={!flow.canSubmit || flow.loading}
+                        style={({ pressed }) => [
+                          styles.primaryButton,
+                          pressed && { opacity: 0.85 },
+                          (!flow.canSubmit || flow.loading) && styles.primaryButtonDisabled,
+                        ]}
+                      >
+                        {flow.loadingProvider === "email" && flow.loading ? (
+                          <ButtonLoadingIndicator />
+                        ) : (
+                          <Text style={styles.primaryButtonText}>Continue</Text>
+                        )}
+                      </Pressable>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.bottomSection}>
+                    <View style={styles.dividerRow}>
+                      <View style={styles.dividerLine} />
+                      <Text style={styles.dividerText}>or</Text>
+                      <View style={styles.dividerLine} />
+                    </View>
+
+                     <View style={styles.socialRow}>
+                       <Pressable
+                         onPress={flow.handleGoogleSignIn}
+                         disabled={flow.loadingProvider === "google" && flow.loading}
+                         style={({ pressed }) => [
+                           styles.socialButton,
+                           pressed && { opacity: 0.85 },
+                           flow.loadingProvider === "google" && flow.loading && styles.primaryButtonDisabled,
+                         ]}
+                       >
+                         {flow.loadingProvider === "google" && flow.loading ? (
+                           <View style={styles.socialLoadingWrap}>
+                             <ButtonLoadingIndicator size={18} color={DARK} />
+                           </View>
+                         ) : (
+                           <>
+                             <Image
+                               source={images.googleG}
+                               style={styles.googleIcon}
+                               contentFit="contain"
+                             />
+                             <Text style={styles.socialBtnText}>Google</Text>
+                           </>
+                         )}
+                       </Pressable>
+
+                       <Pressable
+                         onPress={flow.handleAppleSignIn}
+                         disabled={flow.loadingProvider === "apple" && flow.loading}
+                         style={({ pressed }) => [
+                           styles.socialButton,
+                           pressed && { opacity: 0.85 },
+                           flow.loadingProvider === "apple" && flow.loading && styles.primaryButtonDisabled,
+                         ]}
+                       >
+                         {flow.loadingProvider === "apple" && flow.loading ? (
+                           <View style={styles.socialLoadingWrap}>
+                             <ButtonLoadingIndicator size={18} color={DARK} />
+                           </View>
+                         ) : (
+                           <>
+                             <Ionicons name="logo-apple" size={20} color={DARK} />
+                             <Text style={styles.socialBtnText}>Apple</Text>
+                           </>
+                         )}
+                       </Pressable>
+                     </View>
+
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          )}
         </KeyboardAvoidingView>
       </Animated.View>
     </View>
@@ -224,10 +428,16 @@ function TextInputBase({
   value,
   onChangeText,
   editable,
+  autoCapitalize = "none",
+  keyboardType = "default",
+  maxLength,
 }: {
   value: string;
   onChangeText: (text: string) => void;
   editable: boolean;
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  keyboardType?: "default" | "email-address" | "number-pad";
+  maxLength?: number;
 }) {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -244,12 +454,13 @@ function TextInputBase({
         onChangeText={onChangeText}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholder="Phone number or email"
-        placeholderTextColor="#A0AAB4"
-        keyboardType="email-address"
-        autoCapitalize="none"
+        placeholder={maxLength ? "------" : "Phone number or email"}
+        placeholderTextColor="#9CA3AF"
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
         autoCorrect={false}
         editable={editable}
+        maxLength={maxLength}
         style={styles.inputInner}
       />
     </Pressable>
@@ -364,6 +575,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
   },
+  successText: {
+    color: "#16A34A",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 16,
+  },
   buttonSpacer: {
     marginTop: 8,
   },
@@ -374,6 +592,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 52,
+    overflow: "hidden",
   },
   primaryButtonDisabled: {
     opacity: 0.5,
@@ -427,5 +646,163 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: DARK,
+  },
+  verifyContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  verifyHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 40,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+  },
+  iconButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  verifyContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingBottom: 48,
+  },
+  verifyTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: DARK,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  verifySubtitle: {
+    fontSize: 15,
+    fontWeight: "400",
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 32,
+    lineHeight: 20,
+  },
+  otpWrap: {
+    width: "100%",
+    maxWidth: 320,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    paddingHorizontal: 16,
+    minHeight: 52,
+    justifyContent: "center",
+    backgroundColor: WHITE,
+    marginBottom: 16,
+  },
+  otpInput: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: DARK,
+    paddingVertical: Platform.select({ ios: 14, android: 10 }),
+    letterSpacing: 6,
+    textAlign: "center",
+  },
+  resendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  resendText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  resendLink: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#9CA3AF",
+    textDecorationLine: "underline",
+  },
+  resendLinkActive: {
+    color: DARK,
+  },
+  loadingButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: 20,
+  },
+  shimmerSweep: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 80,
+    backgroundColor: "rgba(255, 255, 255, 0.35)",
+    borderRadius: 20,
+  },
+  loadingButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: WHITE,
+  },
+  welcomeBackContent: {
+    width: "100%",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingBottom: 48,
+    flexGrow: 1,
+    justifyContent: "center",
+  },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#EEECFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+  avatarText: {
+    fontSize: 34,
+    fontWeight: "700",
+    color: "#4F46E5",
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: DARK,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  welcomeEmailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 24,
+  },
+  welcomeEmail: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  welcomeSubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 32,
+    lineHeight: 20,
+  },
+  notYouText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: DARK,
+    textDecorationLine: "underline",
+    marginTop: 16,
+  },
+  socialLoadingWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
   },
 });

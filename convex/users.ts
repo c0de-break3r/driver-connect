@@ -7,7 +7,7 @@ export const getByUserId = query({
     v.object({
       _id: v.id("users"),
       _creationTime: v.number(),
-      userId: v.string(),
+      clerkUserId: v.string(),
       role: v.union(
         v.literal("driver"),
         v.literal("owner"),
@@ -26,7 +26,7 @@ export const getByUserId = query({
     return await ctx.db
       .query("users")
       .withIndex("by_user_id", (q) =>
-        q.eq("userId", args.userId)
+        q.eq("clerkUserId", args.userId)
       )
       .unique();
   },
@@ -50,7 +50,7 @@ export const upsert = mutation({
     const existing = await ctx.db
       .query("users")
       .withIndex("by_user_id", (q) =>
-        q.eq("userId", args.userId)
+        q.eq("clerkUserId", args.userId)
       )
       .unique();
 
@@ -67,7 +67,7 @@ export const upsert = mutation({
     }
 
     return await ctx.db.insert("users", {
-      userId: args.userId,
+      clerkUserId: args.userId,
       role: args.role,
       firstName: args.firstName,
       email: args.email,
@@ -91,7 +91,7 @@ export const getRole = query({
     const user = await ctx.db
       .query("users")
       .withIndex("by_user_id", (q) =>
-        q.eq("userId", args.userId)
+        q.eq("clerkUserId", args.userId)
       )
       .unique();
     return user?.role ?? null;

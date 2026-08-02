@@ -649,6 +649,11 @@ Before every feature implementation:
 - Build clean, simple, teachable code
 - Replicate UI exactly against the HTML reference and asset reference when provided
 
+## UI Implementation Notes
+
+- **Horizontal scroll views**: Never add extra padding inside `contentContainerStyle` for horizontal `ScrollView`s that are already inside a padded parent. Instead, use `marginHorizontal: -<parentPadding>` on the `ScrollView` style and `backgroundColor: "transparent"`. This prevents the white vertical background layer that cuts off the last item.
+- **Card sizes**: Keep horizontal cards compact. Use width ~160 and image height ~110 for vehicle cards. For special mosaic/multi-image cards, use a 2x2 grid layout with an overlay message.
+
 <!-- convex-ai-start -->
 
 This project uses [Convex](https://convex.dev) as its backend.

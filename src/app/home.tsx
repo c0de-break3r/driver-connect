@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Animated, StyleSheet, Text, View, Pressable } from "react-native";
+import { Animated, Dimensions, StyleSheet, Text, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { HomeScreenContent } from "./HomeScreenContent";
@@ -8,39 +8,57 @@ import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useTabBounce } from "@/hooks/useTabBounce";
 import { LoginPromptScreen } from "@/components/LoginPromptScreen";
+import MessagesScreen from "@/components/MessagesScreen";
+import ProfileScreen from "@/components/ProfileScreen";
 import { useHomeStore } from "@/store/useHomeStore";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const NAVY = "#2C3E5B";
+const TAB_ORDER = ["explore", "favorites", "trips", "messages", "profile"] as const;
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function HomeScreen() {
   const [showAuth, setShowAuth] = useState(false);
   const [authOrigin, setAuthOrigin] = useState<string>("explore");
-  const [isFirstLaunch, setIsFirstLaunch] = useState(true);
   const activeTab = useHomeStore((state) => state.activeTab);
   const setActiveTab = useHomeStore((state) => state.setActiveTab);
-  const { signedIn } = useAuth();
+  const { signedIn, isLoaded } = useAuth();
+  const prevTabRef = useRef(activeTab);
+  const directionRef = useRef<"left" | "right">("right");
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    const checkFirstLaunch = async () => {
-      try {
-        const seen = await AsyncStorage.getItem("hasSeenWelcomeAuth");
-        if (seen === "true") {
-          setIsFirstLaunch(false);
-        } else {
-          setIsFirstLaunch(true);
-          setShowAuth(true);
-          setAuthOrigin("explore");
-          await AsyncStorage.setItem("hasSeenWelcomeAuth", "true");
-        }
-      } catch {
-        setIsFirstLaunch(true);
-        setShowAuth(true);
-        setAuthOrigin("explore");
-      }
-    };
-    checkFirstLaunch();
-  }, []);
+    if (!isLoaded) return;
+
+    if (!signedIn) {
+      setShowAuth(true);
+      setAuthOrigin("explore");
+    }
+  }, [isLoaded, signedIn]);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const prevIndex = TAB_ORDER.indexOf(prevTabRef.current as (typeof TAB_ORDER)[number]);
+    const nextIndex = TAB_ORDER.indexOf(activeTab as (typeof TAB_ORDER)[number]);
+    const direction: "left" | "right" = nextIndex > prevIndex ? "right" : "left";
+    directionRef.current = direction;
+
+    const startOffset = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
+    slideAnim.setValue(startOffset);
+
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      damping: 18,
+      stiffness: 120,
+    }).start();
+
+    prevTabRef.current = activeTab;
+  }, [activeTab, isLoaded, signedIn, slideAnim]);
 
   const openAuth = (origin: string) => {
     setAuthOrigin(origin);
@@ -52,32 +70,33 @@ export default function HomeScreen() {
     setActiveTab("explore");
   };
 
-  return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <View style={styles.content}>
-          {activeTab === "explore" && <HomeScreenContent onLoginPress={() => openAuth("explore")} />}
-        {activeTab === "favorites" && (
+  const renderContent = () => {
+    if (!signedIn) {
+      if (activeTab === "explore") {
+        return <HomeScreenContent onLoginPress={() => openAuth("explore")} />;
+      }
+      if (activeTab === "favorites") {
+        return (
           <LoginPromptScreen
             title="Favorites"
             subtitle="Log in to view your favorites. You can save, view, or edit favorites once you've logged in."
             buttonText="Log in"
             onLoginPress={() => openAuth("favorites")}
           />
-        )}
-        {activeTab === "trips" && (
+        );
+      }
+      if (activeTab === "trips") {
+        return (
           <View style={styles.comingSoon}>
             <Text style={styles.comingSoonText}>Trips coming soon</Text>
           </View>
-        )}
-        {activeTab === "messages" && (
-          <LoginPromptScreen
-            title="Messages"
-            subtitle="Log in to see messages. Once you log in, you'll find messages from hosts here."
-            buttonText="Log in"
-            onLoginPress={() => openAuth("messages")}
-          />
-        )}
-        {activeTab === "profile" && (
+        );
+      }
+      if (activeTab === "messages") {
+        return <MessagesScreen />;
+      }
+      if (activeTab === "profile") {
+        return (
           <LoginPromptScreen
             title="Profile"
             subtitle="Log in and start planning your next trip."
@@ -85,7 +104,43 @@ export default function HomeScreen() {
             showMenuItems
             onLoginPress={() => openAuth("profile")}
           />
-        )}
+        );
+      }
+    }
+
+    if (activeTab === "explore") {
+      return <HomeScreenContent onLoginPress={() => {}} />;
+    }
+    if (activeTab === "favorites") {
+      return (
+        <View style={styles.comingSoon}>
+          <Text style={styles.comingSoonText}>Favorites coming soon</Text>
+        </View>
+      );
+    }
+    if (activeTab === "trips") {
+      return (
+        <View style={styles.comingSoon}>
+          <Text style={styles.comingSoonText}>Trips coming soon</Text>
+        </View>
+      );
+    }
+    if (activeTab === "messages") {
+      return <MessagesScreen />;
+    }
+    if (activeTab === "profile") {
+      return <ProfileScreen />;
+    }
+
+    return <HomeScreenContent onLoginPress={() => {}} />;
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <View style={styles.content}>
+        <Animated.View style={{ flex: 1, transform: [{ translateX: slideAnim }] }}>
+          {renderContent()}
+        </Animated.View>
       </View>
 
       {showAuth && (
@@ -111,7 +166,7 @@ export default function HomeScreen() {
           icon="car-sport-outline"
           label="Trips"
           active={activeTab === "trips"}
-          onPress={() => openAuth("trips")}
+          onPress={() => setActiveTab("trips")}
         />
         <NavItem
           icon="chatbubble-ellipses-outline"

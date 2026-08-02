@@ -3,13 +3,10 @@ import { ConvexProviderWithAuth } from "convex/react";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import * as WebBrowser from "expo-web-browser";
-
 import { convex } from "@/lib/convex";
 import { useConvexRoleSync } from "@/hooks/useConvexRoleSync";
 import { AuthProvider, useAuth } from "@/contexts/AuthProvider";
-
-WebBrowser.maybeCompleteAuthSession();
+import { ClerkProvider } from "@clerk/expo";
 
 function ConvexAuthWrapper({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -18,11 +15,10 @@ function ConvexAuthWrapper({ children }: { children: React.ReactNode }) {
     isLoading: !auth.isLoaded,
     isAuthenticated: auth.signedIn,
     fetchAccessToken: async () => {
-      const { supabase } = await import("@/lib/supabase");
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token ?? null;
+      if (!auth.userId) return null;
+      return `clerk_${auth.userId}`;
     },
-  }), [auth.isLoaded, auth.signedIn]);
+  }), [auth.isLoaded, auth.signedIn, auth.userId]);
 
   return (
     <ConvexProviderWithAuth client={convex} useAuth={() => convexAuth}>
@@ -34,11 +30,13 @@ function ConvexAuthWrapper({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <ConvexAuthWrapper>
-          <AppInner />
-        </ConvexAuthWrapper>
-      </AuthProvider>
+      <ClerkProvider publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
+        <AuthProvider>
+          <ConvexAuthWrapper>
+            <AppInner />
+          </ConvexAuthWrapper>
+        </AuthProvider>
+      </ClerkProvider>
     </GestureHandlerRootView>
   );
 }
