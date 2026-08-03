@@ -26,14 +26,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     mountedRef.current = true;
-    setUserId(clerkAuth.userId ?? null);
-    setEmail(user?.primaryEmailAddress?.emailAddress ?? null);
-    setFirstName(user?.firstName ?? null);
-
     return () => {
       mountedRef.current = false;
     };
-  }, [clerkAuth.userId, user?.primaryEmailAddress?.emailAddress, user?.firstName]);
+  }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    setUserId(clerkAuth.userId ?? null);
+  }, [clerkAuth.userId]);
+
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    setEmail(user?.primaryEmailAddress?.emailAddress ?? null);
+  }, [user?.primaryEmailAddress?.emailAddress]);
+
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    setFirstName(user?.firstName ?? null);
+  }, [user?.firstName]);
 
   const signIn = async (emailInput: string, password: string) => {
     try {

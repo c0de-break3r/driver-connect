@@ -79,7 +79,7 @@ export default function MessagesScreen() {
     return (
       <View style={styles.loginContainer}>
         <Text style={styles.title}>Messages</Text>
-        <Text style={styles.subtitle}>Log in to see messages. Once you log in, you'll find messages from hosts here.</Text>
+          <Text style={styles.subtitle}>Log in to see messages. Once you log in, you&apos;ll find messages from hosts here.</Text>
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Log in</Text>
         </TouchableOpacity>
@@ -116,16 +116,15 @@ export default function MessagesScreen() {
               ]}
             >
               <View style={styles.searchInputWrap}>
-                <Ionicons name="search" size={20} color="#9CA3AF" />
-              <TextInput
-                ref={searchInputRef}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder="Search all messages"
-                placeholderTextColor="#9CA3AF"
-                style={styles.searchInput}
-              />
-
+                <Ionicons name="search" size={20} color="#000000" />
+                <TextInput
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Search all messages"
+                  placeholderTextColor="#9CA3AF"
+                  style={styles.searchInput}
+                />
               </View>
             </Animated.View>
           </View>
@@ -154,7 +153,7 @@ export default function MessagesScreen() {
 
         <View style={styles.emptyState}>
           <Ionicons name="chatbubble-ellipses-outline" size={64} color="#9CA3AF" />
-          <Text style={styles.emptyTitle}>You don't have any messages</Text>
+          <Text style={styles.emptyTitle}>You don&apos;t have any messages</Text>
           <Text style={styles.emptySubtitle}>When you receive a new message, it will appear here.</Text>
         </View>
       </ScrollView>
@@ -211,7 +210,7 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -220,7 +219,7 @@ const styles = StyleSheet.create({
   },
   loginContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
     paddingHorizontal: 24,
     paddingTop: 60,
   },
@@ -269,11 +268,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#F8F8F8",
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 10,
     height: 40,
+    borderWidth: 2,
+    borderColor: "#000000",
   },
   searchInput: {
     flex: 1,
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 24,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   settingsSheet: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 24,

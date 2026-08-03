@@ -62,7 +62,7 @@ export function LoginPromptScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
     paddingHorizontal: 24,
     paddingTop: 60,
   },

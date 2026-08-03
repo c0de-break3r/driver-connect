@@ -10,6 +10,8 @@
 
 import type * as ads from "../ads.js";
 import type * as jobs from "../jobs.js";
+import type * as messages from "../messages.js";
+import type * as notifications from "../notifications.js";
 import type * as referralCodes from "../referralCodes.js";
 import type * as users from "../users.js";
 import type * as verifications from "../verifications.js";
@@ -23,6 +25,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   ads: typeof ads;
   jobs: typeof jobs;
+  messages: typeof messages;
+  notifications: typeof notifications;
   referralCodes: typeof referralCodes;
   users: typeof users;
   verifications: typeof verifications;

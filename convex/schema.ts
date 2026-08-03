@@ -13,10 +13,17 @@ export default defineSchema({
     firstName: v.optional(v.string()),
     email: v.optional(v.string()),
     onboardingComplete: v.boolean(),
+    notificationsEnabled: v.optional(v.boolean()),
+    profileSetupComplete: v.optional(v.boolean()),
+    avatarUri: v.optional(v.string()),
+    theme: v.optional(v.string()),
+    currency: v.optional(v.string()),
+    expoPushToken: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_user_id", ["clerkUserId"]),
+    .index("by_user_id", ["clerkUserId"])
+    .index("by_email", ["email"]),
 
   driverProfiles: defineTable({
     userId: v.string(),
@@ -186,4 +193,20 @@ export default defineSchema({
     .index("by_sender", ["senderId"])
     .index("by_receiver", ["receiverId"])
     .index("by_unread", ["receiverId", "isRead"]),
+
+  notificationQueue: defineTable({
+    userId: v.string(),
+    title: v.string(),
+    body: v.string(),
+    data: v.optional(v.any()),
+    status: v.union(v.literal("pending"), v.literal("processing"), v.literal("sent"), v.literal("failed")),
+    attempts: v.number(),
+    maxAttempts: v.number(),
+    nextAttemptAt: v.number(),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status_next", ["status", "nextAttemptAt"])
+    .index("by_user", ["userId"]),
 });

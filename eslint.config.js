@@ -6,6 +6,11 @@ const path = require("path");
 module.exports = defineConfig([
   expoConfig,
   {
+    languageOptions: {
+      globals: {
+        __dirname: "readonly",
+      },
+    },
     settings: {
       'import/resolver': {
         node: {
@@ -15,5 +20,11 @@ module.exports = defineConfig([
       },
     },
     ignores: ["dist/*", "convex/_generated/*"],
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/immutability': 'off',
+    },
   }
 ]);

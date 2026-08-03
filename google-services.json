@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "970415200306",
+    "project_id": "driver-connect-504314",
+    "storage_bucket": "driver-connect-504314.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:970415200306:android:efe67892286fd48f7ac42b",
+        "android_client_info": {
+          "package_name": "com.c0debreak3r.driverconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvwx9KqIeIqTxMMlyl743BSPXvfT5mLrM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

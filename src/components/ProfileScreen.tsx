@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Alert,
-  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -9,12 +8,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useRoleStore } from "@/store/useRoleStore";
 import { useAppStateStore } from "@/store/useAppStateStore";
+import { useNotifications } from "@/lib/notifications";
+import { useNotificationStore } from "@/store/useNotificationStore";
+import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
+import SwitchRoleBottomSheet from "./SwitchRoleBottomSheet";
+import type { UserRole } from "@/store/useRoleStore";
 
 const NAVY = "#2C3E5B";
 
@@ -44,9 +50,12 @@ const menuItems: MenuItem[] = [
 export default function ProfileScreen() {
   const { firstName, email, signOut } = useAuth();
   const role = useRoleStore((state) => state.role);
-  const resetRole = useRoleStore((state) => state.reset);
+  const setRole = useRoleStore((state) => state.setRole);
   const avatarUri = useAppStateStore((state) => state.avatarUri);
   const setAvatarUri = useAppStateStore((state) => state.setAvatarUri);
+  const unreadNotificationCount = useNotificationStore((state) => state.unreadCount);
+  const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+  const [showSwitchRole, setShowSwitchRole] = useState(false);
 
   const displayName = firstName || email?.split("@")[0] || "Guest";
   const roleLabel = role ? ROLE_LABELS[role] : "Guest";
@@ -60,35 +69,39 @@ export default function ProfileScreen() {
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: "images",
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
       });
       if (!result.canceled && result.assets[0]?.uri) {
-        setAvatarUri(result.assets[0].uri);
+        const persistentUri = await copyImageToPersistentStorage(result.assets[0].uri);
+        setAvatarUri(persistentUri);
       }
     } catch {
       Alert.alert("Error", "Unable to pick image. Please try again.");
     }
   };
 
+  const copyImageToPersistentStorage = async (uri: string): Promise<string> => {
+    const baseDir = FileSystem.documentDirectory || "";
+    const destination = `${baseDir.replace(/\/?$/, "/")}avatar-${Date.now()}.jpg`;
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    await FileSystem.writeAsStringAsync(destination, base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return destination;
+  };
+
   const handleSwitchRole = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      "Switch Role",
-      "Choose a new role. This will reset your current role and onboarding progress.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Continue",
-          onPress: () => {
-            resetRole();
-            Alert.alert("Role reset", "Please select your new role to continue.");
-          },
-        },
-      ]
-    );
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowSwitchRole(true);
+  };
+
+  const handleRoleSelected = (newRole: UserRole, formData: Record<string, string>) => {
+    setRole(newRole);
   };
 
   const handleSignOut = async () => {
@@ -99,7 +112,7 @@ export default function ProfileScreen() {
 
   const handleNotificationPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert("Notifications", "You have no new notifications.");
+    router.push("/notifications");
   };
 
   return (
@@ -112,6 +125,13 @@ export default function ProfileScreen() {
           <View style={styles.headerSpacer} />
           <TouchableOpacity onPress={handleNotificationPress} hitSlop={8} style={styles.notificationButton}>
             <Ionicons name="notifications-outline" size={22} color={NAVY} />
+            {unreadNotificationCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -119,7 +139,13 @@ export default function ProfileScreen() {
           <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.85} style={styles.avatarContainer}>
             <View style={styles.avatarRing}>
               {avatarUri ? (
-                <Image source={{ uri: avatarUri }} style={styles.avatar} />
+                <Image
+                  source={{ uri: avatarUri, cacheKey: avatarUri }}
+                  style={styles.avatar}
+                  contentFit="cover"
+                  transition={200}
+                  onError={(e) => console.log("Avatar load error:", e.error, avatarUri)}
+                />
               ) : (
                 <View style={styles.avatarPlaceholder}>
                   <Text style={styles.avatarInitial}>{displayName.charAt(0).toUpperCase()}</Text>
@@ -132,7 +158,9 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <Text style={styles.profileName}>{displayName}</Text>
-          <Text style={styles.roleLabel}>{roleLabel}</Text>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>Guest</Text>
+          </View>
         </View>
 
         <TouchableOpacity style={styles.switchRoleButton} onPress={handleSwitchRole} activeOpacity={0.85}>
@@ -167,6 +195,13 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <SwitchRoleBottomSheet
+        visible={showSwitchRole}
+        onClose={() => setShowSwitchRole(false)}
+        onSelectRole={handleRoleSelected}
+        currentRole={role}
+      />
     </View>
   );
 }
@@ -174,7 +209,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -192,6 +227,25 @@ const styles = StyleSheet.create({
   },
   notificationButton: {
     padding: 8,
+  },
+  badge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "#E74C3C",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    borderWidth: 2,
+    borderColor: "#FFF8F3",
+  },
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "800",
   },
   profileSection: {
     alignItems: "center",
@@ -261,6 +315,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#6B7280",
   },
+  roleBadge: {
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: "#FFF8F3",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  roleBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: NAVY,
+  },
   switchRoleButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -277,7 +345,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   menuSection: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
     borderRadius: 14,
     overflow: "hidden",
     marginBottom: 32,

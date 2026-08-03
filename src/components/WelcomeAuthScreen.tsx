@@ -3,8 +3,6 @@ import {
   Animated,
   Dimensions,
   KeyboardAvoidingView,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
   PanResponder,
   Platform,
   Pressable,
@@ -14,13 +12,14 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Svg, Circle } from "react-native-svg";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { images } from "@/constants/images";
-import { useAuthEntryFlow, AuthEntryFlowState } from "@/hooks/useAuthEntryFlow";
+import { useAuthEntryFlow } from "@/hooks/useAuthEntryFlow";
 import { useAuth } from "@/contexts/AuthProvider";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
@@ -38,39 +37,109 @@ function Avatar({ name }: { name?: string }) {
   );
 }
 
-function ButtonLoadingIndicator({ color = WHITE, size = 20 }: { color?: string; size?: number } = {}) {
-  const shimmer = useMemo(() => new Animated.Value(0), []);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function RingLoader({ color = DARK, size = 120 }: { color?: string; size?: number } = {}) {
+  const a = useRef(new Animated.Value(0)).current;
+  const b = useRef(new Animated.Value(0)).current;
+  const c = useRef(new Animated.Value(0)).current;
+  const d = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(shimmer, {
-        toValue: 1,
-        duration: 1200,
-        useNativeDriver: true,
-      })
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [shimmer]);
+    const dur = 2000;
+    const toA = Animated.loop(Animated.timing(a, { toValue: 1, duration: dur, useNativeDriver: false }));
+    const toB = Animated.loop(Animated.timing(b, { toValue: 1, duration: dur, useNativeDriver: false }));
+    const toC = Animated.loop(Animated.timing(c, { toValue: 1, duration: dur, useNativeDriver: false }));
+    const toD = Animated.loop(Animated.timing(d, { toValue: 1, duration: dur, useNativeDriver: false }));
+    toA.start();
+    toB.start();
+    toC.start();
+    toD.start();
+    return () => {
+      toA.stop();
+      toB.stop();
+      toC.stop();
+      toD.stop();
+    };
+  }, [a, b, c, d]);
 
-  const translateX = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-120, 120],
-  });
+  const dashA = a.interpolate({ inputRange: [0, 1], outputRange: ["0 660", "60 600"] });
+  const offsetA = a.interpolate({ inputRange: [0, 1], outputRange: ["-330", "-990"] });
+  const widthA = a.interpolate({ inputRange: [0, 0.12, 0.32, 0.4, 0.54, 0.62, 0.82, 0.9, 1], outputRange: [20, 30, 30, 20, 20, 30, 30, 20, 20] });
+
+  const dashB = b.interpolate({ inputRange: [0, 1], outputRange: ["0 220", "20 200"] });
+  const offsetB = b.interpolate({ inputRange: [0, 1], outputRange: ["-110", "-330"] });
+  const widthB = b.interpolate({ inputRange: [0, 0.12, 0.2, 0.4, 0.48, 0.62, 0.7, 0.9, 0.98, 1], outputRange: [20, 20, 30, 30, 20, 20, 30, 30, 20, 20] });
+
+  const dashC = c.interpolate({ inputRange: [0, 1], outputRange: ["0 440", "40 400"] });
+  const offsetC = c.interpolate({ inputRange: [0, 1], outputRange: ["0", "-440"] });
+  const widthC = c.interpolate({ inputRange: [0, 0.08, 0.28, 0.36, 0.58, 0.66, 0.86, 0.94, 1], outputRange: [20, 30, 30, 20, 20, 30, 30, 20, 20] });
+
+  const dashD = d.interpolate({ inputRange: [0, 1], outputRange: ["0 440", "40 400"] });
+  const offsetD = d.interpolate({ inputRange: [0, 1], outputRange: ["0", "-440"] });
+  const widthD = d.interpolate({ inputRange: [0, 0.08, 0.16, 0.36, 0.44, 0.5, 0.58, 0.78, 0.86, 1], outputRange: [20, 20, 30, 30, 20, 20, 30, 30, 20, 20] });
 
   return (
-    <View style={[styles.loadingButtonContent, { height: size }]}>
-      <Animated.View
-        style={[
-          styles.shimmerSweep,
-          { width: size * 4, backgroundColor: "#FFFFFF" },
-          { transform: [{ translateX }] },
-        ]}
-      />
-      <Text style={[styles.loadingButtonText, { color }]}>Continue</Text>
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      <Svg viewBox="0 0 240 240" width={size} height={size}>
+        <AnimatedCircle
+          cx="120"
+          cy="120"
+          r="105"
+          fill="none"
+          stroke={color}
+          strokeWidth={widthA as any}
+          strokeDasharray={dashA}
+          strokeDashoffset={offsetA}
+          strokeLinecap="round"
+        />
+        <AnimatedCircle
+          cx="120"
+          cy="120"
+          r="35"
+          fill="none"
+          stroke={color}
+          strokeWidth={widthB as any}
+          strokeDasharray={dashB}
+          strokeDashoffset={offsetB}
+          strokeLinecap="round"
+        />
+        <AnimatedCircle
+          cx="85"
+          cy="120"
+          r="70"
+          fill="none"
+          stroke={color}
+          strokeWidth={widthC as any}
+          strokeDasharray={dashC}
+          strokeDashoffset={offsetC}
+          strokeLinecap="round"
+        />
+        <AnimatedCircle
+          cx="155"
+          cy="120"
+          r="70"
+          fill="none"
+          stroke={color}
+          strokeWidth={widthD as any}
+          strokeDasharray={dashD}
+          strokeDashoffset={offsetD}
+          strokeLinecap="round"
+        />
+      </Svg>
     </View>
   );
 }
+
+function SwingDotsLoader({ color = DARK, dotSize = 6, containerSize = 32 }: { color?: string; dotSize?: number; containerSize?: number } = {}) {
+  return <RingLoader color={color} size={containerSize} />;
+}
+
+function ButtonLoadingIndicator({ color = WHITE, size = 20 }: { color?: string; size?: number } = {}) {
+  return <SwingDotsLoader color={color} dotSize={size * 0.35} containerSize={size * 1.6} />;
+}
+
+export { RingLoader };
 
 export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => void }) {
   const flow = useAuthEntryFlow();
@@ -224,7 +293,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                  scrollEventThrottle={16}
                >
 
-                <Text style={styles.verifyTitle}>Confirm it's you</Text>
+                 <Text style={styles.verifyTitle}>Confirm it&apos;s you</Text>
                 <Text style={styles.verifySubtitle}>
                   We sent a code to {flow.identifier}
                 </Text>
@@ -246,7 +315,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                 {flow.error && <Text style={styles.errorText}>{flow.error}</Text>}
 
                 <View style={styles.resendRow}>
-                  <Text style={styles.resendText}>Didn't get it? </Text>
+                   <Text style={styles.resendText}>Didn&apos;t get it? </Text>
                   {flow.resendCooldown > 0 ? (
                     <Text style={styles.resendLink}>Resend in {flow.resendCooldown}s</Text>
                   ) : (
@@ -316,19 +385,6 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
 
                     <Text style={styles.title}>Log in or sign up</Text>
 
-                    {flow.loading && (
-                      <View style={{ marginBottom: 16 }}>
-                        <ButtonLoadingIndicator />
-                      </View>
-                    )}
-
-                      {flow.success && !flow.loading && (
-                        <Text style={styles.successText}>
-                          Code sent! Check your {flow.identifier.includes("@") && flow.identifier.includes(".") ? "email" : "phone"}.
-                        </Text>
-                      )}
-
-
                     <View style={styles.form}>
                       <TextInputBase
                         value={flow.identifier}
@@ -365,53 +421,53 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                       <View style={styles.dividerLine} />
                     </View>
 
-                     <View style={styles.socialRow}>
-                       <Pressable
-                         onPress={flow.handleGoogleSignIn}
-                         disabled={flow.loadingProvider === "google" && flow.loading}
-                         style={({ pressed }) => [
-                           styles.socialButton,
-                           pressed && { opacity: 0.85 },
-                           flow.loadingProvider === "google" && flow.loading && styles.primaryButtonDisabled,
-                         ]}
-                       >
-                         {flow.loadingProvider === "google" && flow.loading ? (
-                           <View style={styles.socialLoadingWrap}>
-                             <ButtonLoadingIndicator size={18} color={DARK} />
-                           </View>
-                         ) : (
-                           <>
-                             <Image
-                               source={images.googleG}
-                               style={styles.googleIcon}
-                               contentFit="contain"
-                             />
-                             <Text style={styles.socialBtnText}>Google</Text>
-                           </>
-                         )}
-                       </Pressable>
+                      <View style={styles.socialRow}>
+                        <Pressable
+                          onPress={flow.handleGoogleSignIn}
+                          disabled={flow.loading}
+                          style={({ pressed }) => [
+                            styles.socialButton,
+                            pressed && { opacity: 0.85 },
+                            flow.loading && styles.primaryButtonDisabled,
+                          ]}
+                        >
+                          {flow.loadingProvider === "google" && flow.loading ? (
+                            <View style={styles.socialLoadingWrap}>
+                              <ButtonLoadingIndicator size={18} color={DARK} />
+                            </View>
+                          ) : (
+                            <>
+                              <Image
+                                source={images.googleG}
+                                style={styles.googleIcon}
+                                contentFit="contain"
+                              />
+                              <Text style={styles.socialBtnText}>Google</Text>
+                            </>
+                          )}
+                        </Pressable>
 
-                       <Pressable
-                         onPress={flow.handleAppleSignIn}
-                         disabled={flow.loadingProvider === "apple" && flow.loading}
-                         style={({ pressed }) => [
-                           styles.socialButton,
-                           pressed && { opacity: 0.85 },
-                           flow.loadingProvider === "apple" && flow.loading && styles.primaryButtonDisabled,
-                         ]}
-                       >
-                         {flow.loadingProvider === "apple" && flow.loading ? (
-                           <View style={styles.socialLoadingWrap}>
-                             <ButtonLoadingIndicator size={18} color={DARK} />
-                           </View>
-                         ) : (
-                           <>
-                             <Ionicons name="logo-apple" size={20} color={DARK} />
-                             <Text style={styles.socialBtnText}>Apple</Text>
-                           </>
-                         )}
-                       </Pressable>
-                     </View>
+                        <Pressable
+                          onPress={flow.handleAppleSignIn}
+                          disabled={flow.loading}
+                          style={({ pressed }) => [
+                            styles.socialButton,
+                            pressed && { opacity: 0.85 },
+                            flow.loading && styles.primaryButtonDisabled,
+                          ]}
+                        >
+                          {flow.loadingProvider === "apple" && flow.loading ? (
+                            <View style={styles.socialLoadingWrap}>
+                              <ButtonLoadingIndicator size={18} color={DARK} />
+                            </View>
+                          ) : (
+                            <>
+                              <Ionicons name="logo-apple" size={20} color={DARK} />
+                              <Text style={styles.socialBtnText}>Apple</Text>
+                            </>
+                          )}
+                        </Pressable>
+                      </View>
 
                   </View>
                 </>
@@ -470,6 +526,7 @@ function TextInputBase({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: "#FFF8F3",
   },
   sheet: {
     position: "absolute",
@@ -479,7 +536,7 @@ const styles = StyleSheet.create({
     height: SCREEN_HEIGHT,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
     paddingHorizontal: 24,
     paddingBottom: 48,
     zIndex: 1000,
@@ -553,11 +610,11 @@ const styles = StyleSheet.create({
   },
   inputWrap: {
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: "#E5E7EB",
     borderRadius: 14,
     paddingHorizontal: 16,
     minHeight: 52,
-    backgroundColor: WHITE,
+    backgroundColor: "#FFFFFF",
     justifyContent: "center",
   },
   inputWrapFocused: {
@@ -630,10 +687,10 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E0E5EA",
+    borderColor: "#E5E7EB",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: WHITE,
+    backgroundColor: "#FFFFFF",
     flex: 1,
     flexDirection: "row",
     gap: 10,
@@ -649,7 +706,7 @@ const styles = StyleSheet.create({
   },
   verifyContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
   },
   verifyHeaderRow: {
     flexDirection: "row",
@@ -690,11 +747,11 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: "#E5E7EB",
     paddingHorizontal: 16,
     minHeight: 52,
     justifyContent: "center",
-    backgroundColor: WHITE,
+    backgroundColor: "#FFFFFF",
     marginBottom: 16,
   },
   otpInput: {
@@ -723,26 +780,6 @@ const styles = StyleSheet.create({
   },
   resendLinkActive: {
     color: DARK,
-  },
-  loadingButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    height: 20,
-  },
-  shimmerSweep: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    width: 80,
-    backgroundColor: "rgba(255, 255, 255, 0.35)",
-    borderRadius: 20,
-  },
-  loadingButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: WHITE,
   },
   welcomeBackContent: {
     width: "100%",

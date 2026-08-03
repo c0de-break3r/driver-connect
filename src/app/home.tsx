@@ -4,13 +4,14 @@ import { Animated, Dimensions, StyleSheet, Text, View, Pressable } from "react-n
 import { Ionicons } from "@expo/vector-icons";
 
 import { HomeScreenContent } from "./HomeScreenContent";
-import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
+import WelcomeAuthScreen, { RingLoader } from "@/components/WelcomeAuthScreen";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useTabBounce } from "@/hooks/useTabBounce";
 import { LoginPromptScreen } from "@/components/LoginPromptScreen";
 import MessagesScreen from "@/components/MessagesScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import { useHomeStore } from "@/store/useHomeStore";
+import FavoritesScreen from "@/components/FavoritesScreen";
 
 const NAVY = "#2C3E5B";
 const TAB_ORDER = ["explore", "favorites", "trips", "messages", "profile"] as const;
@@ -18,7 +19,6 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function HomeScreen() {
   const [showAuth, setShowAuth] = useState(false);
-  const [authOrigin, setAuthOrigin] = useState<string>("explore");
   const activeTab = useHomeStore((state) => state.activeTab);
   const setActiveTab = useHomeStore((state) => state.setActiveTab);
   const { signedIn, isLoaded } = useAuth();
@@ -30,9 +30,10 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!isLoaded) return;
 
-    if (!signedIn) {
+    if (signedIn) {
+      setShowAuth(false);
+    } else {
       setShowAuth(true);
-      setAuthOrigin("explore");
     }
   }, [isLoaded, signedIn]);
 
@@ -60,8 +61,7 @@ export default function HomeScreen() {
     prevTabRef.current = activeTab;
   }, [activeTab, isLoaded, signedIn, slideAnim]);
 
-  const openAuth = (origin: string) => {
-    setAuthOrigin(origin);
+  const openAuth = () => {
     setShowAuth(true);
   };
 
@@ -71,9 +71,17 @@ export default function HomeScreen() {
   };
 
   const renderContent = () => {
+    if (!isLoaded) {
+      return (
+        <View style={styles.loadingContainer}>
+          <RingLoader color={NAVY} size={120} />
+        </View>
+      );
+    }
+
     if (!signedIn) {
       if (activeTab === "explore") {
-        return <HomeScreenContent onLoginPress={() => openAuth("explore")} />;
+        return <HomeScreenContent onLoginPress={openAuth} />;
       }
       if (activeTab === "favorites") {
         return (
@@ -81,7 +89,7 @@ export default function HomeScreen() {
             title="Favorites"
             subtitle="Log in to view your favorites. You can save, view, or edit favorites once you've logged in."
             buttonText="Log in"
-            onLoginPress={() => openAuth("favorites")}
+            onLoginPress={openAuth}
           />
         );
       }
@@ -102,7 +110,7 @@ export default function HomeScreen() {
             subtitle="Log in and start planning your next trip."
             buttonText="Log in or sign up"
             showMenuItems
-            onLoginPress={() => openAuth("profile")}
+            onLoginPress={openAuth}
           />
         );
       }
@@ -112,11 +120,7 @@ export default function HomeScreen() {
       return <HomeScreenContent onLoginPress={() => {}} />;
     }
     if (activeTab === "favorites") {
-      return (
-        <View style={styles.comingSoon}>
-          <Text style={styles.comingSoonText}>Favorites coming soon</Text>
-        </View>
-      );
+      return <FavoritesScreen />;
     }
     if (activeTab === "trips") {
       return (
@@ -144,9 +148,9 @@ export default function HomeScreen() {
       </View>
 
       {showAuth && (
-        <WelcomeAuthScreen
-          onDismiss={handleAuthDismiss}
-        />
+        <View style={styles.authOverlay}>
+          <WelcomeAuthScreen onDismiss={handleAuthDismiss} />
+        </View>
       )}
 
       <View style={styles.bottomNav}>
@@ -222,11 +226,11 @@ function NavItem({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
   },
   content: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
   },
   bottomNav: {
     position: "absolute",
@@ -236,12 +240,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "#E5E7EB",
     paddingVertical: 10,
     paddingBottom: 16,
     paddingHorizontal: 12,
+    zIndex: 10,
+  },
+  authOverlay: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 50,
   },
   navItem: {
     alignItems: "center",
@@ -260,10 +269,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFF8F3",
   },
   comingSoonText: {
     fontSize: 16,
     color: "#6B7280",
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF8F3",
   },
 });

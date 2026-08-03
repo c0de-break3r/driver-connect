@@ -54,8 +54,8 @@ Use the following stack:
 - NativeWind / Tailwind CSS
 - Zustand
 - AsyncStorage
-- Supabase Auth for authentication
-- Supabase database for user profiles, vehicles, bookings, reviews, and transactions
+- Clerk for authentication
+- Convex database for user profiles, vehicles, bookings, reviews, and transactions
 - Convex for backend functions and real-time subscriptions
 - Maps/location library (e.g. `react-native-maps` or Google Maps SDK) for GPS tracking, live location, and geofencing
 
@@ -383,7 +383,7 @@ Examples:
 
 ```txt
 lib/
-  supabase.ts
+  convex.ts
   maps.ts
   payments.ts
   api.ts
@@ -449,7 +449,7 @@ The onboarding order is fixed, built in three acts. Do not reorder these stages:
 
 ### Act 2 — Climax
 
-11. **Account setup (sign up)** — phone/email + OTP via Supabase, framed around saving what's been built so far (e.g. "Save your answers, [Name]"), not a cold gate. Required here (not deferred further) because, unlike a single-user habit app, this is a multi-sided marketplace and later steps need a persisted account.
+11. **Account setup (sign up)** — phone/email + OTP via Clerk, framed around saving what's been built so far (e.g. "Save your answers, [Name]"), not a cold gate. Required here (not deferred further) because, unlike a single-user habit app, this is a multi-sided marketplace and later steps need a persisted account.
 12. **In-onboarding app experience (main feature trial)** — walk the user through the actual core workflow, hands-on, using their own answers, not a static demo. Examples: Driver sets availability and sees real/mocked matched job cards; Client performs a real/mocked search and sees matched driver/vehicle results; Vehicle Owner sees a mocked shortlist of verified drivers; Corporate sees a mocked outsourcing plan. The user should **do** the action, not just view a screenshot of it.
 13. **Congratulations + milestone** — congratulate the user on completing that first action, and show a concrete starting milestone (e.g. "Verification streak: Day 1" for Driver/Owner, "Booking readiness: Started" for Client/Corporate). This is the emotional peak of the entire flow.
 14. **Review modal (at the peak, not the end)** — immediately after the congratulations/milestone screen, prompt for an App Store review. Timing matters more than placement convention: show it here, at peak excitement, not later next to social proof when energy has dropped.
@@ -540,9 +540,9 @@ Never expose secrets in the frontend.
 
 ---
 
-## Supabase Auth Rules
+## Clerk Auth Rules
 
-Use Supabase Auth for authentication.
+Use Clerk for authentication.
 
 Do not build custom auth.
 
@@ -634,7 +634,7 @@ Use:
 - Never expose API keys, secrets, or backend-only logic in the mobile bundle.
 - Use HTTPS everywhere; never downgrade to HTTP for API calls or asset loading.
 - Prefer server-side enforcement for sensitive operations: payments, matching, document verification, and role permissions.
-- Keep auth flows on vetted providers only (e.g. Supabase); do not roll custom authentication.
+- Keep auth flows on vetted providers only (e.g. Clerk); do not roll custom authentication.
 - Log security-relevant events on the backend, not only on the client.
 - Review third-party dependencies for known vulnerabilities before upgrading.
 

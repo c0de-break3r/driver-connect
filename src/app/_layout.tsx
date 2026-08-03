@@ -7,6 +7,18 @@ import { convex } from "@/lib/convex";
 import { useConvexRoleSync } from "@/hooks/useConvexRoleSync";
 import { AuthProvider, useAuth } from "@/contexts/AuthProvider";
 import { ClerkProvider } from "@clerk/expo";
+import { ConvexSync } from "@/components/ConvexSync";
+import { useNotifications } from "@/lib/notifications";
+
+// Ensure @expo/ui view managers are registered before the app renders.
+// This prevents "ViewManagerRegistry.get()" crashes on Android when
+// navigation or auth flows trigger preallocation of Expo UI views.
+import "@expo/ui";
+
+function NotificationSetup() {
+  useNotifications();
+  return null;
+}
 
 function ConvexAuthWrapper({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -45,7 +57,13 @@ function AppInner() {
   const auth = useAuth();
   useConvexRoleSync({ isLoaded: auth.isLoaded, isSignedIn: auth.signedIn, userId: auth.userId });
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <>
+      <NotificationSetup />
+      <ConvexSync />
+      <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }} />
+    </>
+  );
 }
 
 export const unstable_settings = {

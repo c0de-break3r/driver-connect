@@ -11,7 +11,7 @@ type RoleState = {
   /** Whether onboarding has been completed. */
   onboardingComplete: boolean;
   /** Set the selected role. */
-  setRole: (role: UserRole) => void;
+  setRole: (role: UserRole | null) => void;
   /** Mark onboarding as complete. */
   setOnboardingComplete: (complete: boolean) => void;
   /** Reset all onboarding state (useful for logout). */

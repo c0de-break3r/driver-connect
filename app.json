@@ -30,7 +30,8 @@
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE"
-      ]
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -46,13 +47,19 @@
           "imageWidth": 200
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/splash-icon.png",
+          "color": "#2C3E5B"
+        }
+      ],
       "expo-web-browser",
-      "expo-splash-screen",
       [
         "react-native-maps",
         {
-          "androidGoogleMapsApiKey": "AIzaSyAx7VtjKqxY1HhucbRvLwXKiOCPjodqwpM",
-          "iosGoogleMapsApiKey": "AIzaSyAx7VtjKqxY1HhucbRvLwXKiOCPjodqwpM"
+          "androidGoogleMapsApiKey": "AIzaSyCAaCcfXqVyirzgFKA5Afu1Jpi6wg04BuE",
+          "iosGoogleMapsApiKey": "AIzaSyCAaCcfXqVyirzgFKA5Afu1Jpi6wg04BuE"
         }
       ],
       [
@@ -73,11 +80,10 @@
             ]
           }
         }
-      ],
+      ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "extra": {
       "router": {},

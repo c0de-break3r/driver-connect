@@ -11,6 +11,8 @@ type AppState = {
   setHasSeenWelcome: (seen: boolean) => void;
   avatarUri: string | null;
   setAvatarUri: (uri: string | null) => void;
+  unreadNotificationCount: number;
+  setUnreadNotificationCount: (count: number | ((prev: number) => number)) => void;
   reset: () => void;
 };
 
@@ -19,6 +21,7 @@ const initialState = {
   profileSetupComplete: false,
   hasSeenWelcome: false,
   avatarUri: null,
+  unreadNotificationCount: 0,
 };
 
 export const useAppStateStore = create<AppState>()(
@@ -29,6 +32,7 @@ export const useAppStateStore = create<AppState>()(
       setProfileSetupComplete: (complete) => set({ profileSetupComplete: complete }),
       setHasSeenWelcome: (seen) => set({ hasSeenWelcome: seen }),
       setAvatarUri: (uri) => set({ avatarUri: uri }),
+      setUnreadNotificationCount: (count) => set((state) => ({ unreadNotificationCount: typeof count === "function" ? (count as (prev: number) => number)(state.unreadNotificationCount) : count })),
       reset: () => set(initialState),
     }),
     {
