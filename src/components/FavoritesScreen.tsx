@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: NAVY,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,

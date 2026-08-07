@@ -19,7 +19,7 @@ const TAB_ORDER = ["explore", "favorites", "trips", "messages", "profile"] as co
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function HomeScreen() {
-  const [showAuth, setShowAuth] = useState(false);
+  const [welcomeVisible, setWelcomeVisible] = useState(false);
   const activeTab = useHomeStore((state) => state.activeTab);
   const setActiveTab = useHomeStore((state) => state.setActiveTab);
   const { signedIn, isLoaded } = useAuth();
@@ -33,10 +33,9 @@ export default function HomeScreen() {
     if (!isLoaded) return;
 
     if (signedIn) {
-      setShowAuth(false);
       setHasSeenWelcome(true);
     } else {
-      setShowAuth(true);
+      setWelcomeVisible(true);
     }
   }, [isLoaded, signedIn, setHasSeenWelcome]);
 
@@ -65,11 +64,11 @@ export default function HomeScreen() {
   }, [activeTab, isLoaded, signedIn, slideAnim]);
 
   const openAuth = () => {
-    setShowAuth(true);
+    setWelcomeVisible(true);
   };
 
   const handleAuthDismiss = () => {
-    setShowAuth(false);
+    setWelcomeVisible(false);
     setActiveTab("explore");
   };
 
@@ -80,7 +79,7 @@ export default function HomeScreen() {
       );
     }
 
-    if (!signedIn && showAuth) {
+    if (welcomeVisible) {
       return <WelcomeAuthScreen onDismiss={handleAuthDismiss} />;
     }
 
@@ -152,7 +151,7 @@ export default function HomeScreen() {
         </Animated.View>
       </View>
 
-      {signedIn || !showAuth ? (
+      {!welcomeVisible ? (
         <View style={styles.bottomNav}>
           <NavItem
             icon="compass-outline"

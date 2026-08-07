@@ -28,6 +28,7 @@ const SCREEN_HEIGHT = Dimensions.get("window").height;
 const ACCENT = "#2C3E5B";
 const DARK = "#2C3E5B";
 const WHITE = "#FFFFFF";
+const GRAY = "#6B7280";
 
 function Avatar({ name }: { name?: string }) {
   const letter = name ? name.charAt(0).toUpperCase() : "?";
@@ -38,28 +39,43 @@ function Avatar({ name }: { name?: string }) {
   );
 }
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+function SwingDotsLoader({ color = DARK, dotSize = 7, containerSize = 32 }: { color?: string; dotSize?: number; containerSize?: number } = {}) {
+  const rotateAnim = useRef(new Animated.Value(0)).current;
 
-function SwingDotsLoader({ color = DARK, dotSize = 6, containerSize = 32 }: { color?: string; dotSize?: number; containerSize?: number } = {}) {
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 900,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [rotateAnim]);
+
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
   return (
-    <View style={{ width: containerSize, height: containerSize, alignItems: "center", justifyContent: "center" }}>
+    <Animated.View style={{ width: containerSize, height: containerSize, alignItems: "center", justifyContent: "center", transform: [{ rotate }] }}>
       <Svg viewBox="0 0 240 240" width={containerSize} height={containerSize}>
-        <AnimatedCircle
+        <Circle
           cx="120"
           cy="120"
           r="35"
           fill="none"
           stroke={color}
           strokeWidth={dotSize}
-          strokeDasharray={"0 220"}
+          strokeDasharray={"70 150"}
           strokeLinecap="round"
         />
       </Svg>
-    </View>
+    </Animated.View>
   );
 }
 
-function ButtonLoadingIndicator({ color = WHITE, size = 20 }: { color?: string; size?: number } = {}) {
+function ButtonLoadingIndicator({ color = GRAY, size = 20 }: { color?: string; size?: number } = {}) {
   return <SwingDotsLoader color={color} dotSize={size * 0.35} containerSize={size * 1.6} />;
 }
 
@@ -269,13 +285,13 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                      <Text style={styles.resendLink}>Resend in {flow.resendCooldown}s</Text>
                    ) : (
                      <Pressable onPress={flow.handleSendCode} disabled={flow.loading}>
-                       {flow.loading ? (
-                         <View style={styles.resendLoadingWrap}>
-                           <ButtonLoadingIndicator size={16} color={DARK} />
-                         </View>
-                       ) : (
-                         <Text style={[styles.resendLink, styles.resendLinkActive]}>Send a new code</Text>
-                       )}
+                    {flow.loading ? (
+                      <View style={styles.resendLoadingWrap}>
+                        <ButtonLoadingIndicator size={16} color={GRAY} />
+                      </View>
+                    ) : (
+                      <Text style={[styles.resendLink, styles.resendLinkActive]}>Send a new code</Text>
+                    )}
                      </Pressable>
                    )}
                  </View>
@@ -325,7 +341,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                   </View>
                   <Pressable onPress={switchUser} disabled={flow.loading} style={styles.notYouButton}>
                     {flow.loading ? (
-                      <ButtonLoadingIndicator size={16} color={DARK} />
+                      <ButtonLoadingIndicator size={16} color={GRAY} />
                     ) : (
                       <Text style={[styles.notYouText, flow.loading && styles.notYouTextDisabled]}>Not you?</Text>
                     )}
@@ -392,7 +408,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                         >
                           {flow.loadingProvider === "google" && flow.loading ? (
                             <View style={styles.socialLoadingWrap}>
-                              <ButtonLoadingIndicator size={18} color={DARK} />
+                              <ButtonLoadingIndicator size={18} color={GRAY} />
                             </View>
                           ) : (
                             <>
@@ -417,7 +433,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                         >
                           {flow.loadingProvider === "apple" && flow.loading ? (
                             <View style={styles.socialLoadingWrap}>
-                              <ButtonLoadingIndicator size={18} color={DARK} />
+                              <ButtonLoadingIndicator size={18} color={GRAY} />
                             </View>
                           ) : (
                             <>

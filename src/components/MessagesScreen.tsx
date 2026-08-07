@@ -116,7 +116,7 @@ export default function MessagesScreen() {
               ]}
             >
               <View style={styles.searchInputWrap}>
-                <Ionicons name="search" size={20} color="#000000" />
+                 <Ionicons name="search" size={20} color={NAVY} />
                 <TextInput
                   ref={searchInputRef}
                   value={searchQuery}
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   button: {
-    backgroundColor: "#111827",
+    backgroundColor: NAVY,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     height: 40,
     borderWidth: 2,
-    borderColor: "#000000",
+     borderColor: NAVY,
   },
   searchInput: {
     flex: 1,
