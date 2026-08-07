@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
+  Easing,
   KeyboardAvoidingView,
   PanResponder,
   Platform,
@@ -68,6 +69,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
   const [sheetState, setSheetState] = useState<"open" | "dismissed">("open");
   const sheetAnim = useMemo(() => new Animated.Value(0), []);
   const closeRotateAnim = useMemo(() => new Animated.Value(0), []);
+  const fadeAnim = useMemo(() => new Animated.Value(1), []);
   const scrollAtTopRef = useRef(true);
 
   useEffect(() => {
@@ -77,20 +79,27 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
   }, [isLoaded, signedIn]);
 
   const dismiss = useCallback(() => {
+    if (sheetState === "dismissed") return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSheetState("dismissed");
     Animated.parallel([
       Animated.timing(sheetAnim, {
         toValue: SCREEN_HEIGHT,
-        duration: 350,
+        duration: 380,
         useNativeDriver: true,
-        easing: (t) => 1 - Math.pow(1 - t, 3),
+        easing: Easing.out(Easing.quad),
       }),
       Animated.timing(closeRotateAnim, {
         toValue: 1,
-        duration: 350,
+        duration: 380,
         useNativeDriver: true,
-        easing: (t) => 1 - Math.pow(1 - t, 3),
+        easing: Easing.out(Easing.quad),
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 280,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
       }),
     ]).start(() => {
       if (onDismiss) {
@@ -99,7 +108,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
         router.replace("/home");
       }
     });
-  }, [sheetAnim, closeRotateAnim, onDismiss]);
+  }, [sheetAnim, closeRotateAnim, fadeAnim, onDismiss, sheetState]);
 
   const goBack = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -138,8 +147,8 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
               Animated.spring(sheetAnim, {
                 toValue: 0,
                 useNativeDriver: true,
-                damping: 20,
-                stiffness: 90,
+                damping: 22,
+                stiffness: 110,
               }).start();
             }
           }
@@ -154,6 +163,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
         translateY: sheetAnim,
       } as any,
     ],
+    opacity: fadeAnim,
   } as any;
 
   const isVerifyStep = flow.step === "verify";
@@ -214,38 +224,62 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                  scrollEventThrottle={16}
                >
 
-                 <Text style={styles.verifyTitle}>Confirm it&apos;s you</Text>
-                <Text style={styles.verifySubtitle}>
-                  We sent a code to {flow.identifier}
-                </Text>
+                  <Text style={styles.verifyTitle}>Confirm it&apos;s you</Text>
+                 <Text style={styles.verifySubtitle}>
+                   We sent a code to {flow.identifier}
+                 </Text>
 
-                <View style={styles.otpWrap}>
-                  <TextInput
-                    value={flow.otp}
-                    onChangeText={flow.setOtp}
-                    editable={!flow.loading}
-                    autoCapitalize="none"
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    style={styles.otpInput}
-                    placeholder="------"
-                    placeholderTextColor="#9CA3AF"
-                  />
-                </View>
+                 <View style={styles.otpWrap}>
+                   <TextInput
+                     value={flow.otp}
+                     onChangeText={flow.setOtp}
+                     editable={!flow.loading}
+                     autoCapitalize="none"
+                     keyboardType="number-pad"
+                     maxLength={6}
+                     style={styles.otpInput}
+                     placeholder="------"
+                     placeholderTextColor="#9CA3AF"
+                   />
+                 </View>
 
-                {flow.error && <Text style={styles.errorText}>{flow.error}</Text>}
+                  {flow.error && <Text style={styles.errorText}>{flow.error}</Text>}
 
-                <View style={styles.resendRow}>
-                   <Text style={styles.resendText}>Didn&apos;t get it? </Text>
-                  {flow.resendCooldown > 0 ? (
-                    <Text style={styles.resendLink}>Resend in {flow.resendCooldown}s</Text>
-                  ) : (
-                    <Pressable onPress={flow.handleSendCode} disabled={flow.loading}>
-                      <Text style={[styles.resendLink, styles.resendLinkActive]}>Send a new code</Text>
+                  <View style={styles.verifyButtonSpacer}>
+                    <Pressable
+                      onPress={flow.handleVerifyCode}
+                      disabled={!flow.canVerify || flow.loading}
+                      style={({ pressed }) => [
+                        styles.verifyPrimaryButton,
+                        pressed && { opacity: 0.85 },
+                        (!flow.canVerify || flow.loading) && styles.primaryButtonDisabled,
+                      ]}
+                    >
+                      {flow.loading ? (
+                        <ButtonLoadingIndicator />
+                      ) : (
+                        <Text style={styles.primaryButtonText}>Verify</Text>
+                      )}
                     </Pressable>
-                  )}
-                </View>
-              </ScrollView>
+                  </View>
+
+                 <View style={styles.resendRow}>
+                    <Text style={styles.resendText}>Didn&apos;t get it? </Text>
+                   {flow.resendCooldown > 0 ? (
+                     <Text style={styles.resendLink}>Resend in {flow.resendCooldown}s</Text>
+                   ) : (
+                     <Pressable onPress={flow.handleSendCode} disabled={flow.loading}>
+                       {flow.loading ? (
+                         <View style={styles.resendLoadingWrap}>
+                           <ButtonLoadingIndicator size={16} color={DARK} />
+                         </View>
+                       ) : (
+                         <Text style={[styles.resendLink, styles.resendLinkActive]}>Send a new code</Text>
+                       )}
+                     </Pressable>
+                   )}
+                 </View>
+               </ScrollView>
             </View>
           ) : (
             <ScrollView
@@ -289,8 +323,12 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
                       )}
                     </Pressable>
                   </View>
-                  <Pressable onPress={switchUser} disabled={flow.loading}>
-                    <Text style={styles.notYouText}>Not you?</Text>
+                  <Pressable onPress={switchUser} disabled={flow.loading} style={styles.notYouButton}>
+                    {flow.loading ? (
+                      <ButtonLoadingIndicator size={16} color={DARK} />
+                    ) : (
+                      <Text style={[styles.notYouText, flow.loading && styles.notYouTextDisabled]}>Not you?</Text>
+                    )}
                   </Pressable>
                 </View>
               ) : (
@@ -572,6 +610,15 @@ const styles = StyleSheet.create({
     minHeight: 52,
     overflow: "hidden",
   },
+  verifyPrimaryButton: {
+    backgroundColor: ACCENT,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 56,
+    overflow: "hidden",
+  },
   primaryButtonDisabled: {
     opacity: 0.5,
   },
@@ -673,7 +720,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
-    marginBottom: 16,
+    marginBottom: 20,
   },
   otpInput: {
     fontSize: 15,
@@ -701,6 +748,11 @@ const styles = StyleSheet.create({
   },
   resendLinkActive: {
     color: DARK,
+  },
+  verifyButtonSpacer: {
+    marginTop: 20,
+    width: "100%",
+    maxWidth: 320,
   },
   welcomeBackContent: {
     width: "100%",
@@ -762,5 +814,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
     height: "100%",
+  },
+  resendLoadingWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notYouButton: {
+    marginTop: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignSelf: "center",
+  },
+  notYouTextDisabled: {
+    opacity: 0.6,
   },
 });

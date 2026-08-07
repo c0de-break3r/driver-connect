@@ -11,6 +11,7 @@ import { LoginPromptScreen } from "@/components/LoginPromptScreen";
 import MessagesScreen from "@/components/MessagesScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import { useHomeStore } from "@/store/useHomeStore";
+import { useAppStateStore } from "@/store/useAppStateStore";
 import FavoritesScreen from "@/components/FavoritesScreen";
 
 const NAVY = "#2C3E5B";
@@ -22,6 +23,7 @@ export default function HomeScreen() {
   const activeTab = useHomeStore((state) => state.activeTab);
   const setActiveTab = useHomeStore((state) => state.setActiveTab);
   const { signedIn, isLoaded } = useAuth();
+  const { setHasSeenWelcome } = useAppStateStore();
   const prevTabRef = useRef(activeTab);
   const directionRef = useRef<"left" | "right">("right");
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -32,10 +34,11 @@ export default function HomeScreen() {
 
     if (signedIn) {
       setShowAuth(false);
+      setHasSeenWelcome(true);
     } else {
       setShowAuth(true);
     }
-  }, [isLoaded, signedIn]);
+  }, [isLoaded, signedIn, setHasSeenWelcome]);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -75,6 +78,10 @@ export default function HomeScreen() {
       return (
         <View style={styles.loadingContainer} />
       );
+    }
+
+    if (!signedIn && showAuth) {
+      return <WelcomeAuthScreen onDismiss={handleAuthDismiss} />;
     }
 
     if (!signedIn) {
@@ -145,44 +152,40 @@ export default function HomeScreen() {
         </Animated.View>
       </View>
 
-      {showAuth && (
-        <View style={styles.authOverlay}>
-          <WelcomeAuthScreen onDismiss={handleAuthDismiss} />
+      {signedIn || !showAuth ? (
+        <View style={styles.bottomNav}>
+          <NavItem
+            icon="compass-outline"
+            label="Explore"
+            active={activeTab === "explore"}
+            onPress={() => setActiveTab("explore")}
+          />
+          <NavItem
+            icon="heart-outline"
+            label="Favorites"
+            active={activeTab === "favorites"}
+            onPress={() => setActiveTab("favorites")}
+          />
+          <NavItem
+            icon="car-sport-outline"
+            label="Trips"
+            active={activeTab === "trips"}
+            onPress={() => setActiveTab("trips")}
+          />
+          <NavItem
+            icon="chatbubble-ellipses-outline"
+            label="Messages"
+            active={activeTab === "messages"}
+            onPress={() => setActiveTab("messages")}
+          />
+          <NavItem
+            icon={signedIn ? "person-outline" : "log-in-outline"}
+            label={signedIn ? "Profile" : "Log In"}
+            active={activeTab === "profile"}
+            onPress={() => setActiveTab("profile")}
+          />
         </View>
-      )}
-
-      <View style={styles.bottomNav}>
-        <NavItem
-          icon="compass-outline"
-          label="Explore"
-          active={activeTab === "explore"}
-          onPress={() => setActiveTab("explore")}
-        />
-        <NavItem
-          icon="heart-outline"
-          label="Favorites"
-          active={activeTab === "favorites"}
-          onPress={() => setActiveTab("favorites")}
-        />
-        <NavItem
-          icon="car-sport-outline"
-          label="Trips"
-          active={activeTab === "trips"}
-          onPress={() => setActiveTab("trips")}
-        />
-        <NavItem
-          icon="chatbubble-ellipses-outline"
-          label="Messages"
-          active={activeTab === "messages"}
-          onPress={() => setActiveTab("messages")}
-        />
-        <NavItem
-          icon={signedIn ? "person-outline" : "log-in-outline"}
-          label={signedIn ? "Profile" : "Log In"}
-          active={activeTab === "profile"}
-          onPress={() => setActiveTab("profile")}
-        />
-      </View>
+      ) : null}
     </SafeAreaView>
   );
 }

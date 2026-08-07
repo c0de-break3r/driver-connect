@@ -90,6 +90,7 @@ export function useAuthEntryFlow(): AuthEntryFlowState {
 
       const createResult = await signIn.create({
         identifier: trimmed,
+        signUpIfMissing: true,
       });
 
       if (createResult.error) {
@@ -158,6 +159,7 @@ export function useAuthEntryFlow(): AuthEntryFlowState {
     if (!canVerify || !signIn) return;
     setError(null);
     setLoading(true);
+    setLoadingProvider("email");
     try {
       if (looksLikeEmail) {
         await signIn.emailCode.verifyCode({
@@ -173,6 +175,7 @@ export function useAuthEntryFlow(): AuthEntryFlowState {
       setError(err instanceof Error ? err.message : "Failed to verify code. Please try again.");
     } finally {
       setLoading(false);
+      setLoadingProvider(null);
     }
   }, [otp, canVerify, looksLikeEmail, signIn]);
 
