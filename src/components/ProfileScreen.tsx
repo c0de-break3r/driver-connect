@@ -164,7 +164,7 @@ export default function ProfileScreen() {
         </View>
 
         <TouchableOpacity style={styles.switchRoleButton} onPress={handleSwitchRole} activeOpacity={0.85}>
-          <Text style={styles.switchRoleText}>Switch Role</Text>
+          <Text style={styles.switchRoleText}>Become a host</Text>
           <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
         </TouchableOpacity>
 

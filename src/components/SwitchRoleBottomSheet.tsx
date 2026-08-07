@@ -136,7 +136,7 @@ export default function SwitchRoleBottomSheet({ visible, onClose, onSelectRole, 
           ]}
         >
           <View style={styles.headerRow}>
-            <Text style={styles.title}>Switch Role</Text>
+            <Text style={styles.title}>Choose Your Hosting Service</Text>
             <TouchableOpacity onPress={closeSheet} hitSlop={8}>
             <Ionicons name="close" size={22} color={NAVY} />
             </TouchableOpacity>
