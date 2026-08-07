@@ -8,6 +8,6 @@ export default function Index() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFF9F3" }} />
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }} />
   );
 }

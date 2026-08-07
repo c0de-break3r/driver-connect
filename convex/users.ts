@@ -67,7 +67,7 @@ export const getByEmail = query({
       .withIndex("by_email", (q) =>
         q.eq("email", args.email)
       )
-      .unique();
+      .first();
   },
 });
 

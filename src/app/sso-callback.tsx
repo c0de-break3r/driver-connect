@@ -17,7 +17,7 @@ export default function SSOCallback() {
   }, [isLoaded, signedIn]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFF8F3", alignItems: "center", justifyContent: "center" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
       <Text style={{ color: "#2C3E5B" }}>Completing sign in…</Text>
     </View>
   );

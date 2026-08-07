@@ -209,7 +209,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 6,
     borderWidth: 2,
-    borderColor: "#FFF8F3",
+    borderColor: "#FFFFFF",
   },
   badgeText: {
     color: "#FFFFFF",
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   menuSection: {
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderRadius: 14,
     overflow: "hidden",
     marginBottom: 32,

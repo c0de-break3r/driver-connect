@@ -224,11 +224,11 @@ function NavItem({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   bottomNav: {
     position: "absolute",
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "#E5E7EB",
     paddingVertical: 10,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   comingSoonText: {
     fontSize: 16,
@@ -277,6 +277,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
 });

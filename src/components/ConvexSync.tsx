@@ -21,8 +21,8 @@ export function ConvexSync() {
   const syncedEmailRef = useRef<string | null>(null);
 
   const convexUser = useQuery(
-    (api.users as any).getByEmail,
-    isLoaded && signedIn && email ? { email } : "skip"
+    api.users.getByUserId,
+    isLoaded && signedIn && userId ? { userId } : "skip"
   );
 
   const upsertUser = useMutation((api.users as any).upsert);

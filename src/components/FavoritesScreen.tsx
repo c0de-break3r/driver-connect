@@ -576,7 +576,7 @@ function DraggableCard({ vehicle, onFavoritePress, onAddToCollection, onDragEnd,
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   },
   loginContainer: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 24,
     paddingTop: 60,
   },
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   modalContent: {
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 20,
     width: "90%",

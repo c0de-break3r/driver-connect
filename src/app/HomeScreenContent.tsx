@@ -893,10 +893,10 @@ function Card({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   header: {
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     paddingTop: 16,
     paddingBottom: 12,
   },
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderRadius: 32,
     paddingHorizontal: 16,
     height: 52,
@@ -932,7 +932,7 @@ const styles = StyleSheet.create({
   searchTextInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderRadius: 32,
     paddingHorizontal: 16,
     height: 52,
@@ -1075,7 +1075,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 24,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
@@ -1202,7 +1202,7 @@ const styles = StyleSheet.create({
 
   /* Continue searching */
   continueCard: {
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 16,
     shadowColor: "#000",
@@ -1354,7 +1354,7 @@ const styles = StyleSheet.create({
   /* Mosaic message card */
   mosaicCard: {
     width: "100%",
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderRadius: 14,
     overflow: "hidden",
     shadowColor: "#000",
@@ -1407,7 +1407,7 @@ const styles = StyleSheet.create({
 
   /* Generic card */
   cardStyle: {
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,

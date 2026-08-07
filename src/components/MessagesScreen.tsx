@@ -210,7 +210,7 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   loginContainer: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 24,
     paddingTop: 60,
   },
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 24,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   settingsSheet: {
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 24,

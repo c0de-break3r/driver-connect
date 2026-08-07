@@ -447,7 +447,7 @@ function TextInputBase({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   sheet: {
     position: "absolute",
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     height: SCREEN_HEIGHT,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 24,
     paddingBottom: 48,
     zIndex: 1000,
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
   },
   verifyContainer: {
     flex: 1,
-    backgroundColor: "#FFF8F3",
+    backgroundColor: "#FFFFFF",
   },
   verifyHeaderRow: {
     flexDirection: "row",
