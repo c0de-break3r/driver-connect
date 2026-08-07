@@ -34,6 +34,7 @@ export default function HomeScreen() {
 
     if (signedIn) {
       setHasSeenWelcome(true);
+      setWelcomeVisible(false);
     } else {
       setWelcomeVisible(true);
     }

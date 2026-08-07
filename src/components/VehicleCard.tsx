@@ -11,14 +11,16 @@ type VehicleCardProps = {
   isFavorite?: boolean;
   onPress?: () => void;
   onFavoritePress?: () => void;
+  list?: boolean;
+  style?: any;
 };
 
-export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress }: VehicleCardProps) {
+export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style }: VehicleCardProps) {
   const avatarUrl = vehicle.ownerAvatar;
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
-      <View style={styles.imageWrap}>
+    <Pressable style={[styles.card, list && styles.listCard, style]} onPress={onPress}>
+      <View style={[styles.imageWrap, list && styles.listImageWrap]}>
         <Image source={{ uri: vehicle.image }} style={styles.cardImage} contentFit="cover" />
         <Pressable style={styles.favoriteBadge} onPress={onFavoritePress}>
           <Ionicons
@@ -28,7 +30,7 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
           />
         </Pressable>
       </View>
-      <View style={styles.cardBody}>
+      <View style={[styles.cardBody, list && styles.listCardBody]}>
         <Text style={styles.price}>{vehicle.price}</Text>
         <Text style={styles.cardTitle} numberOfLines={1}>
           {vehicle.title}
@@ -44,7 +46,11 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
               <Text style={styles.verifiedText}>Verified</Text>
             </View>
           )}
-          <Text style={styles.yearsText}>{vehicle.yearsOnPlatform}</Text>
+          {vehicle.isVerified && vehicle.yearsOnPlatform ? (
+            <Text style={styles.yearsText}>• {vehicle.yearsOnPlatform}</Text>
+          ) : (
+            <Text style={styles.yearsText}>{vehicle.yearsOnPlatform}</Text>
+          )}
         </View>
         <View style={styles.ownerRow}>
           <Image source={{ uri: avatarUrl }} style={styles.ownerAvatar} contentFit="cover" />
@@ -69,10 +75,20 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  listCard: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+  },
   imageWrap: {
     position: "relative",
     width: "100%",
     height: 120,
+  },
+  listImageWrap: {
+    width: 140,
+    height: 140,
+    flexShrink: 1,
   },
   cardImage: {
     width: "100%",
@@ -92,6 +108,11 @@ const styles = StyleSheet.create({
   cardBody: {
     padding: 10,
     gap: 3,
+    flex: 1,
+  },
+  listCardBody: {
+    padding: 12,
+    justifyContent: "center",
   },
   price: {
     fontSize: 14,

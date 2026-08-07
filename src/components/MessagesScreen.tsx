@@ -15,20 +15,8 @@ import { useAuth } from "@/contexts/AuthProvider";
 
 const NAVY = "#2C3E5B";
 
-const FILTER_TABS = [
-  "All",
-  "Traveling",
-  "Support",
-  "Booking",
-  "Payment",
-  "Account",
-  "System",
-] as const;
-type FilterTab = (typeof FILTER_TABS)[number];
-
 export default function MessagesScreen() {
   const { signedIn } = useAuth();
-  const [activeFilter, setActiveFilter] = useState<FilterTab>("All");
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -132,24 +120,10 @@ export default function MessagesScreen() {
           <TouchableOpacity onPress={openSettings} hitSlop={8} style={styles.iconButton}>
             <Ionicons name="settings-outline" size={22} color={NAVY} />
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => {}} hitSlop={8} style={styles.iconButton}>
+            <Ionicons name="swap-vertical-outline" size={22} color={NAVY} />
+          </TouchableOpacity>
         </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterScrollContent}
-          style={styles.filterScrollView}
-        >
-          {FILTER_TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.filterChip, activeFilter === tab && styles.filterChipActive]}
-              onPress={() => setActiveFilter(tab)}
-            >
-              <Text style={[styles.filterText, activeFilter === tab && styles.filterTextActive]}>{tab}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
 
         <View style={styles.emptyState}>
           <Ionicons name="chatbubble-ellipses-outline" size={64} color="#9CA3AF" />
@@ -285,34 +259,6 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 8,
-  },
-  filterScrollContent: {
-    gap: 10,
-    paddingHorizontal: 20,
-  },
-  filterScrollView: {
-    backgroundColor: "transparent",
-    marginHorizontal: -20,
-  },
-  filterChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  filterChipActive: {
-    backgroundColor: NAVY,
-    borderColor: NAVY,
-  },
-  filterText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  filterTextActive: {
-    color: "#FFFFFF",
   },
   emptyState: {
     alignItems: "center",

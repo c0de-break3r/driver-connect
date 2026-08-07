@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Easing } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -10,10 +10,10 @@ import { api } from "@/lib/convexApi";
 import { VehicleCard } from "@/components/VehicleCard";
 
 const NAVY = "#2C3E5B";
+const GREEN = "#10B981";
 const ICON_SIZE_BASE = 20;
 const ICON_SIZE_ACTIVE = 24;
 
-const FILTERS = ["All", "Vehicles", "Drivers", "Chauffeur"];
 
 export const VEHICLES = [
   {
@@ -22,17 +22,17 @@ export const VEHICLES = [
     category: "SUV",
     location: "Madina",
     region: "Greater Accra",
-    price: "GH₵250,000",
-    originalPrice: "GH₵280,000",
+    price: "GH₵ 250,000",
+    originalPrice: "GH₵ 280,000",
     period: "for 2 days",
     rating: 4.98,
     image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
     ownerName: "Luke Eshun",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Luke+Eshun&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80",
     isVerified: true,
     condition: "Foreign Used",
     transmission: "Automatic",
-    yearsOnPlatform: "5+ years on Africana",
+    yearsOnPlatform: "5+ years",
   },
   {
     id: "2",
@@ -40,17 +40,17 @@ export const VEHICLES = [
     category: "SUV",
     location: "Madina",
     region: "Greater Accra",
-    price: "GH₵225,000",
-    originalPrice: "GH₵260,000",
+    price: "GH₵ 225,000",
+    originalPrice: "GH₵ 260,000",
     period: "for 2 days",
     rating: 4.88,
     image: "https://images.unsplash.com/photo-1551522435-a13afa82f300?w=800&q=80",
     ownerName: "Nana Agyemang Motors",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Nana+Agyemang&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80",
     isVerified: true,
     condition: "Foreign Used",
     transmission: "Automatic",
-    yearsOnPlatform: "5+ years on Africana",
+    yearsOnPlatform: "5+ years",
   },
   {
     id: "3",
@@ -58,17 +58,17 @@ export const VEHICLES = [
     category: "Sedan",
     location: "Madina",
     region: "Greater Accra",
-    price: "GH₵78,000",
-    originalPrice: "GH₵95,000",
+    price: "GH₵ 78,000",
+    originalPrice: "GH₵ 95,000",
     period: "for 2 days",
     rating: 4.85,
     image: "https://images.unsplash.com/photo-1563720223185-1103d5164cdb?w=800&q=80",
     ownerName: "Nana Danquah",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Nana+Danquah&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80",
     isVerified: true,
     condition: "Local Used",
     transmission: "Automatic",
-    yearsOnPlatform: "3+ years on Africana",
+    yearsOnPlatform: "3+ years",
   },
   {
     id: "4",
@@ -76,17 +76,17 @@ export const VEHICLES = [
     category: "Sedan",
     location: "Kumasi",
     region: "Ashanti",
-    price: "GH₵120,000",
-    originalPrice: "GH₵145,000",
+    price: "GH₵ 120,000",
+    originalPrice: "GH₵ 145,000",
     period: "for 2 days",
     rating: 4.92,
     image: "https://images.unsplash.com/photo-1621007947382-bb3c3968e3bb?w=800&q=80",
     ownerName: "Kwame Asare",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Kwame+Asare&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f5d?w=200&q=80",
     isVerified: true,
     condition: "Foreign Used",
     transmission: "Automatic",
-    yearsOnPlatform: "4+ years on Africana",
+    yearsOnPlatform: "4+ years",
   },
   {
     id: "5",
@@ -94,17 +94,17 @@ export const VEHICLES = [
     category: "SUV",
     location: "Accra",
     region: "Greater Accra",
-    price: "GH₵320,000",
-    originalPrice: "GH₵380,000",
+    price: "GH₵ 320,000",
+    originalPrice: "GH₵ 380,000",
     period: "for 3 days",
     rating: 4.95,
     image: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80",
     ownerName: "Ama Serwaa",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Ama+Serwaa&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
     isVerified: true,
     condition: "Foreign Used",
     transmission: "Automatic",
-    yearsOnPlatform: "6+ years on Africana",
+    yearsOnPlatform: "6+ years",
   },
   {
     id: "6",
@@ -112,17 +112,17 @@ export const VEHICLES = [
     category: "SUV",
     location: "Tema",
     region: "Greater Accra",
-    price: "GH₵180,000",
-    originalPrice: "GH₵210,000",
+    price: "GH₵ 180,000",
+    originalPrice: "GH₵ 210,000",
     period: "for 2 days",
     rating: 4.78,
     image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&q=80",
     ownerName: "Kofi Mensah",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Kofi+Mensah&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80",
     isVerified: false,
     condition: "Local Used",
     transmission: "Manual",
-    yearsOnPlatform: "2+ years on Africana",
+    yearsOnPlatform: "2+ years",
   },
   {
     id: "8",
@@ -130,17 +130,17 @@ export const VEHICLES = [
     category: "SUV",
     location: "Cape Coast",
     region: "Central",
-    price: "GH₵280,000",
-    originalPrice: "GH₵320,000",
+    price: "GH₵ 280,000",
+    originalPrice: "GH₵ 320,000",
     period: "for 2 days",
     rating: 4.90,
     image: "https://images.unsplash.com/photo-1568608889924-24dbd84c702c?w=800&q=80",
     ownerName: "Yaw Boateng",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Yaw+Boateng&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f5d?w=200&q=80",
     isVerified: true,
     condition: "Foreign Used",
     transmission: "Automatic",
-    yearsOnPlatform: "5+ years on Africana",
+    yearsOnPlatform: "5+ years",
   },
   {
     id: "9",
@@ -148,17 +148,17 @@ export const VEHICLES = [
     category: "Truck",
     location: "Kumasi",
     region: "Ashanti",
-    price: "GH₵190,000",
-    originalPrice: "GH₵230,000",
+    price: "GH₵ 190,000",
+    originalPrice: "GH₵ 230,000",
     period: "for 2 days",
     rating: 4.85,
     image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&q=80",
     ownerName: "Abena Osei",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Abena+Osei&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80",
     isVerified: true,
     condition: "Foreign Used",
     transmission: "Automatic",
-    yearsOnPlatform: "3+ years on Africana",
+    yearsOnPlatform: "3+ years",
   },
   {
     id: "10",
@@ -166,13 +166,13 @@ export const VEHICLES = [
     category: "Sedan",
     location: "Accra",
     region: "Greater Accra",
-    price: "GH₵65,000",
-    originalPrice: "GH₵80,000",
+    price: "GH₵ 65,000",
+    originalPrice: "GH₵ 80,000",
     period: "for 1 day",
     rating: 4.72,
     image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
     ownerName: "Kojo Bannerman",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Kojo+Bannerman&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80",
     isVerified: false,
     condition: "Local Used",
     transmission: "Manual",
@@ -184,17 +184,17 @@ export const VEHICLES = [
     category: "Van",
     location: "Tamale",
     region: "Northern",
-    price: "GH₵95,000",
-    originalPrice: "GH₵110,000",
+    price: "GH₵ 95,000",
+    originalPrice: "GH₵ 110,000",
     period: "for 2 days",
     rating: 4.88,
     image: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
     ownerName: "Alhaji Mohammed",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Alhaji+Mohammed&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80",
     isVerified: true,
     condition: "Foreign Used",
     transmission: "Manual",
-    yearsOnPlatform: "7+ years on Africana",
+    yearsOnPlatform: "7+ years",
   },
   {
     id: "12",
@@ -202,17 +202,17 @@ export const VEHICLES = [
     category: "Sedan",
     location: "Accra",
     region: "Greater Accra",
-    price: "GH₵350,000",
-    originalPrice: "GH₵420,000",
+    price: "GH₵ 350,000",
+    originalPrice: "GH₵ 420,000",
     period: "for 3 days",
     rating: 4.96,
     image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80",
     ownerName: "Efua Mensah",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Efua+Mensah&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
     isVerified: true,
     condition: "Foreign Used",
     transmission: "Automatic",
-    yearsOnPlatform: "8+ years on Africana",
+    yearsOnPlatform: "8+ years",
   },
   {
     id: "13",
@@ -220,17 +220,17 @@ export const VEHICLES = [
     category: "Motorcycle",
     location: "Kumasi",
     region: "Ashanti",
-    price: "GH₵45,000",
-    originalPrice: "GH₵55,000",
+    price: "GH₵ 45,000",
+    originalPrice: "GH₵ 55,000",
     period: "for 1 day",
     rating: 4.70,
     image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
     ownerName: "Kwaku Darko",
-    ownerAvatar: "https://ui-avatars.com/api/?name=Kwaku+Darko&background=2C3E5B&color=fff",
+    ownerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80",
     isVerified: false,
     condition: "Local Used",
     transmission: "Manual",
-    yearsOnPlatform: "2+ years on Africana",
+    yearsOnPlatform: "2+ years",
   },
   {
     id: "14",
@@ -274,7 +274,7 @@ const DRIVERS = [
     location: "Kumasi, Ashanti",
     rating: 4.98,
     trips: 342,
-    hourlyRate: "GH₵35",
+    hourlyRate: "GH₵ 35",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
     isVerified: true,
     yearsOnPlatform: "5+ years",
@@ -287,7 +287,7 @@ const DRIVERS = [
     location: "Accra, Greater Accra",
     rating: 4.95,
     trips: 518,
-    hourlyRate: "GH₵45",
+    hourlyRate: "GH₵ 45",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
     isVerified: true,
     yearsOnPlatform: "6+ years",
@@ -300,7 +300,7 @@ const DRIVERS = [
     location: "Tema, Greater Accra",
     rating: 4.88,
     trips: 215,
-    hourlyRate: "GH₵30",
+    hourlyRate: "GH₵ 30",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
     isVerified: true,
     yearsOnPlatform: "4+ years",
@@ -313,7 +313,7 @@ const DRIVERS = [
     location: "Cape Coast, Central",
     rating: 4.92,
     trips: 289,
-    hourlyRate: "GH₵40",
+    hourlyRate: "GH₵ 40",
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
     isVerified: true,
     yearsOnPlatform: "5+ years",
@@ -332,7 +332,6 @@ type HomeScreenContentProps = {
 };
 
 export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {}) {
-  const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedResult, setSelectedResult] = useState<any | null>(null);
   const [focused, setFocused] = useState(false);
@@ -340,9 +339,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [placesResults, setPlacesResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [activeChips, setActiveChips] = useState<string[]>([]);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const layoutAnim = useRef(new Animated.Value(1)).current;
   const { signedIn, email } = useAuth();
   const favorites = useFavoritesStore((state) => state.favorites);
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
@@ -392,10 +391,6 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
 
   const handleImageError = (id: string) => {
     setImageErrors((prev) => ({ ...prev, [id]: true }));
-  };
-
-  const removeChip = (chip: string) => {
-    setActiveChips((prev) => prev.filter((c) => c !== chip));
   };
 
   useEffect(() => {
@@ -472,6 +467,19 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     setIsSearching(false);
   };
 
+  const handleViewModeToggle = () => {
+    layoutAnim.setValue(0);
+    Animated.parallel([
+      Animated.timing(layoutAnim, {
+        toValue: 1,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+    setViewMode((prev) => (prev === "grid" ? "list" : "grid"));
+  };
+
   const iconScale = iconAnim.interpolate({
     inputRange: [ICON_SIZE_BASE, ICON_SIZE_ACTIVE],
     outputRange: [1, 1.25],
@@ -486,7 +494,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           id: `person-${user._id}`,
           type: "person",
           title: user.firstName || "Unknown",
-          subtitle: user.role === "owner" || user.role === "corporate" ? "Owner" : user.role,
+          subtitle: user.role === "owner" || user.role === "corporate" ? "Owner" : user.role === "client" ? "Guest" : user.role,
+          image: user.avatarUri || null,
           data: user,
         });
       });
@@ -499,6 +508,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           type: "place",
           title: place.structured_formatting?.main_text || place.description,
           subtitle: place.structured_formatting?.secondary_text || "",
+          image: null,
           data: place,
         });
       });
@@ -525,7 +535,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
             )}
             <TextInput
               style={styles.searchInput}
-              placeholder="Search places or people in Ghana"
+              placeholder="Search places or people"
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -559,11 +569,17 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                       onPress={() => handleResultSelect(item)}
                     >
                       <View style={styles.searchResultIcon}>
-                        <Ionicons
-                          name={item.type === "place" ? "location-outline" : "person-outline"}
-                          size={ICON_SIZE_BASE}
-                          color={NAVY}
-                        />
+                        {item.type === "person" && item.image ? (
+                          <Image
+                            source={{ uri: item.image }}
+                            style={styles.searchResultAvatar}
+                            contentFit="cover"
+                          />
+                        ) : item.type === "place" ? (
+                          <Ionicons name="location-outline" size={ICON_SIZE_BASE} color={NAVY} />
+                        ) : (
+                          <Ionicons name="person-outline" size={ICON_SIZE_BASE} color={NAVY} />
+                        )}
                       </View>
                       <View style={styles.searchResultInfo}>
                         <Text style={styles.searchResultTitle}>{item.title}</Text>
@@ -572,7 +588,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                         ) : null}
                       </View>
                       <Text style={styles.searchResultType}>
-                        {item.type === "place" ? "Place" : "Person"}
+                        {item.type === "place" ? "Place" : item.data?.role === "client" ? "Guest" : "Person"}
                       </Text>
                     </Pressable>
                   )}
@@ -587,59 +603,17 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           )}
         </View>
 
-        {/* Filter chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {FILTERS.map((filter) => (
-            <Pressable
-              key={filter}
-              style={[
-                styles.filterChip,
-                activeFilter === filter && styles.filterChipActive,
-              ]}
-              onPress={() => setActiveFilter(filter)}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  activeFilter === filter && styles.filterTextActive,
-                ]}
-              >
-                {filter}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-
         {/* Active chips + count + sort + view toggle */}
         <View style={styles.exploreControls}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsRow}
-          >
-            {activeChips.map((chip) => (
-              <Pressable key={chip} style={styles.activeChip} onPress={() => removeChip(chip)}>
-                <Text style={styles.activeChipText}>
-                  <Text style={styles.activeChipCheck}>✓ </Text>
-                  {chip}
-                </Text>
-                <Ionicons name="close" size={14} color={NAVY} />
-              </Pressable>
-            ))}
-          </ScrollView>
+          <Text style={styles.adsCount}>Found 46 ads</Text>
           <View style={styles.controlsRight}>
-            <Text style={styles.adsCount}>Found 46 ads</Text>
             <Pressable style={styles.sortButton} onPress={() => setShowSortDropdown(!showSortDropdown)}>
               <Text style={styles.sortButtonText}>Sort</Text>
               <Ionicons name={showSortDropdown ? "chevron-up" : "chevron-down"} size={14} color={NAVY} />
             </Pressable>
             <Pressable
               style={styles.viewToggle}
-              onPress={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+              onPress={handleViewModeToggle}
             >
               <Ionicons name={viewMode === "grid" ? "grid-outline" : "list-outline"} size={18} color={NAVY} />
             </Pressable>
@@ -668,7 +642,22 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               </Text>
             </View>
 
-            <View style={styles.grid}>
+            <Animated.View
+              style={[
+                viewMode === "list" ? styles.list : styles.grid,
+                {
+                  opacity: layoutAnim,
+                  transform: [
+                    {
+                      scale: layoutAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.96, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
               {VEHICLES.filter((v) => {
                 const query = searchQuery.toLowerCase();
                 return (
@@ -703,16 +692,18 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 }
 
                 return (
-                  <VehicleCard
-                    key={vehicle.id}
-                    vehicle={vehicle as any}
-                    isFavorite={!!favorites[vehicle.id]}
-                    onPress={() => handleVehiclePress(vehicle.id)}
-                    onFavoritePress={() => handleFavoritePress(vehicle.id)}
-                  />
+                <VehicleCard
+                  key={vehicle.id}
+                  vehicle={vehicle as any}
+                  isFavorite={!!favorites[vehicle.id]}
+                  onPress={() => handleVehiclePress(vehicle.id)}
+                  onFavoritePress={() => handleFavoritePress(vehicle.id)}
+                  list={viewMode === "list"}
+                  style={viewMode === "list" ? styles.listCard : undefined}
+                />
                 );
               })}
-            </View>
+            </Animated.View>
           </>
         ) : (
           <>
@@ -748,7 +739,22 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 <Ionicons name="arrow-forward" size={18} color={NAVY} />
               </Pressable>
             </View>
-            <View style={styles.grid}>
+            <Animated.View
+              style={[
+                viewMode === "list" ? styles.list : styles.grid,
+                {
+                  opacity: layoutAnim,
+                  transform: [
+                    {
+                      scale: layoutAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.96, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
               {VERIFIED_VEHICLES.slice(0, 4).map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
@@ -756,9 +762,11 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   isFavorite={!!favorites[vehicle.id]}
                   onPress={() => handleVehiclePress(vehicle.id)}
                   onFavoritePress={() => handleFavoritePress(vehicle.id)}
+                  list={viewMode === "list"}
+                  style={viewMode === "list" ? styles.listCard : undefined}
                 />
               ))}
-            </View>
+            </Animated.View>
 
             {/* Top Rated Drivers */}
             <View style={styles.sectionHeader}>
@@ -767,10 +775,25 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 <Ionicons name="arrow-forward" size={18} color={NAVY} />
               </Pressable>
             </View>
-            <View style={styles.grid}>
+            <Animated.View
+              style={[
+                viewMode === "list" ? styles.list : styles.grid,
+                {
+                  opacity: layoutAnim,
+                  transform: [
+                    {
+                      scale: layoutAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.96, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
               {DRIVERS.map((driver) => (
-                <Pressable key={driver.id} style={styles.card} onPress={() => {}}>
-                  <View style={styles.imageWrap}>
+                <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => {}}>
+                  <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
                     <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
                     {driver.isVerified && (
                       <View style={styles.verifiedBadgeTop}>
@@ -778,7 +801,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                       </View>
                     )}
                   </View>
-                  <View style={styles.cardBody}>
+                  <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
                       {driver.name}
                     </Text>
@@ -796,7 +819,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   </View>
                 </Pressable>
               ))}
-            </View>
+            </Animated.View>
 
             {/* Top Rated Vehicles */}
             <View style={styles.sectionHeader}>
@@ -805,7 +828,22 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 <Ionicons name="arrow-forward" size={18} color={NAVY} />
               </Pressable>
             </View>
-            <View style={styles.grid}>
+            <Animated.View
+              style={[
+                viewMode === "list" ? styles.list : styles.grid,
+                {
+                  opacity: layoutAnim,
+                  transform: [
+                    {
+                      scale: layoutAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.96, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
               {TOP_RATED_VEHICLES.slice(0, 4).map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
@@ -813,9 +851,11 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   isFavorite={!!favorites[vehicle.id]}
                   onPress={() => handleVehiclePress(vehicle.id)}
                   onFavoritePress={() => handleFavoritePress(vehicle.id)}
+                  list={viewMode === "list"}
+                  style={viewMode === "list" ? styles.listCard : undefined}
                 />
               ))}
-            </View>
+            </Animated.View>
 
             {/* Top Vehicle Owners Near You */}
             <View style={styles.sectionHeader}>
@@ -824,7 +864,22 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 <Ionicons name="arrow-forward" size={18} color={NAVY} />
               </Pressable>
             </View>
-            <View style={styles.grid}>
+            <Animated.View
+              style={[
+                viewMode === "list" ? styles.list : styles.grid,
+                {
+                  opacity: layoutAnim,
+                  transform: [
+                    {
+                      scale: layoutAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.96, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
               {TOP_OWNERS_NEARBY.map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
@@ -832,9 +887,11 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   isFavorite={!!favorites[vehicle.id]}
                   onPress={() => handleVehiclePress(vehicle.id)}
                   onFavoritePress={() => handleFavoritePress(vehicle.id)}
+                  list={viewMode === "list"}
+                  style={viewMode === "list" ? styles.listCard : undefined}
                 />
               ))}
-            </View>
+            </Animated.View>
 
             {/* Stay near section */}
             <View style={styles.sectionHeader}>
@@ -844,10 +901,25 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               </Pressable>
             </View>
 
-            <View style={styles.grid}>
+            <Animated.View
+              style={[
+                viewMode === "list" ? styles.list : styles.grid,
+                {
+                  opacity: layoutAnim,
+                  transform: [
+                    {
+                      scale: layoutAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.96, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
               {POPULAR.map((item) => (
-                <Pressable key={item.id} style={styles.card}>
-                  <View style={styles.imageWrap}>
+                <Pressable key={item.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]}>
+                  <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
                     <Image
                       source={{ uri: item.image }}
                       style={styles.cardImage}
@@ -860,7 +932,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                       </View>
                     )}
                   </View>
-                  <View style={styles.cardBody}>
+                  <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
                       {item.title}
                     </Text>
@@ -868,7 +940,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   </View>
                 </Pressable>
               ))}
-            </View>
+            </Animated.View>
           </>
         )}
       </ScrollView>
@@ -937,8 +1009,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 52,
     gap: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderWidth: 1.5,
+    borderColor: NAVY,
   },
   searchAutocompleteContainer: {
     marginHorizontal: 20,
@@ -996,6 +1068,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
+  },
+  searchResultAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   searchResultInfo: {
     flex: 1,
@@ -1063,33 +1140,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#6B7280",
     marginTop: 2,
-  },
-
-  /* Filters */
-  filterRow: {
-    gap: 10,
-    paddingHorizontal: 20,
-    marginTop: 16,
-  },
-  filterChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  filterChipActive: {
-    backgroundColor: NAVY,
-    borderColor: NAVY,
-  },
-  filterText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  filterTextActive: {
-    color: "#FFFFFF",
   },
 
   /* Explore controls */
@@ -1180,7 +1230,7 @@ const styles = StyleSheet.create({
   rateText: {
     fontSize: 12,
     fontWeight: "700",
-    color: NAVY,
+    color: GREEN,
     marginTop: 4,
   },
   vehicleTypeText: {
@@ -1261,6 +1311,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 14,
+  },
+  list: {
+    flexDirection: "column",
+    gap: 14,
+  },
+  listCard: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  listImageWrap: {
+    width: 140,
+    height: 140,
+    flexShrink: 1,
+  },
+  listCardBody: {
+    padding: 12,
+    justifyContent: "center",
+    flex: 1,
   },
   card: {
     width: "47%",
