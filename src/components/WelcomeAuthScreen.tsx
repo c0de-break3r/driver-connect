@@ -39,91 +39,18 @@ function Avatar({ name }: { name?: string }) {
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-function RingLoader({ color = DARK, size = 120 }: { color?: string; size?: number } = {}) {
-  const a = useRef(new Animated.Value(0)).current;
-  const b = useRef(new Animated.Value(0)).current;
-  const c = useRef(new Animated.Value(0)).current;
-  const d = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const dur = 2000;
-    const toA = Animated.loop(Animated.timing(a, { toValue: 1, duration: dur, useNativeDriver: false }));
-    const toB = Animated.loop(Animated.timing(b, { toValue: 1, duration: dur, useNativeDriver: false }));
-    const toC = Animated.loop(Animated.timing(c, { toValue: 1, duration: dur, useNativeDriver: false }));
-    const toD = Animated.loop(Animated.timing(d, { toValue: 1, duration: dur, useNativeDriver: false }));
-    toA.start();
-    toB.start();
-    toC.start();
-    toD.start();
-    return () => {
-      toA.stop();
-      toB.stop();
-      toC.stop();
-      toD.stop();
-    };
-  }, [a, b, c, d]);
-
-  const dashA = a.interpolate({ inputRange: [0, 1], outputRange: ["0 660", "60 600"] });
-  const offsetA = a.interpolate({ inputRange: [0, 1], outputRange: ["-330", "-990"] });
-  const widthA = a.interpolate({ inputRange: [0, 0.12, 0.32, 0.4, 0.54, 0.62, 0.82, 0.9, 1], outputRange: [20, 30, 30, 20, 20, 30, 30, 20, 20] });
-
-  const dashB = b.interpolate({ inputRange: [0, 1], outputRange: ["0 220", "20 200"] });
-  const offsetB = b.interpolate({ inputRange: [0, 1], outputRange: ["-110", "-330"] });
-  const widthB = b.interpolate({ inputRange: [0, 0.12, 0.2, 0.4, 0.48, 0.62, 0.7, 0.9, 0.98, 1], outputRange: [20, 20, 30, 30, 20, 20, 30, 30, 20, 20] });
-
-  const dashC = c.interpolate({ inputRange: [0, 1], outputRange: ["0 440", "40 400"] });
-  const offsetC = c.interpolate({ inputRange: [0, 1], outputRange: ["0", "-440"] });
-  const widthC = c.interpolate({ inputRange: [0, 0.08, 0.28, 0.36, 0.58, 0.66, 0.86, 0.94, 1], outputRange: [20, 30, 30, 20, 20, 30, 30, 20, 20] });
-
-  const dashD = d.interpolate({ inputRange: [0, 1], outputRange: ["0 440", "40 400"] });
-  const offsetD = d.interpolate({ inputRange: [0, 1], outputRange: ["0", "-440"] });
-  const widthD = d.interpolate({ inputRange: [0, 0.08, 0.16, 0.36, 0.44, 0.5, 0.58, 0.78, 0.86, 1], outputRange: [20, 20, 30, 30, 20, 20, 30, 30, 20, 20] });
-
+function SwingDotsLoader({ color = DARK, dotSize = 6, containerSize = 32 }: { color?: string; dotSize?: number; containerSize?: number } = {}) {
   return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-      <Svg viewBox="0 0 240 240" width={size} height={size}>
-        <AnimatedCircle
-          cx="120"
-          cy="120"
-          r="105"
-          fill="none"
-          stroke={color}
-          strokeWidth={widthA as any}
-          strokeDasharray={dashA}
-          strokeDashoffset={offsetA}
-          strokeLinecap="round"
-        />
+    <View style={{ width: containerSize, height: containerSize, alignItems: "center", justifyContent: "center" }}>
+      <Svg viewBox="0 0 240 240" width={containerSize} height={containerSize}>
         <AnimatedCircle
           cx="120"
           cy="120"
           r="35"
           fill="none"
           stroke={color}
-          strokeWidth={widthB as any}
-          strokeDasharray={dashB}
-          strokeDashoffset={offsetB}
-          strokeLinecap="round"
-        />
-        <AnimatedCircle
-          cx="85"
-          cy="120"
-          r="70"
-          fill="none"
-          stroke={color}
-          strokeWidth={widthC as any}
-          strokeDasharray={dashC}
-          strokeDashoffset={offsetC}
-          strokeLinecap="round"
-        />
-        <AnimatedCircle
-          cx="155"
-          cy="120"
-          r="70"
-          fill="none"
-          stroke={color}
-          strokeWidth={widthD as any}
-          strokeDasharray={dashD}
-          strokeDashoffset={offsetD}
+          strokeWidth={dotSize}
+          strokeDasharray={"0 220"}
           strokeLinecap="round"
         />
       </Svg>
@@ -131,15 +58,9 @@ function RingLoader({ color = DARK, size = 120 }: { color?: string; size?: numbe
   );
 }
 
-function SwingDotsLoader({ color = DARK, dotSize = 6, containerSize = 32 }: { color?: string; dotSize?: number; containerSize?: number } = {}) {
-  return <RingLoader color={color} size={containerSize} />;
-}
-
 function ButtonLoadingIndicator({ color = WHITE, size = 20 }: { color?: string; size?: number } = {}) {
   return <SwingDotsLoader color={color} dotSize={size * 0.35} containerSize={size * 1.6} />;
 }
-
-export { RingLoader };
 
 export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => void }) {
   const flow = useAuthEntryFlow();

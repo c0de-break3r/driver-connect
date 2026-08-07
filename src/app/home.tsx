@@ -4,7 +4,7 @@ import { Animated, Dimensions, StyleSheet, Text, View, Pressable } from "react-n
 import { Ionicons } from "@expo/vector-icons";
 
 import { HomeScreenContent } from "./HomeScreenContent";
-import WelcomeAuthScreen, { RingLoader } from "@/components/WelcomeAuthScreen";
+import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useTabBounce } from "@/hooks/useTabBounce";
 import { LoginPromptScreen } from "@/components/LoginPromptScreen";
@@ -73,9 +73,7 @@ export default function HomeScreen() {
   const renderContent = () => {
     if (!isLoaded) {
       return (
-        <View style={styles.loadingContainer}>
-          <RingLoader color={NAVY} size={120} />
-        </View>
+        <View style={styles.loadingContainer} />
       );
     }
 
