@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View, Pressable } from "react-native";
+import { useRef } from "react";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { Animated } from "react-native";
 import type { VehicleFavorite } from "@/store/useFavoritesStore";
 
 const NAVY = "#2C3E5B";
@@ -17,22 +19,40 @@ type VehicleCardProps = {
 
 export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style }: VehicleCardProps) {
   const avatarUrl = vehicle.ownerAvatar;
+  const heartScale = useRef(new Animated.Value(1)).current;
+
+  const triggerHeartBeat = () => {
+    heartScale.setValue(1);
+    Animated.sequence([
+      Animated.timing(heartScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
+      Animated.timing(heartScale, { toValue: 0.85, duration: 120, useNativeDriver: true }),
+      Animated.timing(heartScale, { toValue: 1.15, duration: 120, useNativeDriver: true }),
+      Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
+    ]).start();
+  };
+
+  const handleFavoritePress = () => {
+    triggerHeartBeat();
+    onFavoritePress?.();
+  };
 
   return (
     <Pressable style={[styles.card, list && styles.listCard, style]} onPress={onPress}>
       <View style={[styles.imageWrap, list && styles.listImageWrap]}>
         <Image source={{ uri: vehicle.image }} style={styles.cardImage} contentFit="cover" />
-        <Pressable style={styles.favoriteBadge} onPress={onFavoritePress}>
-          <Ionicons
-            name={isFavorite ? "heart" : "heart-outline"}
-            size={18}
-            color={isFavorite ? "#E74C3C" : "#6B7280"}
-          />
+        <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <Ionicons
+              name={isFavorite ? "heart" : "heart-outline"}
+              size={18}
+              color={isFavorite ? "#E74C3C" : "#6B7280"}
+            />
+          </Animated.View>
         </Pressable>
       </View>
       <View style={[styles.cardBody, list && styles.listCardBody]}>
         <Text style={styles.price}>{vehicle.price}</Text>
-        <Text style={styles.cardTitle} numberOfLines={1}>
+        <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
           {vehicle.title}
         </Text>
         <Text style={styles.cardSubtitle}>
@@ -54,7 +74,7 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
         </View>
         <View style={styles.ownerRow}>
           <Image source={{ uri: avatarUrl }} style={styles.ownerAvatar} contentFit="cover" />
-          <Text style={styles.ownerName} numberOfLines={1}>
+          <Text style={styles.ownerName} numberOfLines={1} ellipsizeMode="tail">
             {vehicle.ownerName}
           </Text>
         </View>
@@ -123,6 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: NAVY,
+    flexShrink: 1,
   },
   cardSubtitle: {
     fontSize: 11,
@@ -171,5 +192,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     color: NAVY,
+    flexShrink: 1,
   },
 });

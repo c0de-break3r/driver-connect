@@ -32,6 +32,7 @@ type FavoriteState = {
   userEmail: string | null;
   collections: Collection[];
   toggleFavorite: (id: string) => void;
+  removeFavorite: (id: string) => void;
   isFavorite: (id: string) => boolean;
   reset: () => void;
   loadForUser: (email: string | null) => Promise<void>;
@@ -56,7 +57,16 @@ export const useFavoritesStore = create<FavoriteState>((set, get) => ({
     }
   },
 
-  isFavorite: (id) => !!get().favorites[id],
+  removeFavorite: (id: string) => {
+    const { [id]: _, ...rest } = get().favorites;
+    set({ favorites: rest });
+    const email = get().userEmail;
+    if (email) {
+      AsyncStorage.setItem(`africana-favorites-${email}`, JSON.stringify(rest));
+    }
+  },
+
+  isFavorite: (id: string) => !!get().favorites[id],
 
   reset: () => set({ favorites: {}, userEmail: null, collections: [] }),
 

@@ -341,7 +341,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const [isSearching, setIsSearching] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const layoutAnim = useRef(new Animated.Value(1)).current;
+  const sectionAnims = useRef<Animated.Value[]>(
+    Array.from({ length: 6 }, () => new Animated.Value(1))
+  ).current;
   const { signedIn, email } = useAuth();
   const favorites = useFavoritesStore((state) => state.favorites);
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
@@ -468,16 +470,18 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   };
 
   const handleViewModeToggle = () => {
-    layoutAnim.setValue(0);
-    Animated.parallel([
-      Animated.timing(layoutAnim, {
-        toValue: 1,
-        duration: 300,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
     setViewMode((prev) => (prev === "grid" ? "list" : "grid"));
+
+    sectionAnims.forEach((anim) => anim.setValue(0));
+
+    Animated.stagger(20, sectionAnims.map((anim) =>
+      Animated.timing(anim, {
+        toValue: 1,
+        duration: 200,
+        easing: Easing.inOut(Easing.cubic),
+        useNativeDriver: true,
+      })
+    )).start();
   };
 
   const iconScale = iconAnim.interpolate({
@@ -646,10 +650,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               style={[
                 viewMode === "list" ? styles.list : styles.grid,
                 {
-                  opacity: layoutAnim,
+                  opacity: sectionAnims[0],
                   transform: [
                     {
-                      scale: layoutAnim.interpolate({
+                      scale: sectionAnims[0].interpolate({
                         inputRange: [0, 1],
                         outputRange: [0.96, 1],
                       }),
@@ -743,10 +747,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               style={[
                 viewMode === "list" ? styles.list : styles.grid,
                 {
-                  opacity: layoutAnim,
+                  opacity: sectionAnims[1],
                   transform: [
                     {
-                      scale: layoutAnim.interpolate({
+                      scale: sectionAnims[1].interpolate({
                         inputRange: [0, 1],
                         outputRange: [0.96, 1],
                       }),
@@ -779,10 +783,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               style={[
                 viewMode === "list" ? styles.list : styles.grid,
                 {
-                  opacity: layoutAnim,
+                  opacity: sectionAnims[2],
                   transform: [
                     {
-                      scale: layoutAnim.interpolate({
+                      scale: sectionAnims[2].interpolate({
                         inputRange: [0, 1],
                         outputRange: [0.96, 1],
                       }),
@@ -832,10 +836,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               style={[
                 viewMode === "list" ? styles.list : styles.grid,
                 {
-                  opacity: layoutAnim,
+                  opacity: sectionAnims[3],
                   transform: [
                     {
-                      scale: layoutAnim.interpolate({
+                      scale: sectionAnims[3].interpolate({
                         inputRange: [0, 1],
                         outputRange: [0.96, 1],
                       }),
@@ -868,10 +872,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               style={[
                 viewMode === "list" ? styles.list : styles.grid,
                 {
-                  opacity: layoutAnim,
+                  opacity: sectionAnims[4],
                   transform: [
                     {
-                      scale: layoutAnim.interpolate({
+                      scale: sectionAnims[4].interpolate({
                         inputRange: [0, 1],
                         outputRange: [0.96, 1],
                       }),
@@ -905,10 +909,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               style={[
                 viewMode === "list" ? styles.list : styles.grid,
                 {
-                  opacity: layoutAnim,
+                  opacity: sectionAnims[5],
                   transform: [
                     {
-                      scale: layoutAnim.interpolate({
+                      scale: sectionAnims[5].interpolate({
                         inputRange: [0, 1],
                         outputRange: [0.96, 1],
                       }),

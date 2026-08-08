@@ -1,20 +1,23 @@
 import { useEffect } from "react";
 import { View, Text } from "react-native";
-import { router } from "expo-router";
+import { router, useRootNavigationState } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 
 export default function SSOCallback() {
   const { isLoaded, signedIn } = useAuth();
+  const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
-    if (!isLoaded) return;
-
-    if (signedIn) {
-      router.replace("/home");
-    } else {
-      router.replace("/home");
+    if (!rootNavigationState?.key) {
+      return;
     }
-  }, [isLoaded, signedIn]);
+
+    if (!isLoaded) {
+      return;
+    }
+
+    router.replace("/home");
+  }, [isLoaded, signedIn, rootNavigationState?.key]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>

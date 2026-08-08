@@ -23,7 +23,9 @@ export default function HomeScreen() {
   const activeTab = useHomeStore((state) => state.activeTab);
   const setActiveTab = useHomeStore((state) => state.setActiveTab);
   const { signedIn, isLoaded } = useAuth();
-  const { setHasSeenWelcome } = useAppStateStore();
+  const { setHasSeenWelcome, hasSeenWelcome } = useAppStateStore();
+  const hasSeenWelcomeRef = useRef(hasSeenWelcome);
+  hasSeenWelcomeRef.current = hasSeenWelcome;
   const prevTabRef = useRef(activeTab);
   const directionRef = useRef<"left" | "right">("right");
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -36,7 +38,7 @@ export default function HomeScreen() {
       setHasSeenWelcome(true);
       setWelcomeVisible(false);
     } else {
-      setWelcomeVisible(true);
+      setWelcomeVisible(!hasSeenWelcomeRef.current);
     }
   }, [isLoaded, signedIn, setHasSeenWelcome]);
 

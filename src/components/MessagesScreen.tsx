@@ -18,6 +18,7 @@ const NAVY = "#2C3E5B";
 export default function MessagesScreen() {
   const { signedIn } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const settingsSheetAnim = useRef(new Animated.Value(0)).current;
@@ -47,7 +48,7 @@ export default function MessagesScreen() {
       setSearchExpanded(false);
       Animated.timing(searchWidthAnim, {
         toValue: 0,
-        duration: 280,
+        duration: 240,
         useNativeDriver: false,
       }).start();
     } else {
@@ -55,12 +56,22 @@ export default function MessagesScreen() {
       searchWidthAnim.setValue(0);
       Animated.timing(searchWidthAnim, {
         toValue: 1,
-        duration: 280,
+        duration: 240,
         useNativeDriver: false,
       }).start(() => {
         searchInputRef.current?.focus();
       });
     }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchExpanded(false);
+    Animated.timing(searchWidthAnim, {
+      toValue: 0,
+      duration: 240,
+      useNativeDriver: false,
+    }).start();
   };
 
   if (!signedIn) {
@@ -83,28 +94,37 @@ export default function MessagesScreen() {
       >
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={toggleSearch} hitSlop={8} style={styles.iconButton}>
-              <Ionicons name={searchExpanded ? "close" : "search"} size={22} color={NAVY} />
-            </TouchableOpacity>
+            <Animated.View
+              style={{
+                opacity: searchWidthAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [1, 0],
+                }),
+                position: "absolute",
+                left: 0,
+              }}
+            >
+              <TouchableOpacity onPress={toggleSearch} hitSlop={8} style={styles.iconButton}>
+                <Ionicons name="search" size={22} color={NAVY} />
+              </TouchableOpacity>
+            </Animated.View>
+
             <Animated.View
               style={[
                 styles.searchExpandWrap,
                 {
-                width: searchWidthAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 215],
-                }),
-
-                  opacity: searchWidthAnim,
-                  marginLeft: searchWidthAnim.interpolate({
+                  width: searchWidthAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0, 10],
+                    outputRange: [0, 200],
                   }),
+                  opacity: searchWidthAnim,
                 },
               ]}
             >
               <View style={styles.searchInputWrap}>
-                 <Ionicons name="search" size={20} color={NAVY} />
+                <TouchableOpacity onPress={searchExpanded ? handleClearSearch : undefined} hitSlop={8}>
+                  <Ionicons name={searchExpanded ? "close" : "search"} size={20} color={NAVY} />
+                </TouchableOpacity>
                 <TextInput
                   ref={searchInputRef}
                   value={searchQuery}
@@ -117,14 +137,18 @@ export default function MessagesScreen() {
             </Animated.View>
           </View>
 
+          <TouchableOpacity
+            style={styles.sortButton}
+            onPress={() => setShowSortDropdown(!showSortDropdown)}
+            hitSlop={8}
+          >
+            <Text style={styles.sortButtonText}>Sort</Text>
+            <Ionicons name={showSortDropdown ? "chevron-up" : "chevron-down"} size={14} color={NAVY} />
+          </TouchableOpacity>
           <TouchableOpacity onPress={openSettings} hitSlop={8} style={styles.iconButton}>
             <Ionicons name="settings-outline" size={22} color={NAVY} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}} hitSlop={8} style={styles.iconButton}>
-            <Ionicons name="swap-vertical-outline" size={22} color={NAVY} />
-          </TouchableOpacity>
         </View>
-
         <View style={styles.emptyState}>
           <Ionicons name="chatbubble-ellipses-outline" size={64} color="#9CA3AF" />
           <Text style={styles.emptyTitle}>You don&apos;t have any messages</Text>
@@ -244,7 +268,8 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: "#F8F8F8",
     borderRadius: 20,
-    paddingHorizontal: 14,
+    paddingLeft: 8,
+    paddingRight: 14,
     paddingVertical: 10,
     height: 40,
     borderWidth: 2,
@@ -256,9 +281,26 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: NAVY,
     paddingVertical: 0,
+    textAlign: "left",
   },
   iconButton: {
     padding: 8,
+  },
+  sortButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  sortButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: NAVY,
   },
   emptyState: {
     alignItems: "center",
