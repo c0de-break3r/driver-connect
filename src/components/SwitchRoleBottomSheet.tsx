@@ -97,6 +97,13 @@ export default function SwitchRoleBottomSheet({ visible, onClose, onSelectRole, 
 
   const handleRolePress = (role: Role) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (role === "owner") {
+      onSelectRole(role, {});
+      closeSheet();
+      return;
+    }
+
     setSelectedRole(role);
     setFormData({});
   };

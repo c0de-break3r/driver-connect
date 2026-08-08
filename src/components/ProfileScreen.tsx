@@ -20,6 +20,7 @@ import { useNotificationStore } from "@/store/useNotificationStore";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import SwitchRoleBottomSheet from "./SwitchRoleBottomSheet";
+import RoleSwitchTransition from "./RoleSwitchTransition";
 import type { UserRole } from "@/store/useRoleStore";
 
 const NAVY = "#2C3E5B";
@@ -56,6 +57,7 @@ export default function ProfileScreen() {
   const unreadNotificationCount = useNotificationStore((state) => state.unreadCount);
   const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
   const [showSwitchRole, setShowSwitchRole] = useState(false);
+  const [switchingRole, setSwitchingRole] = useState<UserRole | null>(null);
 
   const displayName = firstName || email?.split("@")[0] || "Guest";
   const roleLabel = role ? ROLE_LABELS[role] : "Guest";
@@ -102,6 +104,7 @@ export default function ProfileScreen() {
 
   const handleRoleSelected = (newRole: UserRole, formData: Record<string, string>) => {
     setRole(newRole);
+    setSwitchingRole(newRole);
   };
 
   const handleSignOut = async () => {
@@ -202,6 +205,10 @@ export default function ProfileScreen() {
         onSelectRole={handleRoleSelected}
         currentRole={role}
       />
+
+      {switchingRole ? (
+        <RoleSwitchTransition role={switchingRole} />
+      ) : null}
     </View>
   );
 }
