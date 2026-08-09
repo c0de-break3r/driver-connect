@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { images } from "@/constants/images";
 
 const NAVY = "#2C3E5B";
 
@@ -29,20 +31,19 @@ export default function RoleSwitchTransition({ role }: RoleSwitchTransitionProps
 
   useEffect(() => {
     Animated.sequence([
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 1200,
-          easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.delay(400),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2600),
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 1200,
+        easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2600),
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 300,
@@ -66,22 +67,49 @@ export default function RoleSwitchTransition({ role }: RoleSwitchTransitionProps
     outputRange: ["0deg", "360deg"],
   });
 
+  const isOwner = role === "owner";
+
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <View style={styles.content}>
-        <Animated.View
-          style={[
-            styles.iconWrap,
-            {
-              transform: [
-                { perspective: 800 },
-                { rotateY: rotateInterpolate },
-              ],
-            },
-          ]}
-        >
-          <Ionicons name={ROLE_ICONS[role]} size={120} color={NAVY} />
-        </Animated.View>
+        <View style={styles.iconWrap}>
+          {isOwner ? (
+            <View style={styles.slideContainer}>
+              <Image source={images.roleOwner} style={styles.slideImage} contentFit="contain" />
+              <Animated.View
+                style={[
+                  styles.slideOverlay,
+                  {
+                    transform: [
+                      {
+                        translateX: rotateAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, -320],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Image source={images.roleGuest} style={styles.slideImage} contentFit="contain" />
+              </Animated.View>
+            </View>
+          ) : (
+            <Animated.View
+              style={[
+                styles.iconWrap,
+                {
+                  transform: [
+                    { perspective: 800 },
+                    { rotateY: rotateInterpolate },
+                  ],
+                },
+              ]}
+            >
+              <Ionicons name={ROLE_ICONS[role]} size={120} color={NAVY} />
+            </Animated.View>
+          )}
+        </View>
 
         <Text style={styles.label}>
           Switching to {ROLE_LABELS[role] || role}
@@ -105,10 +133,27 @@ const styles = StyleSheet.create({
     gap: 32,
   },
   iconWrap: {
-    width: 160,
-    height: 160,
+    width: 320,
+    height: 320,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+  },
+  slideContainer: {
+    width: 320,
+    height: 320,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  slideOverlay: {
+    ...StyleSheet.absoluteFill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  slideImage: {
+    width: 320,
+    height: 320,
   },
   label: {
     fontSize: 20,

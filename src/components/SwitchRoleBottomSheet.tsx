@@ -151,7 +151,7 @@ export default function SwitchRoleBottomSheet({ visible, onClose, onSelectRole, 
 
           {!selectedRole ? (
             <ScrollView contentContainerStyle={styles.roleList} showsVerticalScrollIndicator={false}>
-              {ROLE_OPTIONS.filter((option) => option.value !== currentRole).map((option) => (
+              {ROLE_OPTIONS.filter((option) => option.value !== "client").map((option) => (
                 <TouchableOpacity
                   key={option.value}
                   style={styles.roleItem}
