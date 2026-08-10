@@ -307,18 +307,19 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 80,
+    paddingVertical: 60,
   },
   emptyImage: {
     width: 180,
     height: 180,
+    marginBottom: 24,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
     color: NAVY,
-    marginTop: 24,
-    marginBottom: 8,
+    textAlign: "center",
+    marginBottom: 12,
   },
   emptySubtitle: {
     fontSize: 15,
@@ -326,7 +327,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     textAlign: "center",
     lineHeight: 22,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
   },
   modalOverlay: {
     flex: 1,

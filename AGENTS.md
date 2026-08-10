@@ -527,6 +527,16 @@ Allowed animation directions:
 
 Use `StyleSheet` or inline styles for animated values and component-specific props that NativeWind cannot express.
 
+#### Owner Dashboard Animations
+
+The owner dashboard uses the following shared animation patterns. Keep these consistent across all owner tabs and role dashboards.
+
+- **Tab switch animation**: when switching between owner tabs (`today`, `calendar`, `listings`, `messages`, `menu`), animate the content with a combined fade + slide + scale transition. Use `Animated.parallel` with `fadeAnim`, `slideY`, and `scaleAnim`. Direction is derived from tab order; duration ~280ms with a custom ease-out curve and a spring scale bounce (`damping: 18, stiffness: 160, mass: 0.8`).
+- **Tab bounce**: bottom nav items use `useTabBounce` to give a subtle press feedback.
+- **Search bar expansion**: calendar and messages search bars expand from the right using `Animated.timing` on width (`useNativeDriver: false`). The search icon is separate from the expanding bar.
+- **Today/Upcoming indicator**: a sliding `Animated.View` indicator moves between the two subtabs using `translateX` with a spring animation. The indicator width is `50%` of the tab bar, positioned absolutely inside a `position: "relative", overflow: "hidden"` container.
+- **Settings sheet**: messages settings slide up from the bottom using `translateY` interpolation with `useNativeDriver: true`.
+
 ---
 
 ## Maps / GPS Rules

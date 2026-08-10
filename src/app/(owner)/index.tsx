@@ -13,11 +13,10 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
+  BackHandler,
   Platform,
   Pressable,
   ScrollView,
@@ -27,6 +26,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useEffect, useRef, useState, useCallback } from "react";
 import OwnerListingsContent from "./_components/OwnerListingsContent";
 import OwnerMessagesScreen from "./messages";
 
@@ -73,6 +74,19 @@ export default function OwnerDashboard() {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchWidthAnim = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef<TextInput>(null);
+
+  const tabIndicatorAnim = useRef(new Animated.Value(0)).current;
+  const [tabBarWidth, setTabBarWidth] = useState(0);
+
+  useEffect(() => {
+    Animated.spring(tabIndicatorAnim, {
+      toValue: activeSubTab === "today" ? 0 : 1,
+      useNativeDriver: true,
+      damping: 18,
+      stiffness: 160,
+      mass: 0.8,
+    }).start();
+  }, [activeSubTab]);
 
   const toggleSearch = () => {
     if (searchExpanded) {
@@ -191,6 +205,27 @@ export default function OwnerDashboard() {
     setSwitchingRole("client");
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (switchingRole) {
+          return true;
+        }
+        if (activeTab !== "menu") {
+          setActiveTab("menu");
+          return true;
+        }
+        BackHandler.exitApp();
+        return true;
+      };
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress,
+      );
+      return () => subscription.remove();
+    }, [switchingRole, activeTab]),
+  );
+
   const handlePickAvatar = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
@@ -242,7 +277,14 @@ export default function OwnerDashboard() {
         }}
       >
         {activeTab === "messages" ? (
-          <OwnerMessagesScreen />
+          <View
+            style={{
+              paddingTop: Platform.select({ ios: 60, android: 40 }),
+              flex: 1,
+            }}
+          >
+            <OwnerMessagesScreen />
+          </View>
         ) : (
           <>
             {activeTab === "menu" && !switchingRole ? (
@@ -290,6 +332,8 @@ export default function OwnerDashboard() {
                   </TouchableOpacity>
                 </View>
               </View>
+            ) : activeTab !== "menu" && !switchingRole ? (
+              <View style={styles.menuHeaderSpacer} />
             ) : null}
             <ScrollView
               style={{ flex: 1 }}
@@ -298,39 +342,53 @@ export default function OwnerDashboard() {
             >
             {activeTab === "today" && (
               <View>
-                <View style={styles.tabBar}>
-                  <TouchableOpacity
+                <View
+                  style={styles.tabBar}
+                  onLayout={(e) => setTabBarWidth(e.nativeEvent.layout.width)}
+                >
+                  <Animated.View
                     style={[
-                      styles.tab,
-                      activeSubTab === "today" && styles.tabActive,
+                      styles.tabIndicator,
+                      {
+                        transform: [
+                          {
+                            translateX: tabIndicatorAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, tabBarWidth ? (tabBarWidth - 8) / 2 : 0],
+                            }),
+                          },
+                        ],
+                      },
                     ]}
-                    onPress={() => setActiveSubTab("today")}
-                  >
-                    <Text
-                      style={[
-                        styles.tabText,
-                        activeSubTab === "today" && styles.tabTextActive,
-                      ]}
+                  />
+                  <View style={styles.tabRow}>
+                    <TouchableOpacity
+                      style={styles.tab}
+                      onPress={() => setActiveSubTab("today")}
                     >
-                      Today
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.tab,
-                      activeSubTab === "upcoming" && styles.tabActive,
-                    ]}
-                    onPress={() => setActiveSubTab("upcoming")}
-                  >
-                    <Text
-                      style={[
-                        styles.tabText,
-                        activeSubTab === "upcoming" && styles.tabTextActive,
-                      ]}
+                      <Text
+                        style={[
+                          styles.tabText,
+                          activeSubTab === "today" && styles.tabTextActive,
+                        ]}
+                      >
+                        Today
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.tab}
+                      onPress={() => setActiveSubTab("upcoming")}
                     >
-                      Upcoming
-                    </Text>
-                  </TouchableOpacity>
+                      <Text
+                        style={[
+                          styles.tabText,
+                          activeSubTab === "upcoming" && styles.tabTextActive,
+                        ]}
+                      >
+                        Upcoming
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {activeSubTab === "today" ? (
@@ -392,57 +450,44 @@ export default function OwnerDashboard() {
             {activeTab === "calendar" && (
               <View>
                 <View style={styles.headerRow}>
-                  <View style={styles.headerLeft} />
-                  <View style={styles.headerRight}>
-                    <Animated.View
-                      style={{
-                        opacity: searchWidthAnim.interpolate({
+                  <Animated.View
+                    style={[
+                      styles.searchExpandWrap,
+                      {
+                        width: searchWidthAnim.interpolate({
                           inputRange: [0, 1],
-                          outputRange: [1, 0],
+                          outputRange: [0, 250],
                         }),
-                      }}
-                    >
-                      <TouchableOpacity onPress={toggleSearch} hitSlop={8}>
-                        <Ionicons name="search" size={22} color={NAVY} />
-                      </TouchableOpacity>
-                    </Animated.View>
-
-                    <Animated.View
-                      style={[
-                        styles.searchExpandWrap,
-                        {
-                          width: searchWidthAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, 200],
-                          }),
-                          opacity: searchWidthAnim,
-                        },
-                      ]}
-                    >
-                      <View style={styles.searchInputWrap}>
-                        <TextInput
-                          ref={searchInputRef}
-                          value={searchQuery}
-                          onChangeText={setSearchQuery}
-                          placeholder="Search calendars"
-                          placeholderTextColor="#9CA3AF"
-                          style={styles.searchInput}
+                        opacity: searchWidthAnim,
+                      },
+                    ]}
+                  >
+                    <View style={styles.searchInputWrap}>
+                      <TextInput
+                        ref={searchInputRef}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        placeholder="Search calendars"
+                        placeholderTextColor="#9CA3AF"
+                        style={styles.searchInput}
+                      />
+                      <TouchableOpacity
+                        onPress={
+                          searchExpanded ? handleClearSearch : undefined
+                        }
+                        hitSlop={8}
+                      >
+                        <Ionicons
+                          name={searchExpanded ? "close" : "search"}
+                          size={20}
+                          color={NAVY}
                         />
-                        <TouchableOpacity
-                          onPress={
-                            searchExpanded ? handleClearSearch : undefined
-                          }
-                          hitSlop={8}
-                        >
-                          <Ionicons
-                            name={searchExpanded ? "close" : "search"}
-                            size={20}
-                            color={NAVY}
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    </Animated.View>
-                  </View>
+                      </TouchableOpacity>
+                    </View>
+                  </Animated.View>
+                  <TouchableOpacity onPress={toggleSearch} hitSlop={8}>
+                    <Ionicons name="search" size={22} color={NAVY} />
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.centerContent}>
                   <Image
@@ -460,7 +505,7 @@ export default function OwnerDashboard() {
             )}
 
             {activeTab === "listings" && (
-              <View>
+              <View style={{ marginTop: 10 }}>
                 <OwnerListingsContent />
               </View>
             )}
@@ -537,6 +582,11 @@ export default function OwnerDashboard() {
                       <Ionicons name="book-outline" size={20} color={NAVY} />
                     </View>
                     <Text style={styles.menuLabel}>Hosting resources</Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color="#9CA3AF"
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.menuItem, styles.menuItemBorder]}
@@ -549,6 +599,11 @@ export default function OwnerDashboard() {
                       />
                     </View>
                     <Text style={styles.menuLabel}>Get help</Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color="#9CA3AF"
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.menuItem, styles.menuItemBorder]}
@@ -557,6 +612,11 @@ export default function OwnerDashboard() {
                       <Ionicons name="people-outline" size={20} color={NAVY} />
                     </View>
                     <Text style={styles.menuLabel}>Find a co-host</Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color="#9CA3AF"
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.menuItem, styles.menuItemBorder]}
@@ -583,6 +643,11 @@ export default function OwnerDashboard() {
                       <Ionicons name="people-outline" size={20} color={NAVY} />
                     </View>
                     <Text style={styles.menuLabel}>Refer a host</Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color="#9CA3AF"
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.menuItem}>
                     <View style={styles.menuIconWrap}>
@@ -593,19 +658,26 @@ export default function OwnerDashboard() {
                       />
                     </View>
                     <Text style={styles.menuLabel}>Legal</Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color="#9CA3AF"
+                    />
                   </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                  style={styles.logoutButton}
-                  onPress={handleMenuLogout}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.logoutIconWrap}>
-                    <Ionicons name="power-outline" size={20} color="#E74C3C" />
-                  </View>
-                  <Text style={styles.logoutText}>Log Out</Text>
-                </TouchableOpacity>
+                <View style={styles.logoutContainer}>
+                  <TouchableOpacity
+                    style={styles.logoutButton}
+                    onPress={handleMenuLogout}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.logoutIconWrap}>
+                      <Ionicons name="power-outline" size={20} color="#E74C3C" />
+                    </View>
+                    <Text style={styles.logoutText}>Log Out</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </ScrollView>
@@ -731,7 +803,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   scrollContent: {
-    paddingTop: 16,
+    paddingTop: 0,
     paddingHorizontal: 24,
     paddingBottom: 48,
   },
@@ -739,6 +811,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingTop: Platform.select({ ios: 60, android: 40 }),
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+  },
+  menuHeaderSpacer: {
     paddingTop: Platform.select({ ios: 60, android: 40 }),
     paddingHorizontal: 24,
     paddingBottom: 16,
@@ -890,13 +967,16 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: NAVY,
   },
+  logoutContainer: {
+    marginBottom: 32,
+  },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     paddingVertical: 16,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   logoutIconWrap: {
     width: 24,
@@ -931,15 +1011,31 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 4,
     marginBottom: 24,
+    marginTop: 10,
+    position: "relative",
+    overflow: "hidden",
+  },
+  tabIndicator: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    width: "50%",
+    height: "100%",
+    backgroundColor: "#2C3E5B",
+    borderRadius: 12,
+  },
+  tabRow: {
+    flexDirection: "row",
+    flex: 1,
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
     alignItems: "center",
-    borderRadius: 12,
+    justifyContent: "center",
   },
   tabActive: {
-    backgroundColor: "#2C3E5B",
+    backgroundColor: "transparent",
   },
   tabText: {
     fontSize: 15,
@@ -1049,6 +1145,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 24,
+    marginTop: 10,
   },
   headerTitle: {
     fontSize: 32,
@@ -1113,8 +1210,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
-    marginTop: 120,
-    gap: 16,
+    paddingVertical: 60,
+    gap: 0,
   },
   message: {
     fontSize: 16,

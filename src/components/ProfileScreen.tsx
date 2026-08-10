@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 16,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   logoutIconWrap: {
     width: 24,

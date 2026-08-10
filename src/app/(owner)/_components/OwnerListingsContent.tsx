@@ -111,7 +111,7 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
               }}
             >
               <TouchableOpacity onPress={toggleSearch} hitSlop={8}>
-                <Ionicons name="search-outline" size={22} color="#374151" />
+                <Ionicons name="search" size={22} color={NAVY} />
               </TouchableOpacity>
             </Animated.View>
 
@@ -129,7 +129,7 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
             >
               <View style={styles.searchInputWrap}>
                 <TouchableOpacity onPress={searchExpanded ? handleClearSearch : undefined} hitSlop={8}>
-                  <Ionicons name={searchExpanded ? "close" : "search"} size={20} color="#374151" />
+                  <Ionicons name={searchExpanded ? "close" : "search"} size={20} color={NAVY} />
                 </TouchableOpacity>
                 <TextInput
                   ref={searchInputRef}
@@ -329,6 +329,7 @@ const styles = StyleSheet.create({
   emptyImage: {
     width: 180,
     height: 180,
+    marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 22,

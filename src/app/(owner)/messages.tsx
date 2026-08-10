@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import {
   Animated,
   Modal,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -214,7 +213,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: Platform.select({ ios: 60, android: 40 }),
+    paddingTop: 0,
     paddingBottom: 48,
   },
   loginContainer: {
@@ -252,6 +251,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 20,
+    marginTop: 10,
     minHeight: 36,
   },
   headerLeft: {
@@ -314,11 +314,11 @@ const styles = StyleSheet.create({
     height: 180,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
     color: NAVY,
     marginTop: 24,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   emptySubtitle: {
     fontSize: 15,
