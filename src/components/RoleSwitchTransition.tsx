@@ -48,18 +48,6 @@ export default function RoleSwitchTransition({
     contentFade.setValue(0);
     scaleAnim.setValue(0.8);
 
-    const navigate = () => {
-      if (role === "owner") {
-        router.replace("/(owner)" as any);
-      } else if (role === "driver") {
-        router.replace("/(driver)" as any);
-      } else if (role === "corporate") {
-        router.replace("/(corporate)" as any);
-      } else {
-        router.replace("/home" as any);
-      }
-    };
-
     Animated.sequence([
       Animated.parallel([
         Animated.timing(contentFade, {
@@ -76,12 +64,17 @@ export default function RoleSwitchTransition({
         }),
       ]),
       Animated.delay(2200),
-      Animated.timing(contentFade, {
-        toValue: 0,
-        duration: 280,
-        useNativeDriver: true,
-      }),
-    ]).start(navigate);
+    ]).start(() => {
+      if (role === "owner") {
+        router.replace("/(owner)" as any);
+      } else if (role === "driver") {
+        router.replace("/(driver)" as any);
+      } else if (role === "corporate") {
+        router.replace("/(corporate)" as any);
+      } else {
+        router.replace("/home" as any);
+      }
+    });
   }, [role, contentFade, scaleAnim]);
 
   return (

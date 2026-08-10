@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 16,
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 48,
   },
   menuHeaderRow: {
     flexDirection: "row",
