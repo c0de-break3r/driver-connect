@@ -8,8 +8,9 @@
 import googleG from "@/assets/images/google-g.svg";
 import appIcon from "@/assets/images/splash-icon.png";
 import heroIllustrator from "@/assets/images/hero-illustrator.jpg";
-import roleGuest from "@/assets/images/role-guest.jpg";
-import roleOwner from "@/assets/images/role-owner.jpg";
+import roleGuest from "@/assets/images/illustrator-icons/role-guest.png";
+import roleOwner from "@/assets/images/illustrator-icons/role-owner.png";
+import teslaCybertruck from "@/assets/images/illustrator-icons/teslacybertruck.png";
 
 export const images = {
   appIcon,
@@ -17,4 +18,5 @@ export const images = {
   heroIllustrator,
   roleGuest,
   roleOwner,
+  teslaCybertruck,
 };

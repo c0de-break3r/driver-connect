@@ -10,8 +10,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthProvider";
+import messages3dIcon from "@/assets/images/illustrator-icons/3dicons-chat-text.png";
 
 const NAVY = "#2C3E5B";
 
@@ -150,7 +152,7 @@ export default function OwnerMessagesScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.emptyState}>
-          <Ionicons name="chatbubble-ellipses-outline" size={64} color="#9CA3AF" />
+          <Image source={messages3dIcon} style={styles.emptyImage} contentFit="contain" />
           <Text style={styles.emptyTitle}>You don&apos;t have any messages</Text>
           <Text style={styles.emptySubtitle}>When you receive a new message, it will appear here.</Text>
         </View>
@@ -306,6 +308,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 80,
+  },
+  emptyImage: {
+    width: 180,
+    height: 180,
   },
   emptyTitle: {
     fontSize: 18,

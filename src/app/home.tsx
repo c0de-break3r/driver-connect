@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Animated, Dimensions, StyleSheet, Text, View, Pressable } from "react-native";
+import { Animated, StyleSheet, Text, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 import { HomeScreenContent } from "./HomeScreenContent";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
@@ -12,14 +13,15 @@ import MessagesScreen from "@/components/MessagesScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import { useHomeStore } from "@/store/useHomeStore";
 import { useAppStateStore } from "@/store/useAppStateStore";
+import { useRoleStore } from "@/store/useRoleStore";
+import { getPostAuthRoute } from "@/lib/routing";
 import FavoritesScreen from "@/components/FavoritesScreen";
 
 const NAVY = "#2C3E5B";
-const TAB_ORDER = ["explore", "favorites", "trips", "messages", "profile"] as const;
-const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function HomeScreen() {
   const [welcomeVisible, setWelcomeVisible] = useState(false);
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const activeTab = useHomeStore((state) => state.activeTab);
   const setActiveTab = useHomeStore((state) => state.setActiveTab);
   const { signedIn, isLoaded } = useAuth();
@@ -27,15 +29,14 @@ export default function HomeScreen() {
   const hasSeenWelcomeRef = useRef(hasSeenWelcome);
   hasSeenWelcomeRef.current = hasSeenWelcome;
   const prevTabRef = useRef(activeTab);
-  const directionRef = useRef<"left" | "right">("right");
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.97)).current;
   const isFirstRender = useRef(true);
 
   useEffect(() => {
     if (!isLoaded) return;
 
     if (signedIn) {
-      setHasSeenWelcome(true);
       setWelcomeVisible(false);
     } else {
       setWelcomeVisible(!hasSeenWelcomeRef.current);
@@ -45,34 +46,46 @@ export default function HomeScreen() {
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      fadeAnim.setValue(1);
+      scaleAnim.setValue(1);
       return;
     }
 
-    const prevIndex = TAB_ORDER.indexOf(prevTabRef.current as (typeof TAB_ORDER)[number]);
-    const nextIndex = TAB_ORDER.indexOf(activeTab as (typeof TAB_ORDER)[number]);
-    const direction: "left" | "right" = nextIndex > prevIndex ? "right" : "left";
-    directionRef.current = direction;
+    fadeAnim.setValue(0);
+    scaleAnim.setValue(0.97);
 
-    const startOffset = direction === "right" ? SCREEN_WIDTH : -SCREEN_WIDTH;
-    slideAnim.setValue(startOffset);
-
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-      damping: 18,
-      stiffness: 120,
-    }).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 280,
+        easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        damping: 18,
+        stiffness: 160,
+        mass: 0.8,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
     prevTabRef.current = activeTab;
-  }, [activeTab, isLoaded, signedIn, slideAnim]);
+  }, [activeTab, isLoaded, signedIn, fadeAnim, scaleAnim]);
 
   const openAuth = () => {
     setWelcomeVisible(true);
   };
 
   const handleAuthDismiss = () => {
+    setHasSeenWelcome(true);
     setWelcomeVisible(false);
-    setActiveTab("explore");
+    const role = useRoleStore.getState().role;
+    if (role) {
+      router.replace(getPostAuthRoute(role) as any);
+    } else {
+      setActiveTab("explore");
+    }
   };
 
   const renderContent = () => {
@@ -140,7 +153,7 @@ export default function HomeScreen() {
       return <MessagesScreen />;
     }
     if (activeTab === "profile") {
-      return <ProfileScreen />;
+      return <ProfileScreen onSwitchingRoleChange={setIsSwitchingRole} />;
     }
 
     return <HomeScreenContent onLoginPress={() => {}} />;
@@ -149,12 +162,18 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.content}>
-        <Animated.View style={{ flex: 1, transform: [{ translateX: slideAnim }] }}>
+        <Animated.View
+          style={{
+            flex: 1,
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          }}
+        >
           {renderContent()}
         </Animated.View>
       </View>
 
-      {!welcomeVisible ? (
+      {!welcomeVisible && !isSwitchingRole ? (
         <View style={styles.bottomNav}>
           <NavItem
             icon="compass-outline"

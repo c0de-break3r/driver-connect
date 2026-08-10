@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Alert,
   Platform,
@@ -48,7 +48,11 @@ const menuItems: MenuItem[] = [
   { icon: "document-text-outline", label: "Legal" },
 ];
 
-export default function ProfileScreen() {
+export default function ProfileScreen({
+  onSwitchingRoleChange,
+}: {
+  onSwitchingRoleChange?: (isSwitching: boolean) => void;
+}) {
   const { firstName, email, signOut } = useAuth();
   const role = useRoleStore((state) => state.role);
   const setRole = useRoleStore((state) => state.setRole);
@@ -58,6 +62,11 @@ export default function ProfileScreen() {
   const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
   const [showSwitchRole, setShowSwitchRole] = useState(false);
   const [switchingRole, setSwitchingRole] = useState<UserRole | null>(null);
+  const [switchingFromRole, setSwitchingFromRole] = useState<UserRole | null>(null);
+
+  useEffect(() => {
+    onSwitchingRoleChange?.(!!switchingRole);
+  }, [switchingRole, onSwitchingRoleChange]);
 
   const displayName = firstName || email?.split("@")[0] || "Guest";
   const roleLabel = role ? ROLE_LABELS[role] : "Guest";
@@ -103,14 +112,20 @@ export default function ProfileScreen() {
   };
 
   const handleRoleSelected = (newRole: UserRole, formData: Record<string, string>) => {
+    setSwitchingFromRole(role);
     setRole(newRole);
     setSwitchingRole(newRole);
   };
 
   const handleSignOut = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setAvatarUri(null);
-    await signOut();
+    try {
+      useAppStateStore.getState().setHasSeenWelcome(false);
+      await signOut();
+      router.replace("/" as any);
+    } catch {
+      Alert.alert("Error", "Unable to log out. Please try again.");
+    }
   };
 
   const handleNotificationPress = () => {
@@ -121,6 +136,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.safeArea}>
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -207,7 +223,7 @@ export default function ProfileScreen() {
       />
 
       {switchingRole ? (
-        <RoleSwitchTransition role={switchingRole} />
+        <RoleSwitchTransition role={switchingRole} fromRole={switchingFromRole ?? undefined} />
       ) : null}
     </View>
   );

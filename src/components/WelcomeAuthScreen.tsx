@@ -17,11 +17,11 @@ import { Svg, Circle } from "react-native-svg";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 
 import { images } from "@/constants/images";
 import { useAuthEntryFlow } from "@/hooks/useAuthEntryFlow";
 import { useAuth } from "@/contexts/AuthProvider";
+import { navigatePostAuth } from "@/lib/routing";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
@@ -121,7 +121,7 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
       if (onDismiss) {
         onDismiss();
       } else {
-        router.replace("/home");
+        navigatePostAuth();
       }
     });
   }, [sheetAnim, closeRotateAnim, fadeAnim, onDismiss, sheetState]);

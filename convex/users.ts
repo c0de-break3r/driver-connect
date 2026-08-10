@@ -366,3 +366,68 @@ export const savePushToken = mutation({
     });
   },
 });
+
+export const getOwnerProfile = query({
+  args: { userId: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("ownerProfiles"),
+      _creationTime: v.number(),
+      userId: v.string(),
+      companyName: v.optional(v.string()),
+      fleetSize: v.optional(v.number()),
+      referralCode: v.optional(v.string()),
+    }),
+    v.null()
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("ownerProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .unique();
+  },
+});
+
+export const createOwnerProfile = mutation({
+  args: {
+    userId: v.string(),
+    companyName: v.optional(v.string()),
+    fleetSize: v.optional(v.number()),
+  },
+  returns: v.id("ownerProfiles"),
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("ownerProfiles", {
+      userId: args.userId,
+      companyName: args.companyName,
+      fleetSize: args.fleetSize,
+    });
+  },
+});
+
+export const updateOwnerProfile = mutation({
+  args: {
+    userId: v.string(),
+    companyName: v.optional(v.string()),
+    fleetSize: v.optional(v.number()),
+    referralCode: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("ownerProfiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .unique();
+
+    if (!existing) {
+      return null;
+    }
+
+    await ctx.db.patch(existing._id, {
+      ...(args.companyName !== undefined && { companyName: args.companyName }),
+      ...(args.fleetSize !== undefined && { fleetSize: args.fleetSize }),
+      ...(args.referralCode !== undefined && { referralCode: args.referralCode }),
+    });
+
+    return null;
+  },
+});

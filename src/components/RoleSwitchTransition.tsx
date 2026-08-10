@@ -3,12 +3,14 @@ import { Animated, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import type { UserRole } from "@/store/useRoleStore";
 import { images } from "@/constants/images";
 
 const NAVY = "#2C3E5B";
 
 type RoleSwitchTransitionProps = {
-  role: "owner" | "driver" | "client" | "corporate";
+  role: UserRole;
+  fromRole?: UserRole;
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -18,82 +20,85 @@ const ROLE_LABELS: Record<string, string> = {
   corporate: "Corporate",
 };
 
-const ROLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-  owner: "car-outline",
-  driver: "person-outline",
-  client: "person-outline",
-  corporate: "business-outline",
-};
+export default function RoleSwitchTransition({
+  role,
+  fromRole,
+}: RoleSwitchTransitionProps) {
+  const contentFade = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
-export default function RoleSwitchTransition({ role }: RoleSwitchTransitionProps) {
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const showTargetRoleImage = role === "owner" || role === "client";
+
+  const targetRoleImage =
+    role === "owner"
+      ? images.roleOwner
+      : role === "client"
+        ? images.roleGuest
+        : null;
+
+  const fallbackIcon = role === "owner"
+    ? "car-outline"
+    : role === "client"
+      ? "person-outline"
+      : role === "driver"
+        ? "person-outline"
+        : "business-outline";
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.delay(2600),
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 1200,
-        easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
-        useNativeDriver: true,
-      }),
-      Animated.delay(2600),
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
+    contentFade.setValue(0);
+    scaleAnim.setValue(0.8);
+
+    const navigate = () => {
       if (role === "owner") {
-        router.replace("/(owner)");
+        router.replace("/(owner)" as any);
       } else if (role === "driver") {
         router.replace("/(driver)" as any);
       } else if (role === "corporate") {
         router.replace("/(corporate)" as any);
       } else {
-        router.replace("/(client)" as any);
+        router.replace("/home" as any);
       }
-    });
-  }, [role, rotateAnim, fadeAnim]);
+    };
 
-  const rotateInterpolate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
-
-  const isOwner = role === "owner";
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(contentFade, {
+          toValue: 1,
+          duration: 320,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          damping: 14,
+          stiffness: 160,
+          mass: 0.8,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.delay(2200),
+      Animated.timing(contentFade, {
+        toValue: 0,
+        duration: 280,
+        useNativeDriver: true,
+      }),
+    ]).start(navigate);
+  }, [role, contentFade, scaleAnim]);
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <View style={styles.content}>
+    <View style={styles.container}>
+      <Animated.View
+        style={[
+          styles.content,
+          { opacity: contentFade, transform: [{ scale: scaleAnim }] },
+        ]}
+      >
         <View style={styles.iconWrap}>
-          {isOwner ? (
-            <View style={styles.slideContainer}>
-              <Image source={images.roleOwner} style={styles.slideImage} contentFit="contain" />
-              <Animated.View
-                style={[
-                  styles.slideOverlay,
-                  {
-                    transform: [
-                      {
-                        translateX: rotateAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, -320],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <Image source={images.roleGuest} style={styles.slideImage} contentFit="contain" />
-              </Animated.View>
-            </View>
+          {showTargetRoleImage && targetRoleImage ? (
+            <Image
+              source={targetRoleImage}
+              style={styles.slideImage}
+              contentFit="contain"
+            />
           ) : (
             <Animated.View
               style={[
@@ -101,12 +106,15 @@ export default function RoleSwitchTransition({ role }: RoleSwitchTransitionProps
                 {
                   transform: [
                     { perspective: 800 },
-                    { rotateY: rotateInterpolate },
+                    { rotateY: contentFade.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["0deg", "360deg"],
+                    })},
                   ],
                 },
               ]}
             >
-              <Ionicons name={ROLE_ICONS[role]} size={120} color={NAVY} />
+              <Ionicons name={fallbackIcon as keyof typeof Ionicons.glyphMap} size={120} color={NAVY} />
             </Animated.View>
           )}
         </View>
@@ -114,8 +122,8 @@ export default function RoleSwitchTransition({ role }: RoleSwitchTransitionProps
         <Text style={styles.label}>
           Switching to {ROLE_LABELS[role] || role}
         </Text>
-      </View>
-    </Animated.View>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -138,18 +146,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-  },
-  slideContainer: {
-    width: 320,
-    height: 320,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  slideOverlay: {
-    ...StyleSheet.absoluteFill,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
   },
   slideImage: {
     width: 320,
