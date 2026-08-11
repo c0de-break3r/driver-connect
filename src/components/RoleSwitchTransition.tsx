@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import type { UserRole } from "@/store/useRoleStore";
 import { images } from "@/constants/images";
+import { useHomeStore } from "@/store/useHomeStore";
 
 const NAVY = "#2C3E5B";
 
@@ -72,6 +73,7 @@ export default function RoleSwitchTransition({
       } else if (role === "corporate") {
         router.replace("/(corporate)" as any);
       } else {
+        useHomeStore.getState().setActiveTab("explore");
         router.replace("/home" as any);
       }
     });

@@ -17,6 +17,8 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { router } from "expo-router";
 import { useFavoritesStore, type VehicleFavorite } from "@/store/useFavoritesStore";
 import { VEHICLES } from "@/app/HomeScreenContent";
+import { images } from "@/constants/images";
+import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -222,11 +224,11 @@ export default function FavoritesScreen() {
         )}
 
         {favoriteVehicles.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="heart-outline" size={48} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>No favorites yet</Text>
-            <Text style={styles.emptySubtitle}>Tap the heart icon on any vehicle to save it here.</Text>
-          </View>
+          <EmptyState
+            image={images.favoritesHeart}
+            title="No favorites yet"
+            subtitle="Tap the heart icon on any vehicle to save it here."
+          />
         ) : (
           <View style={styles.grid}>
             {favoriteVehicles.map((vehicle) => (

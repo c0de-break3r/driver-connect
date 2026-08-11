@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFavoritesStore, type VehicleFavorite } from "@/store/useFavoritesStore";
 import { VEHICLES } from "@/app/HomeScreenContent";
+import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
 
@@ -40,16 +41,14 @@ export default function CollectionDetailScreen() {
   if (!collection) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={20} color={NAVY} />
-          </Pressable>
-          <Text style={styles.headerTitle}>Collection</Text>
-          <View style={styles.headerRight} />
-        </View>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>Collection not found</Text>
-        </View>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={20} color={NAVY} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Collection</Text>
+        <View style={styles.headerRight} />
+      </View>
+      <EmptyState title="Collection not found" />
       </View>
     );
   }
@@ -71,13 +70,10 @@ export default function CollectionDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {vehicles.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="folder-open-outline" size={48} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>This collection is empty</Text>
-            <Text style={styles.emptySubtitle}>
-              Drag and drop favorites here from the Favorites tab.
-            </Text>
-          </View>
+          <EmptyState
+            title="This collection is empty"
+            subtitle="Drag and drop favorites here from the Favorites tab."
+          />
         ) : (
           <View style={styles.grid}>
             {vehicles.map((vehicle) => (

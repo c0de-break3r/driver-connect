@@ -39,21 +39,21 @@
     },
     "plugins": [
       "expo-router",
-        [
-          "expo-splash-screen",
-          {
-            "backgroundColor": "#FFFFFF",
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 200
-          }
-        ],
-        [
-          "expo-notifications",
-          {
-            "icon": "./assets/images/notification-icon.png",
-            "color": "#2C3E5B"
-          }
-        ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#2C3E5B"
+        }
+      ],
       "expo-web-browser",
       [
         "react-native-maps",
@@ -80,7 +80,8 @@
             ]
           }
         }
-      ]
+      ],
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true

@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useRoleStore } from "@/store/useRoleStore";
-import { useAppStateStore } from "@/store/useAppStateStore";
+import { useAppStateStore, getEffectiveAvatarUri, getEffectiveProfileSetupComplete } from "@/store/useAppStateStore";
 import { api } from "@/lib/convexApi";
 
 export function ConvexSync() {
@@ -13,9 +13,7 @@ export function ConvexSync() {
   const setOnboardingComplete = useRoleStore((state) => state.setOnboardingComplete);
   const notificationsEnabled = useAppStateStore((state) => state.notificationsEnabled);
   const setNotificationsEnabled = useAppStateStore((state) => state.setNotificationsEnabled);
-  const profileSetupComplete = useAppStateStore((state) => state.profileSetupComplete);
   const setProfileSetupComplete = useAppStateStore((state) => state.setProfileSetupComplete);
-  const avatarUri = useAppStateStore((state) => state.avatarUri);
   const setAvatarUri = useAppStateStore((state) => state.setAvatarUri);
   const syncedUserIdRef = useRef<string | null>(null);
   const syncedEmailRef = useRef<string | null>(null);
@@ -38,15 +36,15 @@ export function ConvexSync() {
         email,
         onboardingComplete,
         notificationsEnabled,
-        profileSetupComplete,
-        avatarUri: avatarUri || undefined,
+        profileSetupComplete: getEffectiveProfileSetupComplete(),
+        avatarUri: getEffectiveAvatarUri() || undefined,
       });
       syncedUserIdRef.current = userId;
       syncedEmailRef.current = email;
     } catch (error) {
       console.error("Failed to sync user to Convex:", error);
     }
-  }, [isLoaded, signedIn, userId, email, role, firstName, onboardingComplete, notificationsEnabled, profileSetupComplete, avatarUri, upsertUser]);
+  }, [isLoaded, signedIn, userId, email, role, firstName, onboardingComplete, notificationsEnabled, upsertUser]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -91,14 +89,14 @@ export function ConvexSync() {
     if (convexUser.notificationsEnabled !== undefined && convexUser.notificationsEnabled !== notificationsEnabled) {
       setNotificationsEnabled(convexUser.notificationsEnabled);
     }
-    if (convexUser.profileSetupComplete !== undefined && convexUser.profileSetupComplete !== profileSetupComplete) {
+    if (convexUser.profileSetupComplete !== undefined && convexUser.profileSetupComplete !== getEffectiveProfileSetupComplete()) {
       setProfileSetupComplete(convexUser.profileSetupComplete);
     }
-    if (convexUser.avatarUri && convexUser.avatarUri !== avatarUri && !avatarUri) {
+    if (convexUser.avatarUri && convexUser.avatarUri !== getEffectiveAvatarUri() && !getEffectiveAvatarUri()) {
       setAvatarUri(convexUser.avatarUri);
     }
     syncedEmailRef.current = email || syncedEmailRef.current;
-  }, [convexUser, role, onboardingComplete, notificationsEnabled, profileSetupComplete, avatarUri, email, setRole, setOnboardingComplete, setNotificationsEnabled, setProfileSetupComplete, setAvatarUri]);
+  }, [convexUser, role, onboardingComplete, notificationsEnabled, email, setRole, setOnboardingComplete, setNotificationsEnabled, setProfileSetupComplete, setAvatarUri]);
 
   return null;
 }

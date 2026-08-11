@@ -11,6 +11,7 @@ import heroIllustrator from "@/assets/images/hero-illustrator.jpg";
 import roleGuest from "@/assets/images/illustrator-icons/role-guest.png";
 import roleOwner from "@/assets/images/illustrator-icons/role-owner.png";
 import teslaCybertruck from "@/assets/images/illustrator-icons/teslacybertruck.png";
+import favoritesHeart from "@/assets/images/illustrator-icons/3dicons-heart.png";
 
 export const images = {
   appIcon,
@@ -19,4 +20,5 @@ export const images = {
   roleGuest,
   roleOwner,
   teslaCybertruck,
+  favoritesHeart,
 };

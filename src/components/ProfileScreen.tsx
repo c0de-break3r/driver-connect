@@ -14,7 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useRoleStore } from "@/store/useRoleStore";
-import { useAppStateStore } from "@/store/useAppStateStore";
+import { useAppStateStore, getEffectiveAvatarUri } from "@/store/useAppStateStore";
 import { useNotifications } from "@/lib/notifications";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { router } from "expo-router";
@@ -56,7 +56,7 @@ export default function ProfileScreen({
   const { firstName, email, signOut } = useAuth();
   const role = useRoleStore((state) => state.role);
   const setRole = useRoleStore((state) => state.setRole);
-  const avatarUri = useAppStateStore((state) => state.avatarUri);
+  const avatarUri = getEffectiveAvatarUri();
   const setAvatarUri = useAppStateStore((state) => state.setAvatarUri);
   const unreadNotificationCount = useNotificationStore((state) => state.unreadCount);
   const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
@@ -163,7 +163,10 @@ export default function ProfileScreen({
                   style={styles.avatar}
                   contentFit="cover"
                   transition={200}
-                  onError={(e) => console.log("Avatar load error:", e.error, avatarUri)}
+                  onError={(e) => {
+                    console.log("Avatar load error:", e.error, avatarUri);
+                    setAvatarUri(null);
+                  }}
                 />
               ) : (
                 <View style={styles.avatarPlaceholder}>

@@ -10,15 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@/contexts/AuthProvider";
 import messages3dIcon from "@/assets/images/illustrator-icons/3dicons-chat-text.png";
+import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
 
 export default function MessagesScreen() {
-  const { signedIn } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,18 +73,6 @@ export default function MessagesScreen() {
       useNativeDriver: false,
     }).start();
   };
-
-  if (!signedIn) {
-    return (
-      <View style={styles.loginContainer}>
-        <Text style={styles.title}>Messages</Text>
-          <Text style={styles.subtitle}>Log in to see messages. Once you log in, you&apos;ll find messages from hosts here.</Text>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Log in</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -151,11 +137,11 @@ export default function MessagesScreen() {
             <Ionicons name="settings-outline" size={22} color={NAVY} />
           </TouchableOpacity>
         </View>
-        <View style={styles.emptyState}>
-          <Image source={messages3dIcon} style={styles.emptyImage} contentFit="contain" />
-          <Text style={styles.emptyTitle}>You don&apos;t have any messages</Text>
-          <Text style={styles.emptySubtitle}>When you receive a new message, it will appear here.</Text>
-        </View>
+        <EmptyState
+          image={messages3dIcon}
+          title="You don't have any messages"
+          subtitle="When you receive a new message, it will appear here."
+        />
       </ScrollView>
 
       <Modal
@@ -217,36 +203,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.select({ ios: 60, android: 40 }),
     paddingBottom: 48,
   },
-  loginContainer: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: NAVY,
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6B7280",
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  button: {
-    backgroundColor: NAVY,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -303,31 +259,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: NAVY,
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-  },
-  emptyImage: {
-    width: 180,
-    height: 180,
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: NAVY,
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: 24,
   },
   modalOverlay: {
     flex: 1,

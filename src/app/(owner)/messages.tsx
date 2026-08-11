@@ -9,15 +9,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@/contexts/AuthProvider";
 import messages3dIcon from "@/assets/images/illustrator-icons/3dicons-chat-text.png";
+import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
 
 export default function OwnerMessagesScreen() {
-  const { signedIn } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,18 +72,6 @@ export default function OwnerMessagesScreen() {
       useNativeDriver: false,
     }).start();
   };
-
-  if (!signedIn) {
-    return (
-      <View style={styles.loginContainer}>
-        <Text style={styles.title}>Messages</Text>
-        <Text style={styles.subtitle}>Log in to see messages. Once you log in, you&apos;ll find messages from guests here.</Text>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Log in</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -150,11 +136,11 @@ export default function OwnerMessagesScreen() {
             <Ionicons name="settings-outline" size={22} color={NAVY} />
           </TouchableOpacity>
         </View>
-        <View style={styles.emptyState}>
-          <Image source={messages3dIcon} style={styles.emptyImage} contentFit="contain" />
-          <Text style={styles.emptyTitle}>You don&apos;t have any messages</Text>
-          <Text style={styles.emptySubtitle}>When you receive a new message, it will appear here.</Text>
-        </View>
+        <EmptyState
+          image={messages3dIcon}
+          title="You don't have any messages"
+          subtitle="When you receive a new message, it will appear here."
+        />
       </ScrollView>
 
       <Modal
@@ -215,36 +201,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 0,
     paddingBottom: 48,
-  },
-  loginContainer: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: NAVY,
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6B7280",
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  button: {
-    backgroundColor: NAVY,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignSelf: "flex-start",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
   },
   headerRow: {
     flexDirection: "row",

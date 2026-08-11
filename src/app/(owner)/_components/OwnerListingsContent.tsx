@@ -13,8 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 import { images } from "@/constants/images";
+import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
 
@@ -155,18 +155,13 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
       )}
 
       {!vehicles || vehicles.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={styles.illustrationWrap}>
-            <Image source={images.teslaCybertruck} style={styles.emptyImage} contentFit="contain" />
-          </View>
-          <Text style={styles.emptyTitle}>No listings yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Create your first vehicle listing to start receiving booking requests.
-          </Text>
-          <TouchableOpacity style={styles.ctaButton} onPress={() => router.push("/create-listing" as any)}>
-            <Text style={styles.ctaButtonText}>Create a listing</Text>
-          </TouchableOpacity>
-        </View>
+        <EmptyState
+          image={images.teslaCybertruck}
+          title="No listings yet"
+          subtitle="Create your first vehicle listing to start receiving booking requests."
+          ctaText="Create a listing"
+          onCtaPress={() => router.push("/create-listing" as any)}
+        />
       ) : (
         <ScrollView
           contentContainerStyle={styles.listingsList}

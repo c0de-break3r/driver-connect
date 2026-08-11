@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, Pressable, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { router } from "expo-router";
+import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
 
@@ -41,13 +42,10 @@ export default function NotificationsScreen() {
 
       <View style={styles.list}>
         {sorted.length === 0 && (
-          <View style={styles.emptyState}>
-            <Ionicons name="notifications-outline" size={48} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>No notifications yet</Text>
-            <Text style={styles.emptySubtitle}>
-              We&apos;ll notify you about bookings, messages, and updates here.
-            </Text>
-          </View>
+          <EmptyState
+            title="No notifications yet"
+            subtitle="We'll notify you about bookings, messages, and updates here."
+          />
         )}
 
         {sorted.map((item) => (

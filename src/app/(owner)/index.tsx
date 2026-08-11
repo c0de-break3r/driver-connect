@@ -1,10 +1,13 @@
 import bookmark3dIcon from "@/assets/images/illustrator-icons/3dicons-bookmark.png";
 import calendar3dNoFigure from "@/assets/images/illustrator-icons/calendar-3d-no-figure.png";
+import messages3dIcon from "@/assets/images/illustrator-icons/3dicons-chat-text.png";
+import teslaCybertruck from "@/assets/images/illustrator-icons/teslacybertruck.png";
+import setting3dIcon from "@/assets/images/illustrator-icons/3dicons-setting.png";
 import RoleSwitchTransition from "@/components/RoleSwitchTransition";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useTabBounce } from "@/hooks/useTabBounce";
 import { api } from "@/lib/convexApi";
-import { useAppStateStore } from "@/store/useAppStateStore";
+import { useAppStateStore, getEffectiveAvatarUri } from "@/store/useAppStateStore";
 import type { UserRole } from "@/store/useRoleStore";
 import { useRoleStore } from "@/store/useRoleStore";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,6 +33,8 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import OwnerListingsContent from "./_components/OwnerListingsContent";
 import OwnerMessagesScreen from "./messages";
+import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
+import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
 
@@ -51,7 +56,7 @@ function isTodayBooking(booking: {
 
 export default function OwnerDashboard() {
   const router = useRouter();
-  const { userId, signOut } = useAuth();
+  const { userId, signOut, signedIn, isLoaded } = useAuth();
 
   const convexUser = useQuery(
     api.users.getByUserId,
@@ -71,9 +76,11 @@ export default function OwnerDashboard() {
     ownerBookings?.filter((b) => b.startDate > getTodayDateString()) ?? [];
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchExpanded, setSearchExpanded] = useState(false);
-  const searchWidthAnim = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef<TextInput>(null);
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+  };
 
   const tabIndicatorAnim = useRef(new Animated.Value(0)).current;
   const [tabBarWidth, setTabBarWidth] = useState(0);
@@ -87,44 +94,12 @@ export default function OwnerDashboard() {
       mass: 0.8,
     }).start();
   }, [activeSubTab]);
-
-  const toggleSearch = () => {
-    if (searchExpanded) {
-      setSearchExpanded(false);
-      Animated.timing(searchWidthAnim, {
-        toValue: 0,
-        duration: 240,
-        useNativeDriver: false,
-      }).start();
-    } else {
-      setSearchExpanded(true);
-      searchWidthAnim.setValue(0);
-      Animated.timing(searchWidthAnim, {
-        toValue: 1,
-        duration: 240,
-        useNativeDriver: false,
-      }).start(() => {
-        searchInputRef.current?.focus();
-      });
-    }
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchExpanded(false);
-    Animated.timing(searchWidthAnim, {
-      toValue: 0,
-      duration: 240,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const prevTabRef = useRef(activeTab);
   const directionRef = useRef<"left" | "right">("right");
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(20)).current;
   const scaleAnim = useRef(new Animated.Value(0.97)).current;
   const isFirstRender = useRef(true);
+  const prevTabRef = useRef(activeTab);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -180,20 +155,30 @@ export default function OwnerDashboard() {
     prevTabRef.current = activeTab;
   }, [activeTab, fadeAnim, slideY, scaleAnim]);
 
-  const avatarUri = useAppStateStore((state) => state.avatarUri);
+  const avatarUri = getEffectiveAvatarUri();
   const setAvatarUri = useAppStateStore((state) => state.setAvatarUri);
   const setHasSeenWelcome = useAppStateStore(
     (state) => state.setHasSeenWelcome,
   );
   const setRole = useRoleStore((state) => state.setRole);
   const [switchingRole, setSwitchingRole] = useState<UserRole | null>(null);
+  const [welcomeVisible, setWelcomeVisible] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (signedIn) {
+      setWelcomeVisible(false);
+    }
+  }, [isLoaded, signedIn]);
+
+  const openAuth = () => {
+    setWelcomeVisible(true);
+  };
 
   const handleMenuLogout = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      setHasSeenWelcome(false);
       await signOut();
-      router.replace("/" as any);
     } catch {
       Alert.alert("Error", "Unable to log out. Please try again.");
     }
@@ -283,11 +268,21 @@ export default function OwnerDashboard() {
               flex: 1,
             }}
           >
-            <OwnerMessagesScreen />
+            {!signedIn ? (
+              <EmptyState
+                image={messages3dIcon}
+                title="No messages"
+                subtitle="Log in to view and send messages to guests."
+                ctaText="Log in"
+                onCtaPress={openAuth}
+              />
+            ) : (
+              <OwnerMessagesScreen />
+            )}
           </View>
         ) : (
           <>
-            {activeTab === "menu" && !switchingRole ? (
+            {activeTab === "menu" && !switchingRole && signedIn ? (
               <View style={styles.menuHeaderRow}>
                 <Text style={styles.menuHeaderTitle}>Menu</Text>
                 <View style={styles.menuHeaderRight}>
@@ -313,13 +308,14 @@ export default function OwnerDashboard() {
                           style={styles.headerAvatar}
                           contentFit="cover"
                           transition={200}
-                          onError={(e) =>
+                          onError={(e) => {
                             console.log(
                               "Avatar load error:",
                               e.error,
                               avatarUri,
-                            )
-                          }
+                            );
+                            setAvatarUri(null);
+                          }}
                         />
                       ) : (
                         <View style={styles.headerAvatarPlaceholder}>
@@ -342,79 +338,74 @@ export default function OwnerDashboard() {
             >
             {activeTab === "today" && (
               <View>
-                <View
-                  style={styles.tabBar}
-                  onLayout={(e) => setTabBarWidth(e.nativeEvent.layout.width)}
-                >
-                  <Animated.View
-                    style={[
-                      styles.tabIndicator,
-                      {
-                        transform: [
-                          {
-                            translateX: tabIndicatorAnim.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [0, tabBarWidth ? (tabBarWidth - 8) / 2 : 0],
-                            }),
-                          },
-                        ],
-                      },
-                    ]}
-                  />
-                  <View style={styles.tabRow}>
-                    <TouchableOpacity
-                      style={styles.tab}
-                      onPress={() => setActiveSubTab("today")}
-                    >
-                      <Text
-                        style={[
-                          styles.tabText,
-                          activeSubTab === "today" && styles.tabTextActive,
-                        ]}
-                      >
-                        Today
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.tab}
-                      onPress={() => setActiveSubTab("upcoming")}
-                    >
-                      <Text
-                        style={[
-                          styles.tabText,
-                          activeSubTab === "upcoming" && styles.tabTextActive,
-                        ]}
-                      >
-                        Upcoming
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {activeSubTab === "today" ? (
-                  todayBookings.length === 0 ? (
-                    <View style={styles.emptyState}>
-                      <Image
-                        source={bookmark3dIcon}
-                        style={styles.emptyImage}
-                        contentFit="contain"
-                      />
-                      <Text style={styles.emptyTitle}>
-                        You don&apos;t have any reservations
-                      </Text>
-                      <Text style={styles.emptySubtitle}>
-                        To get booked, you&apos;ll need to complete and publish
-                        your listing.
-                      </Text>
+                {signedIn ? (
+                  <View
+                    style={styles.tabBar}
+                    onLayout={(e) => setTabBarWidth(e.nativeEvent.layout.width)}
+                  >
+                    <Animated.View
+                      style={[
+                        styles.tabIndicator,
+                        {
+                          transform: [
+                            {
+                              translateX: tabIndicatorAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0, tabBarWidth ? (tabBarWidth - 8) / 2 : 0],
+                              }),
+                            },
+                          ],
+                        },
+                      ]}
+                    />
+                    <View style={styles.tabRow}>
                       <TouchableOpacity
-                        style={styles.ctaButton}
-                        onPress={() => router.push("/create-listing" as any)}
+                        style={styles.tab}
+                        onPress={() => setActiveSubTab("today")}
                       >
-                        <Text style={styles.ctaButtonText}>
-                          Complete your listing
+                        <Text
+                          style={[
+                            styles.tabText,
+                            activeSubTab === "today" && styles.tabTextActive,
+                          ]}
+                        >
+                          Today
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.tab}
+                        onPress={() => setActiveSubTab("upcoming")}
+                      >
+                        <Text
+                          style={[
+                            styles.tabText,
+                            activeSubTab === "upcoming" && styles.tabTextActive,
+                          ]}
+                        >
+                          Upcoming
                         </Text>
                       </TouchableOpacity>
                     </View>
+                  </View>
+                ) : null}
+
+                {!signedIn ? (
+                  <EmptyState
+                    image={bookmark3dIcon}
+                    title="No reservations"
+                    subtitle="Log in to view your bookings and start accepting reservations."
+                    ctaText="Log in"
+                    onCtaPress={openAuth}
+                  />
+                ) : activeSubTab === "today" ? (
+                  todayBookings.length === 0 ? (
+                    <EmptyState
+                      image={bookmark3dIcon}
+                      title="You don't have any reservations"
+                      subtitle="To get booked, you'll need to complete and publish your listing."
+                      ctaText="Complete your listing"
+                      onCtaPress={() => router.push("/create-listing" as any)}
+                    />
                   ) : (
                     <View style={styles.bookingsList}>
                       {todayBookings.map((booking) => (
@@ -423,20 +414,11 @@ export default function OwnerDashboard() {
                     </View>
                   )
                 ) : upcomingBookings.length === 0 ? (
-                  <View style={styles.emptyState}>
-                    <Image
-                      source={bookmark3dIcon}
-                      style={styles.emptyImage}
-                      contentFit="contain"
-                    />
-                    <Text style={styles.emptyTitle}>
-                      No upcoming reservations
-                    </Text>
-                    <Text style={styles.emptySubtitle}>
-                      Your future bookings will appear here once you have active
-                      listings.
-                    </Text>
-                  </View>
+                  <EmptyState
+                    image={bookmark3dIcon}
+                    title="No upcoming reservations"
+                    subtitle="Your future bookings will appear here once you have active listings."
+                  />
                 ) : (
                   <View style={styles.bookingsList}>
                     {upcomingBookings.map((booking) => (
@@ -449,70 +431,73 @@ export default function OwnerDashboard() {
 
             {activeTab === "calendar" && (
               <View>
-                <View style={styles.headerRow}>
-                  <Animated.View
-                    style={[
-                      styles.searchExpandWrap,
-                      {
-                        width: searchWidthAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 250],
-                        }),
-                        opacity: searchWidthAnim,
-                      },
-                    ]}
-                  >
-                    <View style={styles.searchInputWrap}>
+                {!signedIn ? (
+                  <EmptyState
+                    image={calendar3dNoFigure}
+                    title="No calendar events"
+                    subtitle="Log in to view and manage your availability calendar."
+                    ctaText="Log in"
+                    onCtaPress={openAuth}
+                  />
+                ) : (
+                  <>
+                    <View style={styles.calendarSearchBar}>
+                      <Ionicons name="search" size={20} color="#6B7280" />
                       <TextInput
                         ref={searchInputRef}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         placeholder="Search calendars"
                         placeholderTextColor="#9CA3AF"
-                        style={styles.searchInput}
+                        style={styles.calendarSearchInput}
                       />
-                      <TouchableOpacity
-                        onPress={
-                          searchExpanded ? handleClearSearch : undefined
-                        }
-                        hitSlop={8}
-                      >
-                        <Ionicons
-                          name={searchExpanded ? "close" : "search"}
-                          size={20}
-                          color={NAVY}
-                        />
-                      </TouchableOpacity>
+                      {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={handleClearSearch} hitSlop={8}>
+                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
-                  </Animated.View>
-                  <TouchableOpacity onPress={toggleSearch} hitSlop={8}>
-                    <Ionicons name="search" size={22} color={NAVY} />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.centerContent}>
-                  <Image
-                    source={calendar3dNoFigure}
-                    style={styles.emptyImage}
-                    contentFit="contain"
-                  />
-                  <Text style={styles.emptyTitle}>No calendar events</Text>
-                  <Text style={styles.emptySubtitle}>
-                    When you publish a listing you&apos;ll be able to see and
-                    edit your calendar here.
-                  </Text>
-                </View>
+                    <View style={styles.centerContent}>
+                      <EmptyState
+                        image={calendar3dNoFigure}
+                        title="No calendar events"
+                        subtitle="When you publish a listing you&apos;ll be able to see and edit your calendar here."
+                      />
+                    </View>
+                  </>
+                )}
               </View>
             )}
 
             {activeTab === "listings" && (
               <View style={{ marginTop: 10 }}>
-                <OwnerListingsContent />
+                {!signedIn ? (
+                  <EmptyState
+                    image={teslaCybertruck}
+                    title="No listings"
+                    subtitle="Log in to create and manage your vehicle listings."
+                    ctaText="Log in"
+                    onCtaPress={openAuth}
+                  />
+                ) : (
+                  <OwnerListingsContent />
+                )}
               </View>
             )}
 
             {activeTab === "menu" && (
               <View>
-                <View style={styles.onboardingCard}>
+                {!signedIn ? (
+                  <EmptyState
+                    image={setting3dIcon}
+                    title="No menu"
+                    subtitle="Log in to access your owner dashboard, manage listings, and view bookings."
+                    ctaText="Log in"
+                    onCtaPress={openAuth}
+                  />
+                ) : (
+                  <>
+                    <View style={styles.onboardingCard}>
                   <View style={styles.cardImagesRow}>
                     <View style={styles.cardImagePlaceholder}>
                       <Ionicons
@@ -678,6 +663,8 @@ export default function OwnerDashboard() {
                     <Text style={styles.logoutText}>Log Out</Text>
                   </TouchableOpacity>
                 </View>
+                  </>
+                )}
               </View>
             )}
           </ScrollView>
@@ -723,6 +710,15 @@ export default function OwnerDashboard() {
       {switchingRole ? (
         <RoleSwitchTransition role={switchingRole} fromRole="owner" />
       ) : null}
+
+      {welcomeVisible && (
+        <WelcomeAuthScreen
+          onDismiss={() => {
+            setWelcomeVisible(false);
+            setHasSeenWelcome(true);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -968,7 +964,7 @@ const styles = StyleSheet.create({
     color: NAVY,
   },
   logoutContainer: {
-    marginBottom: 32,
+    marginBottom: 0,
   },
   logoutButton: {
     flexDirection: "row",
@@ -976,7 +972,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 16,
-    marginBottom: 32,
+    marginBottom: 0,
   },
   logoutIconWrap: {
     width: 24,
@@ -1192,6 +1188,32 @@ const styles = StyleSheet.create({
     color: NAVY,
     paddingVertical: 0,
     textAlign: "left",
+  },
+  calendarSearchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    height: 44,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    marginBottom: 24,
+    marginTop: 10,
+  },
+  calendarSearchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "500",
+    color: NAVY,
+    paddingVertical: 0,
+  },
+  cancelButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: NAVY,
   },
   avatar: {
     width: 36,

@@ -80,6 +80,10 @@ export default function HomeScreen() {
   const handleAuthDismiss = () => {
     setHasSeenWelcome(true);
     setWelcomeVisible(false);
+    if (!signedIn) {
+      setActiveTab("explore");
+      return;
+    }
     const role = useRoleStore.getState().role;
     if (role) {
       router.replace(getPostAuthRoute(role) as any);
