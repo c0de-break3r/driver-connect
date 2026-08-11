@@ -134,31 +134,32 @@ export default function CreateListingScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity hitSlop={8} onPress={prevStep}>
+          <Ionicons name="arrow-back" size={24} color={NAVY} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          {step === 0 && "Vehicle Details"}
+          {step === 1 && "Features & Specs"}
+          {step === 2 && "Pricing & Location"}
+          {step === 3 && "Review"}
+        </Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <View style={styles.progressRow}>
+        {[0, 1, 2, 3].map((i) => (
+          <View
+            key={i}
+            style={[styles.progressDot, i <= step && styles.progressDotActive]}
+          />
+        ))}
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <TouchableOpacity hitSlop={8} onPress={prevStep}>
-            <Ionicons name="arrow-back" size={24} color={NAVY} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {step === 0 && "Vehicle Details"}
-            {step === 1 && "Features & Specs"}
-            {step === 2 && "Pricing & Location"}
-            {step === 3 && "Review"}
-          </Text>
-          <View style={{ width: 24 }} />
-        </View>
-
-        <View style={styles.progressRow}>
-          {[0, 1, 2, 3].map((i) => (
-            <View
-              key={i}
-              style={[styles.progressDot, i <= step && styles.progressDotActive]}
-            />
-          ))}
-        </View>
 
         {step === 0 && (
           <View style={styles.section}>
@@ -539,7 +540,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   scrollContent: {
-    paddingTop: 60,
+    paddingTop: 0,
     paddingHorizontal: 24,
     paddingBottom: 120,
   },
@@ -547,7 +548,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 16,
   },
   headerTitle: {
     fontSize: 18,
@@ -557,6 +560,7 @@ const styles = StyleSheet.create({
   progressRow: {
     flexDirection: "row",
     gap: 8,
+    paddingHorizontal: 24,
     marginBottom: 24,
   },
   progressDot: {
