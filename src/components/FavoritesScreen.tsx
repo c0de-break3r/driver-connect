@@ -163,10 +163,13 @@ export default function FavoritesScreen() {
 
   if (!signedIn) {
     return (
-      <View style={styles.loginContainer}>
-        <Text style={styles.loginTitle}>Favorites</Text>
-        <Text style={styles.loginSubtitle}>Log in to view your favorites. You can save, view, or edit favorites once you&apos;ve logged in.</Text>
-      </View>
+      <EmptyState
+        image={images.favoritesHeart}
+        title="No favorites"
+        subtitle="Log in to view your favorites. You can save, view, or edit favorites once you've logged in."
+        ctaText="Log in"
+        onCtaPress={() => {}}
+      />
     );
   }
 

@@ -93,6 +93,9 @@ export default function RoleSwitchTransition({
               source={targetRoleImage}
               style={styles.slideImage}
               contentFit="contain"
+              onError={(e) => {
+                console.log("Role image load error:", e.error, role, targetRoleImage);
+              }}
             />
           ) : (
             <Animated.View

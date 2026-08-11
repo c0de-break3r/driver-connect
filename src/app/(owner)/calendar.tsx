@@ -80,10 +80,7 @@ export default function OwnerCalendarScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.scrollContent}>
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>Calendars</Text>
           <TouchableOpacity hitSlop={8}>
@@ -185,7 +182,7 @@ export default function OwnerCalendarScreen() {
             </Text>
           </View>
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 }

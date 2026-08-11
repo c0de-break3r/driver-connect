@@ -16,6 +16,11 @@ import { useAppStateStore } from "@/store/useAppStateStore";
 import { useRoleStore } from "@/store/useRoleStore";
 import { getPostAuthRoute } from "@/lib/routing";
 import FavoritesScreen from "@/components/FavoritesScreen";
+import EmptyState from "@/components/EmptyState";
+import messages3dIcon from "@/assets/images/illustrator-icons/3dicons-chat-text.png";
+import setting3dIcon from "@/assets/images/illustrator-icons/3dicons-setting.png";
+import travel3dIcon from "@/assets/images/illustrator-icons/3dicons-travel.png";
+import { images } from "@/constants/images";
 
 const NAVY = "#2C3E5B";
 
@@ -109,32 +114,45 @@ export default function HomeScreen() {
       }
       if (activeTab === "favorites") {
         return (
-          <LoginPromptScreen
-            title="Favorites"
+          <EmptyState
+            image={images.favoritesHeart}
+            title="No favorites"
             subtitle="Log in to view your favorites. You can save, view, or edit favorites once you've logged in."
-            buttonText="Log in"
-            onLoginPress={openAuth}
+            ctaText="Log in"
+            onCtaPress={openAuth}
           />
         );
       }
       if (activeTab === "trips") {
         return (
-          <View style={styles.comingSoon}>
-            <Text style={styles.comingSoonText}>Trips coming soon</Text>
-          </View>
+          <EmptyState
+            image={travel3dIcon}
+            title="No trips"
+            subtitle="Log in to view and manage your upcoming trips."
+            ctaText="Log in"
+            onCtaPress={openAuth}
+          />
         );
       }
       if (activeTab === "messages") {
-        return <MessagesScreen />;
+        return (
+          <EmptyState
+            image={messages3dIcon}
+            title="No messages"
+             subtitle="Log in to view and send messages to hosts."
+            ctaText="Log in"
+            onCtaPress={openAuth}
+          />
+        );
       }
       if (activeTab === "profile") {
         return (
-          <LoginPromptScreen
-            title="Profile"
-            subtitle="Log in and start planning your next trip."
-            buttonText="Log in or sign up"
-            showMenuItems
-            onLoginPress={openAuth}
+          <EmptyState
+            image={setting3dIcon}
+            title="No menu"
+             subtitle="Log in to access your profile dashboard and manage your bookings."
+            ctaText="Log in"
+            onCtaPress={openAuth}
           />
         );
       }

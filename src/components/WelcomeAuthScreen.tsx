@@ -83,10 +83,27 @@ export default function WelcomeAuthScreen({ onDismiss }: { onDismiss?: () => voi
   const flow = useAuthEntryFlow();
   const { signedIn, isLoaded } = useAuth();
   const [sheetState, setSheetState] = useState<"open" | "dismissed">("open");
-  const sheetAnim = useMemo(() => new Animated.Value(0), []);
+  const sheetAnim = useMemo(() => new Animated.Value(SCREEN_HEIGHT), []);
   const closeRotateAnim = useMemo(() => new Animated.Value(0), []);
-  const fadeAnim = useMemo(() => new Animated.Value(1), []);
+  const fadeAnim = useMemo(() => new Animated.Value(0), []);
   const scrollAtTopRef = useRef(true);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(sheetAnim, {
+        toValue: 0,
+        duration: 420,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 320,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+    ]).start();
+  }, [sheetAnim, fadeAnim]);
 
   useEffect(() => {
     if (isLoaded && signedIn && sheetState !== "dismissed") {

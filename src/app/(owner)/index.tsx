@@ -335,6 +335,7 @@ export default function OwnerDashboard() {
               style={{ flex: 1 }}
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
+              scrollEnabled={activeTab !== "calendar"}
             >
             {activeTab === "today" && (
               <View>
@@ -486,7 +487,13 @@ export default function OwnerDashboard() {
             )}
 
             {activeTab === "menu" && (
-              <View>
+              <View
+                style={
+                  !signedIn
+                    ? { paddingTop: Platform.select({ ios: 60, android: 40 }) }
+                    : undefined
+                }
+              >
                 {!signedIn ? (
                   <EmptyState
                     image={setting3dIcon}
