@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useState, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import {
   Animated,
   ScrollView,
@@ -37,14 +38,9 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
   const router = useRouter();
   const { userId } = useAuth();
 
-  const convexUser = useQuery(
-    api.users.getByUserId,
-    userId ? { userId } : "skip"
-  );
-
   const vehicles = useQuery(
     api.jobs.getOwnerVehicles,
-    convexUser?._id ? { ownerId: convexUser._id } : "skip"
+    userId ? { ownerId: userId } : "skip"
   );
 
   const deleteVehicle = useMutation(api.jobs.deleteVehicle);
@@ -171,9 +167,7 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
             <View key={vehicle._id} style={styles.listingCard}>
               <View style={styles.listingImagePlaceholder}>
                 {vehicle.images && vehicle.images.length > 0 ? (
-                  <Text style={styles.imagePlaceholderText}>
-                    {vehicle.images.length} photo{vehicle.images.length !== 1 ? "s" : ""}
-                  </Text>
+                  <Image source={{ uri: vehicle.images[0] }} style={styles.listingImage} contentFit="cover" />
                 ) : (
                   <Ionicons name="car-outline" size={48} color="#9CA3AF" />
                 )}
@@ -358,18 +352,23 @@ const styles = StyleSheet.create({
   },
   listingCard: {
     backgroundColor: "#F9FAFB",
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#E5E7EB",
+    marginBottom: 12,
   },
   listingImagePlaceholder: {
     width: "100%",
-    height: 180,
+    height: 140,
     backgroundColor: "#E5E7EB",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+  },
+  listingImage: {
+    width: "100%",
+    height: "100%",
   },
   imagePlaceholderText: {
     fontSize: 13,

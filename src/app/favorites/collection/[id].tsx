@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/lib/convexApi";
 import {
   Platform,
   ScrollView,
@@ -11,7 +13,7 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFavoritesStore, type VehicleFavorite } from "@/store/useFavoritesStore";
-import { VEHICLES } from "@/app/HomeScreenContent";
+
 import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
@@ -25,12 +27,31 @@ export default function CollectionDetailScreen() {
 
   const collection = collections.find((c) => c.id === collectionId);
 
-  const vehicles = useMemo<VehicleFavorite[]>(() => {
-    if (!collection) return [];
+  const allVehicles = useQuery(api.jobs.listVehicles, {});
+  const vehicles = useMemo(() => {
+    if (!collection || !allVehicles) return [];
     return collection.vehicleIds
-      .map((id) => VEHICLES.find((v) => v.id === id))
-      .filter((v): v is VehicleFavorite => !!v && typeof v.image === "string" && typeof v.category === "string");
-  }, [collection]);
+      .map((id) => allVehicles.find((v: any) => v._id === id))
+      .filter((v: any): v is VehicleFavorite => !!v && typeof v.images?.[0] === "string" && typeof v.category === "string")
+      .map((v: any) => ({
+        id: v._id,
+        title: v.title,
+        category: v.category,
+        location: v.city,
+        region: v.region,
+        price: `GH₵ ${v.pricePerDay}`,
+        originalPrice: v.pricePerWeek ? `GH₵ ${v.pricePerWeek}` : "",
+        period: "per day",
+        rating: v.rating,
+        image: v.images?.[0] ?? "",
+        ownerName: v.ownerId,
+        ownerAvatar: "",
+        isVerified: true,
+        condition: "Listed",
+        transmission: v.transmission ?? "Automatic",
+        yearsOnPlatform: "New",
+      }));
+  }, [collection, allVehicles]);
 
   const handleDelete = () => {
     if (!collectionId) return;

@@ -9,7 +9,10 @@
  */
 
 import type * as ads from "../ads.js";
+import type * as analytics from "../analytics.js";
 import type * as jobs from "../jobs.js";
+import type * as listingAutomation from "../listingAutomation.js";
+import type * as listingQueries from "../listingQueries.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as referralCodes from "../referralCodes.js";
@@ -24,7 +27,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ads: typeof ads;
+  analytics: typeof analytics;
   jobs: typeof jobs;
+  listingAutomation: typeof listingAutomation;
+  listingQueries: typeof listingQueries;
   messages: typeof messages;
   notifications: typeof notifications;
   referralCodes: typeof referralCodes;

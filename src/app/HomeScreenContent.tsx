@@ -15,235 +15,7 @@ const ICON_SIZE_BASE = 20;
 const ICON_SIZE_ACTIVE = 24;
 
 
-export const VEHICLES = [
-  {
-    id: "1",
-    title: "Hyundai Santa Fe 2020 Gray",
-    category: "SUV",
-    location: "Madina",
-    region: "Greater Accra",
-    price: "GH₵ 250,000",
-    originalPrice: "GH₵ 280,000",
-    period: "for 2 days",
-    rating: 4.98,
-    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
-    ownerName: "Luke Eshun",
-    ownerAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80",
-    isVerified: true,
-    condition: "Foreign Used",
-    transmission: "Automatic",
-    yearsOnPlatform: "5+ years",
-  },
-  {
-    id: "2",
-    title: "Hyundai Santa Fe 2015 Silver",
-    category: "SUV",
-    location: "Madina",
-    region: "Greater Accra",
-    price: "GH₵ 225,000",
-    originalPrice: "GH₵ 260,000",
-    period: "for 2 days",
-    rating: 4.88,
-    image: "https://images.unsplash.com/photo-1551522435-a13afa82f300?w=800&q=80",
-    ownerName: "Nana Agyemang Motors",
-    ownerAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80",
-    isVerified: true,
-    condition: "Foreign Used",
-    transmission: "Automatic",
-    yearsOnPlatform: "5+ years",
-  },
-  {
-    id: "3",
-    title: "Hyundai Elantra 2015 Gray",
-    category: "Sedan",
-    location: "Madina",
-    region: "Greater Accra",
-    price: "GH₵ 78,000",
-    originalPrice: "GH₵ 95,000",
-    period: "for 2 days",
-    rating: 4.85,
-    image: "https://images.unsplash.com/photo-1563720223185-1103d5164cdb?w=800&q=80",
-    ownerName: "Nana Danquah",
-    ownerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80",
-    isVerified: true,
-    condition: "Local Used",
-    transmission: "Automatic",
-    yearsOnPlatform: "3+ years",
-  },
-  {
-    id: "4",
-    title: "Toyota Corolla 2018 White",
-    category: "Sedan",
-    location: "Kumasi",
-    region: "Ashanti",
-    price: "GH₵ 120,000",
-    originalPrice: "GH₵ 145,000",
-    period: "for 2 days",
-    rating: 4.92,
-    image: "https://images.unsplash.com/photo-1621007947382-bb3c3968e3bb?w=800&q=80",
-    ownerName: "Kwame Asare",
-    ownerAvatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f5d?w=200&q=80",
-    isVerified: true,
-    condition: "Foreign Used",
-    transmission: "Automatic",
-    yearsOnPlatform: "4+ years",
-  },
-  {
-    id: "5",
-    title: "Nissan Patrol 2019 Black",
-    category: "SUV",
-    location: "Accra",
-    region: "Greater Accra",
-    price: "GH₵ 320,000",
-    originalPrice: "GH₵ 380,000",
-    period: "for 3 days",
-    rating: 4.95,
-    image: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80",
-    ownerName: "Ama Serwaa",
-    ownerAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
-    isVerified: true,
-    condition: "Foreign Used",
-    transmission: "Automatic",
-    yearsOnPlatform: "6+ years",
-  },
-  {
-    id: "6",
-    title: "Mitsubishi Pajero 2017 Red",
-    category: "SUV",
-    location: "Tema",
-    region: "Greater Accra",
-    price: "GH₵ 180,000",
-    originalPrice: "GH₵ 210,000",
-    period: "for 2 days",
-    rating: 4.78,
-    image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&q=80",
-    ownerName: "Kofi Mensah",
-    ownerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80",
-    isVerified: false,
-    condition: "Local Used",
-    transmission: "Manual",
-    yearsOnPlatform: "2+ years",
-  },
-  {
-    id: "8",
-    title: "Honda CR-V 2020 Blue",
-    category: "SUV",
-    location: "Cape Coast",
-    region: "Central",
-    price: "GH₵ 280,000",
-    originalPrice: "GH₵ 320,000",
-    period: "for 2 days",
-    rating: 4.90,
-    image: "https://images.unsplash.com/photo-1568608889924-24dbd84c702c?w=800&q=80",
-    ownerName: "Yaw Boateng",
-    ownerAvatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f5d?w=200&q=80",
-    isVerified: true,
-    condition: "Foreign Used",
-    transmission: "Automatic",
-    yearsOnPlatform: "5+ years",
-  },
-  {
-    id: "9",
-    title: "Ford Ranger 2019 White",
-    category: "Truck",
-    location: "Kumasi",
-    region: "Ashanti",
-    price: "GH₵ 190,000",
-    originalPrice: "GH₵ 230,000",
-    period: "for 2 days",
-    rating: 4.85,
-    image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&q=80",
-    ownerName: "Abena Osei",
-    ownerAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80",
-    isVerified: true,
-    condition: "Foreign Used",
-    transmission: "Automatic",
-    yearsOnPlatform: "3+ years",
-  },
-  {
-    id: "10",
-    title: "Suzuki Swift 2016 Silver",
-    category: "Sedan",
-    location: "Accra",
-    region: "Greater Accra",
-    price: "GH₵ 65,000",
-    originalPrice: "GH₵ 80,000",
-    period: "for 1 day",
-    rating: 4.72,
-    image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
-    ownerName: "Kojo Bannerman",
-    ownerAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80",
-    isVerified: false,
-    condition: "Local Used",
-    transmission: "Manual",
-    yearsOnPlatform: "1+ year on Africana",
-  },
-  {
-    id: "11",
-    title: "Toyota Hiace 2018 Gray",
-    category: "Van",
-    location: "Tamale",
-    region: "Northern",
-    price: "GH₵ 95,000",
-    originalPrice: "GH₵ 110,000",
-    period: "for 2 days",
-    rating: 4.88,
-    image: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
-    ownerName: "Alhaji Mohammed",
-    ownerAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80",
-    isVerified: true,
-    condition: "Foreign Used",
-    transmission: "Manual",
-    yearsOnPlatform: "7+ years",
-  },
-  {
-    id: "12",
-    title: "Mercedes C300 2019 Black",
-    category: "Sedan",
-    location: "Accra",
-    region: "Greater Accra",
-    price: "GH₵ 350,000",
-    originalPrice: "GH₵ 420,000",
-    period: "for 3 days",
-    rating: 4.96,
-    image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80",
-    ownerName: "Efua Mensah",
-    ownerAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
-    isVerified: true,
-    condition: "Foreign Used",
-    transmission: "Automatic",
-    yearsOnPlatform: "8+ years",
-  },
-  {
-    id: "13",
-    title: "Kawasaki Ninja 2021 Red",
-    category: "Motorcycle",
-    location: "Kumasi",
-    region: "Ashanti",
-    price: "GH₵ 45,000",
-    originalPrice: "GH₵ 55,000",
-    period: "for 1 day",
-    rating: 4.70,
-    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
-    ownerName: "Kwaku Darko",
-    ownerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80",
-    isVerified: false,
-    condition: "Local Used",
-    transmission: "Manual",
-    yearsOnPlatform: "2+ years",
-  },
-  {
-    id: "14",
-    title: "Find your perfect ride",
-    message: "Explore vehicles near you",
-    images: [
-      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&q=80",
-      "https://images.unsplash.com/photo-1532581140115-ca39d166e46a?w=400&q=80",
-      "https://images.unsplash.com/photo-1503376763036-066120622c74?w=400&q=80",
-      "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&q=80",
-    ],
-  },
-];
+
 
 const POPULAR = [
   {
@@ -321,12 +93,6 @@ const DRIVERS = [
   },
 ];
 
-const TOP_RATED_VEHICLES = VEHICLES.filter((v) => (v.rating ?? 0) >= 4.9 && v.id !== "14");
-
-const VERIFIED_VEHICLES = VEHICLES.filter((v) => v.isVerified && v.id !== "14");
-
-const TOP_OWNERS_NEARBY = VEHICLES.filter((v) => v.isVerified && v.id !== "14").slice(0, 4);
-
 type HomeScreenContentProps = {
   onLoginPress?: () => void;
 };
@@ -340,6 +106,33 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const [placesResults, setPlacesResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+
+  const convexVehicles = useQuery(api.jobs.listVehicles, {});
+  const vehicles = (convexVehicles ?? []).map((v: any) => ({
+    id: v._id,
+    title: v.title,
+    category: v.category,
+    location: v.city,
+    region: v.region,
+    price: `GH₵ ${v.pricePerDay}`,
+    originalPrice: v.pricePerWeek ? `GH₵ ${v.pricePerWeek}` : undefined,
+    period: "per day",
+    rating: v.rating,
+    image: v.images?.[0] ?? "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
+    images: v.images ?? [],
+    message: "Explore this vehicle",
+    ownerName: v.ownerId,
+    ownerAvatar: "",
+    isVerified: true,
+    condition: "Listed",
+    transmission: v.transmission ?? "Automatic",
+    yearsOnPlatform: "New",
+  }));
+
+  const topRatedVehicles = vehicles.filter((v: any) => (v.rating ?? 0) >= 4.9);
+  const verifiedVehicles = vehicles.filter((v: any) => v.isVerified);
+  const topOwnersNearby = verifiedVehicles.slice(0, 4);
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const sectionAnims = useRef<Animated.Value[]>(
     Array.from({ length: 6 }, () => new Animated.Value(1))
@@ -662,7 +455,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-              {VEHICLES.filter((v) => {
+              {vehicles.filter((v) => {
                 const query = searchQuery.toLowerCase();
                 return (
                   v.title.toLowerCase().includes(query) ||
@@ -759,7 +552,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-              {VERIFIED_VEHICLES.slice(0, 4).map((vehicle) => (
+              {verifiedVehicles.slice(0, 4).map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
                   vehicle={vehicle as any}
@@ -848,7 +641,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-              {TOP_RATED_VEHICLES.slice(0, 4).map((vehicle) => (
+              {topRatedVehicles.slice(0, 4).map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
                   vehicle={vehicle as any}
@@ -884,7 +677,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-              {TOP_OWNERS_NEARBY.map((vehicle) => (
+              {topOwnersNearby.map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
                   vehicle={vehicle as any}

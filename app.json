@@ -9,11 +9,18 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.c0debreak3r.driverconnect",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Allow Africana Driver Connect to use your location for driver matching and live tracking.",
         "NSPhotoLibraryUsageDescription": "Allow Africana Driver Connect to access your photos for identity document uploads.",
         "NSCameraUsageDescription": "Allow Africana Driver Connect to use your camera for identity verification.",
-        "NSMicrophoneUsageDescription": "Allow Africana Driver Connect to use your microphone for video verification."
+        "NSMicrophoneUsageDescription": "Allow Africana Driver Connect to use your microphone for video verification.",
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      },
+      "entitlements": {
+        "aps-environment": "development"
       }
     },
     "android": {
@@ -30,8 +37,7 @@
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "web": {
       "output": "static",
@@ -45,13 +51,6 @@
           "backgroundColor": "#FFFFFF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200
-        }
-      ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/notification-icon.png",
-          "color": "#2C3E5B"
         }
       ],
       "expo-web-browser",

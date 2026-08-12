@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { ConvexProviderWithAuth } from "convex/react";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -8,7 +8,7 @@ import { useConvexRoleSync } from "@/hooks/useConvexRoleSync";
 import { AuthProvider, useAuth } from "@/contexts/AuthProvider";
 import { ClerkProvider } from "@clerk/expo";
 import { ConvexSync } from "@/components/ConvexSync";
-import { useNotifications } from "@/lib/notifications";
+import { setupOneSignal } from "@/lib/onesignal";
 
 // Ensure @expo/ui view managers are registered before the app renders.
 // This prevents "ViewManagerRegistry.get()" crashes on Android when
@@ -16,7 +16,22 @@ import { useNotifications } from "@/lib/notifications";
 import "@expo/ui";
 
 function NotificationSetup() {
-  useNotifications();
+  useEffect(() => {
+    let isCancelled = false;
+    const run = async () => {
+      const cleanup = await setupOneSignal();
+      if (isCancelled || typeof cleanup !== "function") {
+        return;
+      }
+      return cleanup;
+    };
+    run();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
   return null;
 }
 

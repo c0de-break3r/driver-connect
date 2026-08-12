@@ -242,13 +242,8 @@ export default function OwnerDashboard() {
 
   const copyImageToPersistentStorage = async (uri: string): Promise<string> => {
     const baseDir = FileSystem.documentDirectory || "";
-    const destination = `${baseDir.replace(/\/?$/, "/")}avatar-${Date.now()}.jpg`;
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    await FileSystem.writeAsStringAsync(destination, base64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    const destination = `${baseDir.replace(/\/?$/, "")}/avatar-${Date.now()}.jpg`;
+    await FileSystem.copyAsync({ from: uri, to: destination });
     return destination;
   };
 
@@ -742,7 +737,10 @@ function BookingCard({ booking }: { booking: any }) {
   return (
     <TouchableOpacity
       style={styles.bookingCard}
-      onPress={() => router.push(`/booking/${booking._id}` as any)}
+      onPress={() => {
+        const path = "/booking/" + booking._id;
+        router.push(path as any);
+      }}
     >
       <View style={styles.bookingHeader}>
         <View

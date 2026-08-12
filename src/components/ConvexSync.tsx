@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { useRoleStore } from "@/store/useRoleStore";
 import { useAppStateStore, getEffectiveAvatarUri, getEffectiveProfileSetupComplete } from "@/store/useAppStateStore";
 import { api } from "@/lib/convexApi";
+import { getOneSignalPlayerId } from "@/lib/onesignal";
 
 export function ConvexSync() {
   const { userId, email, firstName, isLoaded, signedIn } = useAuth();
@@ -29,6 +30,8 @@ export function ConvexSync() {
     if (!isLoaded || !signedIn || !userId || !email) return;
 
     try {
+      const onesignalPlayerId = await getOneSignalPlayerId();
+
       await upsertUser({
         userId,
         role: role || "client",
@@ -38,6 +41,7 @@ export function ConvexSync() {
         notificationsEnabled,
         profileSetupComplete: getEffectiveProfileSetupComplete(),
         avatarUri: getEffectiveAvatarUri() || undefined,
+        onesignalPlayerId: onesignalPlayerId || undefined,
       });
       syncedUserIdRef.current = userId;
       syncedEmailRef.current = email;

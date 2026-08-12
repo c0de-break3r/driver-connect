@@ -36,6 +36,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# lockfiles
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
 example
 
 # generated native folders

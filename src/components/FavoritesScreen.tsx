@@ -1,4 +1,6 @@
 import { useMemo, useRef, useEffect, useState, useCallback, forwardRef } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/lib/convexApi";
 import {
   ScrollView,
   StyleSheet,
@@ -16,7 +18,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthProvider";
 import { router } from "expo-router";
 import { useFavoritesStore, type VehicleFavorite } from "@/store/useFavoritesStore";
-import { VEHICLES } from "@/app/HomeScreenContent";
 import { images } from "@/constants/images";
 import EmptyState from "@/components/EmptyState";
 
@@ -51,9 +52,10 @@ export default function FavoritesScreen() {
     loadForUser(email);
   }, [email, loadForUser]);
 
-  const favoriteVehicles = useMemo<VehicleFavorite[]>(() => {
-    return VEHICLES.filter((v) => v.id !== "14" && favorites[v.id] && "image" in v && v.image) as VehicleFavorite[];
-  }, [favorites]);
+  const allVehicles = useQuery(api.jobs.listVehicles, {});
+  const favoriteVehicles = useMemo<any[]>(() => {
+    return (allVehicles ?? []).filter((v: any) => v._id !== "14" && favorites[v._id] && v.images?.[0]);
+  }, [favorites, allVehicles]);
 
   const getHeartAnim = (id: string) => {
     if (!heartAnims.has(id)) {
@@ -200,10 +202,10 @@ export default function FavoritesScreen() {
         ) : (
           <View style={styles.collectionsGrid}>
             {collections.map((collection) => {
-              const stackedImages = collection.vehicleIds
+              const stackedImages = (allVehicles ?? [])
+                .filter((v: any) => collection.vehicleIds.includes(v._id))
                 .slice(-3)
-                .map((id) => VEHICLES.find((v) => v.id === id))
-                .filter((v): v is VehicleFavorite => !!v && typeof v.image === "string" && typeof v.category === "string");
+                .map((v: any) => ({ id: v._id, image: v.images?.[0] ?? "" }));
               const isDragOver = dragOverCollectionId === collection.id;
               const isReceiving = receivingCollectionId === collection.id;
               return (
@@ -379,7 +381,7 @@ const BottomSheet = ({ visible, onClose, children }: { visible: boolean; onClose
 
 const CollectionCard = forwardRef<View, {
   collection: { id: string; name: string; vehicleIds: string[] };
-  stackedImages: VehicleFavorite[];
+  stackedImages: Array<{ id: string; image: string }>;
   isDragOver: boolean;
   isReceiving: boolean;
   onPress: () => void;

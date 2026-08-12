@@ -16,14 +16,16 @@ export default defineSchema({
     notificationsEnabled: v.optional(v.boolean()),
     profileSetupComplete: v.optional(v.boolean()),
     avatarUri: v.optional(v.string()),
+    expoPushToken: v.optional(v.string()),
+    onesignalPlayerId: v.optional(v.string()),
     theme: v.optional(v.string()),
     currency: v.optional(v.string()),
-    expoPushToken: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_user_id", ["clerkUserId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_role", ["role"]),
 
   driverProfiles: defineTable({
     userId: v.string(),
@@ -83,6 +85,7 @@ export default defineSchema({
     description: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     targetUrl: v.optional(v.string()),
+    targetRole: v.optional(v.union(v.literal("driver"), v.literal("owner"), v.literal("client"), v.literal("corporate"), v.literal("all"))),
     isActive: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -209,4 +212,15 @@ export default defineSchema({
   })
     .index("by_status_next", ["status", "nextAttemptAt"])
     .index("by_user", ["userId"]),
+
+  analyticsEvents: defineTable({
+    event: v.string(),
+    userId: v.optional(v.string()),
+    role: v.optional(v.string()),
+    properties: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index("by_event", ["event"])
+    .index("by_user", ["userId"])
+    .index("by_created_at", ["createdAt"]),
 });

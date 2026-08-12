@@ -15,7 +15,6 @@ import * as FileSystem from "expo-file-system/legacy";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useRoleStore } from "@/store/useRoleStore";
 import { useAppStateStore, getEffectiveAvatarUri } from "@/store/useAppStateStore";
-import { useNotifications } from "@/lib/notifications";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -96,13 +95,8 @@ export default function ProfileScreen({
 
   const copyImageToPersistentStorage = async (uri: string): Promise<string> => {
     const baseDir = FileSystem.documentDirectory || "";
-    const destination = `${baseDir.replace(/\/?$/, "/")}avatar-${Date.now()}.jpg`;
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    await FileSystem.writeAsStringAsync(destination, base64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    const destination = `${baseDir.replace(/\/?$/, "")}/avatar-${Date.now()}.jpg`;
+    await FileSystem.copyAsync({ from: uri, to: destination });
     return destination;
   };
 

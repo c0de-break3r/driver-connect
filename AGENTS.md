@@ -630,6 +630,12 @@ Use:
 - AsyncStorage for persistence
 - backend only for secure operations (secrets, payments, matching)
 
+## Build Rules
+
+- Always use **EAS Build** for native builds. Do not use `npx expo run:ios` or `npx expo run:android` for production or testing builds.
+- Use local `npx expo prebuild` only when necessary to inspect or update the native project, but final builds must go through EAS.
+- Treat `eas.json` and EAS build profiles as the source of truth for native build configuration.
+
 ## Dependency Management Rules
 
 - Use **bun** only; do not use npm or yarn to avoid package management conflicts.

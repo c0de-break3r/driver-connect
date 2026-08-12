@@ -4,6 +4,8 @@ import { api } from "./_generated/api";
 
 const MAX_ATTEMPTS = 5;
 const RETRY_DELAY_MS = 60 * 1000;
+const ONESIGNAL_APP_ID = "e55df92b-39ad-4a8d-81fd-7f1aa4b76bd6";
+const ONESIGNAL_REST_API_KEY = process.env.ONESIGNAL_REST_API_KEY || "";
 
 type PushMessage = {
   to: string;
@@ -57,6 +59,79 @@ export const sendTestNotification = action({
   },
 });
 
+export const sendUserNotification = action({
+  args: {
+    userId: v.string(),
+    title: v.string(),
+    body: v.string(),
+    data: v.optional(v.any()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args): Promise<null> => {
+    await ctx.runMutation(api.notifications.enqueue, {
+      userId: args.userId,
+      title: args.title,
+      body: args.body,
+      data: args.data,
+    });
+
+    return null;
+  },
+});
+
+export const sendRoleNotification = action({
+  args: {
+    role: v.union(v.literal("driver"), v.literal("owner"), v.literal("client"), v.literal("corporate")),
+    title: v.string(),
+    body: v.string(),
+    data: v.optional(v.any()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args): Promise<null> => {
+    const users = await ctx.runQuery(api.notifications.getUsersByRole, {
+      role: args.role as any,
+    });
+
+    for (const user of users) {
+      if (user.onesignalPlayerId) {
+        await ctx.runMutation(api.notifications.enqueue, {
+          userId: user.clerkUserId,
+          title: args.title,
+          body: args.body,
+          data: args.data,
+        });
+      }
+    }
+
+    return null;
+  },
+});
+
+export const sendAppWideNotification = action({
+  args: {
+    title: v.string(),
+    body: v.string(),
+    data: v.optional(v.any()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args): Promise<null> => {
+    const users = await ctx.runQuery(api.notifications.getAllUsersWithPlayerId);
+
+    for (const user of users) {
+      if (user.onesignalPlayerId) {
+        await ctx.runMutation(api.notifications.enqueue, {
+          userId: user.clerkUserId,
+          title: args.title,
+          body: args.body,
+          data: args.data,
+        });
+      }
+    }
+
+    return null;
+  },
+});
+
 export const enqueue = mutation({
   args: {
     userId: v.string(),
@@ -105,7 +180,8 @@ export const processQueue = internalMutation({
           userId: item.userId,
         });
 
-        if (!user?.expoPushToken) {
+        const playerId = user?.onesignalPlayerId || user?.expoPushToken;
+        if (!playerId) {
           await ctx.db.patch(item._id, {
             status: "failed",
             attempts: item.attempts + 1,
@@ -115,25 +191,24 @@ export const processQueue = internalMutation({
           continue;
         }
 
-        const message: PushMessage = {
-          to: user.expoPushToken,
-          sound: "default",
-          title: item.title,
-          body: item.body,
-          data: item.data ?? {},
-        };
-
-        const response = await fetch("https://exp.host/--/api/v2/push/send", {
+        const response = await fetch("https://api.onesignal.com/notifications", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Basic ${ONESIGNAL_REST_API_KEY}`,
           },
-          body: JSON.stringify(message),
+          body: JSON.stringify({
+            app_id: ONESIGNAL_APP_ID,
+            include_player_ids: [playerId],
+            headings: { en: item.title },
+            contents: { en: item.body },
+            data: item.data ?? {},
+          }),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Push API responded with ${response.status}: ${errorText}`);
+          throw new Error(`OneSignal API responded with ${response.status}: ${errorText}`);
         }
 
         await ctx.db.patch(item._id, {
@@ -197,5 +272,46 @@ export const getQueueStatus = query({
       sent: all.filter((item) => item.status === "sent").length,
       failed: all.filter((item) => item.status === "failed").length,
     };
+  },
+});
+
+export const getUsersByRole = query({
+  args: { role: v.string() },
+  returns: v.array(v.object({
+    clerkUserId: v.string(),
+    onesignalPlayerId: v.optional(v.string()),
+  })),
+  handler: async (ctx, args) => {
+    const users = await ctx.db
+      .query("users")
+      .withIndex("by_role", (q) => q.eq("role", args.role as any))
+      .collect();
+
+    return users
+      .filter((user) => user.onesignalPlayerId)
+      .map((user) => ({
+        clerkUserId: user.clerkUserId,
+        onesignalPlayerId: user.onesignalPlayerId,
+      }));
+  },
+});
+
+export const getAllUsersWithPlayerId = query({
+  args: {},
+  returns: v.array(v.object({
+    clerkUserId: v.string(),
+    onesignalPlayerId: v.optional(v.string()),
+  })),
+  handler: async (ctx) => {
+    const users = await ctx.db
+      .query("users")
+      .collect();
+
+    return users
+      .filter((user) => user.onesignalPlayerId)
+      .map((user) => ({
+        clerkUserId: user.clerkUserId,
+        onesignalPlayerId: user.onesignalPlayerId,
+      }));
   },
 });

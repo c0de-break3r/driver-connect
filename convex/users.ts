@@ -21,6 +21,7 @@ export const getByUserId = query({
       profileSetupComplete: v.optional(v.boolean()),
       avatarUri: v.optional(v.string()),
       expoPushToken: v.optional(v.string()),
+      onesignalPlayerId: v.optional(v.string()),
       createdAt: v.number(),
       updatedAt: v.number(),
     }),
@@ -56,6 +57,7 @@ export const getByEmail = query({
       profileSetupComplete: v.optional(v.boolean()),
       avatarUri: v.optional(v.string()),
       expoPushToken: v.optional(v.string()),
+      onesignalPlayerId: v.optional(v.string()),
       createdAt: v.number(),
       updatedAt: v.number(),
     }),
@@ -87,6 +89,7 @@ export const upsert = mutation({
     profileSetupComplete: v.optional(v.boolean()),
     avatarUri: v.optional(v.string()),
     expoPushToken: v.optional(v.string()),
+    onesignalPlayerId: v.optional(v.string()),
   },
   returns: v.id("users"),
   handler: async (ctx, args) => {
@@ -108,6 +111,7 @@ export const upsert = mutation({
         ...(args.profileSetupComplete !== undefined && { profileSetupComplete: args.profileSetupComplete }),
         ...(args.avatarUri !== undefined && { avatarUri: args.avatarUri }),
         ...(args.expoPushToken !== undefined && { expoPushToken: args.expoPushToken }),
+        ...(args.onesignalPlayerId !== undefined && { onesignalPlayerId: args.onesignalPlayerId }),
         updatedAt: now,
       });
       return existing._id;
@@ -123,6 +127,7 @@ export const upsert = mutation({
       profileSetupComplete: args.profileSetupComplete ?? false,
       avatarUri: args.avatarUri,
       expoPushToken: args.expoPushToken,
+      onesignalPlayerId: args.onesignalPlayerId,
       createdAt: now,
       updatedAt: now,
     });
