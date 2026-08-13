@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyImage: {
-    width: 180,
-    height: 180,
+    width: 240,
+    height: 240,
     marginBottom: 24,
   },
   emptyTitle: {

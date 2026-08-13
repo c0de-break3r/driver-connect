@@ -1,7 +1,7 @@
 import bookmark3dIcon from "@/assets/images/illustrator-icons/3dicons-bookmark.png";
 import calendar3dNoFigure from "@/assets/images/illustrator-icons/calendar-3d-no-figure.png";
 import messages3dIcon from "@/assets/images/illustrator-icons/3dicons-chat-text.png";
-import teslaCybertruck from "@/assets/images/illustrator-icons/teslacybertruck.png";
+import benz from "@/assets/images/illustrator-icons/benz.png";
 import setting3dIcon from "@/assets/images/illustrator-icons/3dicons-setting.png";
 import RoleSwitchTransition from "@/components/RoleSwitchTransition";
 import { useAuth } from "@/contexts/AuthProvider";
@@ -469,7 +469,7 @@ export default function OwnerDashboard() {
               <View style={{ marginTop: 10 }}>
                 {!signedIn ? (
                   <EmptyState
-                    image={teslaCybertruck}
+                    image={benz}
                     title="No listings"
                     subtitle="Log in to create and manage your vehicle listings."
                     ctaText="Log in"

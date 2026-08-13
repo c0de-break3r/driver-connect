@@ -152,7 +152,7 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
 
       {!vehicles || vehicles.length === 0 ? (
         <EmptyState
-          image={images.teslaCybertruck}
+          image={images.benz}
           title="No listings yet"
           subtitle="Create your first vehicle listing to start receiving booking requests."
           ctaText="Create a listing"

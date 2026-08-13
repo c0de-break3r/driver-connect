@@ -10,7 +10,7 @@ import appIcon from "@/assets/images/splash-icon.png";
 import heroIllustrator from "@/assets/images/hero-illustrator.jpg";
 import roleGuest from "@/assets/images/illustrator-icons/role-guest.png";
 import roleOwner from "@/assets/images/illustrator-icons/role-owner.png";
-import teslaCybertruck from "@/assets/images/illustrator-icons/teslacybertruck.png";
+import benz from "@/assets/images/illustrator-icons/benz.png";
 import favoritesHeart from "@/assets/images/illustrator-icons/3dicons-heart.png";
 
 export const images = {
@@ -19,6 +19,6 @@ export const images = {
   heroIllustrator,
   roleGuest,
   roleOwner,
-  teslaCybertruck,
+  benz,
   favoritesHeart,
 };

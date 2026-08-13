@@ -27,3 +27,8 @@ declare module "*.svg" {
   const value: ImageSourcePropType;
   export default value;
 }
+
+declare module "*.mp4" {
+  const value: string;
+  export default value;
+}
