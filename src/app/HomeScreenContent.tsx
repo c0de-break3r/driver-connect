@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Dimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Dimensions, Alert } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
@@ -17,24 +19,34 @@ const ICON_SIZE_ACTIVE = 24;
 
 
 
-const POPULAR = [
+const FEATURED_VEHICLES = [
   {
-    id: "1",
-    title: "Kumasi Zoological Garden",
-    subtitle: "12 vehicles nearby",
-    image: "https://images.unsplash.com/photo-1504173010664-32509aeebb62?w=800&q=80",
+    id: "f1",
+    title: "Toyota Hilux 2022",
+    subtitle: "Double Cab · 4x4 · Ashanti",
+    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
+    pricePerDay: 169,
   },
   {
-    id: "2",
-    title: "Lake Bosumtwi",
-    subtitle: "8 vehicles nearby",
-    image: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800&q=80",
+    id: "f2",
+    title: "Mercedes-Benz C300",
+    subtitle: "Luxury sedan · Greater Accra",
+    image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80",
+    pricePerDay: 220,
   },
   {
-    id: "3",
-    title: "Manhyia Palace",
-    subtitle: "15 vehicles nearby",
-    image: "https://images.unsplash.com/photo-1580060839134-75a5edca2e27?w=800&q=80",
+    id: "f3",
+    title: "Toyota Hiace 2021",
+    subtitle: "14-seater bus · Central Region",
+    image: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
+    pricePerDay: 180,
+  },
+  {
+    id: "f4",
+    title: "Yamaha YZF-R3",
+    subtitle: "Sport motorcycle · Accra",
+    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
+    pricePerDay: 85,
   },
 ];
 
@@ -129,6 +141,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     condition: "Listed",
     transmission: v.transmission ?? "Automatic",
     yearsOnPlatform: "New",
+    pricePerDay: v.pricePerDay,
   }));
 
   const topRatedVehicles = vehicles.filter((v: any) => (v.rating ?? 0) >= 4.9);
@@ -169,7 +182,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   };
 
   const handleVehiclePress = (id: string) => {
-    router.push(`/home/${id}` as any);
+    router.push(`/vehicle-details?id=${id}` as any);
   };
 
   const handleFavoritePress = (id: string) => {
@@ -283,14 +296,16 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   };
 
   const displayedVehicles = sortVehicles(vehicles);
+  const sortedFeaturedVehicles = sortVehicles(FEATURED_VEHICLES);
 
   const chips = [
-    { id: "all", label: "All", icon: "car-outline" },
-    { id: "airports", label: "Airports", icon: "airplane-outline" },
-    { id: "monthly", label: "Monthly", icon: "calendar-outline" },
-    { id: "nearby", label: "Nearby", icon: "location-outline" },
-    { id: "delivered", label: "Delivered", icon: "car-outline" },
-    { id: "cities", label: "Cities", icon: "business-outline" },
+    { id: "all", label: "All", icon: "people-pulling", family: "fa6" as const },
+    { id: "drivers", label: "Drivers", icon: "steering", family: "mci" as const },
+    { id: "airports", label: "Airports", icon: "airplane-outline", family: "ion" as const },
+    { id: "monthly", label: "Monthly", icon: "calendar-outline", family: "ion" as const },
+    { id: "nearby", label: "Nearby", icon: "location-outline", family: "ion" as const },
+    { id: "delivered", label: "Delivered", icon: "car-sport-outline", family: "ion" as const },
+    { id: "cities", label: "Cities", icon: "business-outline", family: "ion" as const },
   ];
 
   const handleSort = (option: "recommended" | "price_asc" | "price_desc" | "rating") => {
@@ -468,8 +483,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                       {sortBy === option.id && (
                         <Ionicons name="checkmark" size={18} color={NAVY} />
                       )}
-                    </Pressable>
-                  ))}
+                     </Pressable>
+                   ))}
                 </View>
               )}
             </View>
@@ -496,10 +511,17 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               onPress={() => handleCategoryPress(chip.id)}
               onLayout={(e) => handleChipLayout(chip.id, e)}
             >
-              <Ionicons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
+              {chip.family === "fa6" ? (
+                <FontAwesome6 name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
+              ) : chip.family === "mci" ? (
+                <MaterialCommunityIcons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
+              ) : (
+                <Ionicons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
+              )}
               <Text style={[styles.categoryChipText, selectedCategory === chip.id && styles.categoryChipTextActive]}>{chip.label}</Text>
             </Pressable>
-          ))}
+          )
+        )}
         </ScrollView>
       </View>
 
@@ -589,37 +611,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           </>
         ) : (
           <>
-            {/* Continue searching card */}
-            <Card style={styles.continueCard}>
-              <View style={styles.continueContent}>
-                <View style={styles.continueTextWrap}>
-                  <Text style={styles.continueTitle}>
-                    Continue searching for vehicles in Kumasi
-                  </Text>
-                  <Text style={styles.continueDate}>Jul 31 – Aug 2 ›</Text>
-                </View>
-                <View style={styles.continueImageWrap}>
-                  <Image
-                    source={{ uri: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80" }}
-                    style={styles.continueImage}
-                    contentFit="cover"
-                    onError={() => handleImageError("continue")}
-                  />
-                  {imageErrors["continue"] && (
-                    <View style={styles.imageFallback}>
-                      <Ionicons name="image-outline" size={24} color="#9CA3AF" />
-                    </View>
-                  )}
-                </View>
-              </View>
-            </Card>
-
-            {/* Verified Vehicles */}
+            {/* Top Rated Drivers */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Verified Vehicles</Text>
-              <Pressable>
-                <Ionicons name="arrow-forward" size={18} color={NAVY} />
-              </Pressable>
+              <Text style={styles.sectionTitle}>Top Rated Drivers</Text>
             </View>
             <Animated.View
               style={[
@@ -637,26 +631,64 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-              {verifiedVehicles.slice(0, 4).map((vehicle) => (
-                <VehicleCard
-                  key={vehicle.id}
-                  vehicle={vehicle as any}
-                  isFavorite={!!favorites[vehicle.id]}
-                  onPress={() => handleVehiclePress(vehicle.id)}
-                  onFavoritePress={() => handleFavoritePress(vehicle.id)}
-                  list={viewMode === "list"}
-                  style={viewMode === "list" ? styles.listCard : undefined}
-                />
-              ))}
+              {DRIVERS.map((driver) => {
+                const heartScale = getHeartAnim(driver.id);
+                const triggerHeartBeat = () => {
+                  heartScale.setValue(1);
+                  Animated.sequence([
+                    Animated.timing(heartScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
+                    Animated.timing(heartScale, { toValue: 0.85, duration: 120, useNativeDriver: true }),
+                    Animated.timing(heartScale, { toValue: 1.15, duration: 120, useNativeDriver: true }),
+                    Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
+                  ]).start();
+                };
+                return (
+                <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => router.push(`/driver-details?id=${driver.id}` as any)}>
+                  <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
+                    <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
+                     <Pressable style={styles.favoriteBadge} onPress={() => {
+                       triggerHeartBeat();
+                       Alert.alert("Favorite", `Added ${driver.name} to favorites`);
+                     }}>
+                       <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                         <Ionicons name="heart-outline" size={22} color="#FFFFFF" />
+                       </Animated.View>
+                     </Pressable>
+                  </View>
+                  <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
+                    <Text style={styles.cardTitle} numberOfLines={1}>
+                      {driver.name}
+                    </Text>
+                    <Text style={styles.cardSubtitle}>{driver.location}</Text>
+                    <View style={styles.ratingRow}>
+                      <Ionicons name="star" size={12} color="#FFB800" />
+                      <Text style={styles.ratingText}>{driver.rating}</Text>
+                      <Text style={styles.tripsText}>({driver.trips} trips)</Text>
+                    </View>
+                    <View style={styles.rateRow}>
+                      <Text style={styles.rateText}>{driver.hourlyRate}/hr</Text>
+                      {driver.isVerified && (
+                        <View style={styles.verifiedBadgeInline}>
+                          <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                          <Text style={styles.verifiedBadgeText}>Verified</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.metaRow}>
+                      <Text style={styles.yearsText}>{driver.yearsOnPlatform}</Text>
+                      <Text style={styles.vehicleTypeText}>{driver.vehicleType}</Text>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
             </Animated.View>
 
-            {/* Top Rated Drivers */}
+            {/* Featured Vehicles */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Top Rated Drivers</Text>
-              <Pressable>
-                <Ionicons name="arrow-forward" size={18} color={NAVY} />
-              </Pressable>
+              <Text style={styles.sectionTitle}>Featured Vehicles</Text>
             </View>
+
             <Animated.View
               style={[
                 viewMode === "list" ? styles.list : styles.grid,
@@ -673,155 +705,49 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-              {DRIVERS.map((driver) => (
-                <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => {}}>
-                  <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
-                    <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
-                    {driver.isVerified && (
-                      <View style={styles.verifiedBadgeTop}>
-                        <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                      </View>
-                    )}
-                  </View>
-                  <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                      {driver.name}
-                    </Text>
-                    <Text style={styles.cardSubtitle}>{driver.location}</Text>
-                    <View style={styles.ratingRow}>
-                      <Ionicons name="star" size={12} color="#FFB800" />
-                      <Text style={styles.ratingText}>{driver.rating}</Text>
-                      <Text style={styles.tripsText}>({driver.trips} trips)</Text>
-                    </View>
-                    <Text style={styles.rateText}>{driver.hourlyRate}/hr</Text>
-                    <View style={styles.metaRow}>
-                      <Text style={styles.yearsText}>{driver.yearsOnPlatform}</Text>
-                      <Text style={styles.vehicleTypeText}>{driver.vehicleType}</Text>
-                    </View>
-                  </View>
-                </Pressable>
-              ))}
-            </Animated.View>
-
-            {/* Top Rated Vehicles */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Top Rated Vehicles</Text>
-              <Pressable>
-                <Ionicons name="arrow-forward" size={18} color={NAVY} />
-              </Pressable>
-            </View>
-            <Animated.View
-              style={[
-                viewMode === "list" ? styles.list : styles.grid,
-                {
-                  opacity: sectionAnims[3],
-                  transform: [
-                    {
-                      scale: sectionAnims[3].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.96, 1],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              {topRatedVehicles.slice(0, 4).map((vehicle) => (
-                <VehicleCard
-                  key={vehicle.id}
-                  vehicle={vehicle as any}
-                  isFavorite={!!favorites[vehicle.id]}
-                  onPress={() => handleVehiclePress(vehicle.id)}
-                  onFavoritePress={() => handleFavoritePress(vehicle.id)}
-                  list={viewMode === "list"}
-                  style={viewMode === "list" ? styles.listCard : undefined}
-                />
-              ))}
-            </Animated.View>
-
-            {/* Top Vehicle Owners Near You */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Top Vehicle Owners Near You</Text>
-              <Pressable>
-                <Ionicons name="arrow-forward" size={18} color={NAVY} />
-              </Pressable>
-            </View>
-            <Animated.View
-              style={[
-                viewMode === "list" ? styles.list : styles.grid,
-                {
-                  opacity: sectionAnims[4],
-                  transform: [
-                    {
-                      scale: sectionAnims[4].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.96, 1],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              {topOwnersNearby.map((vehicle) => (
-                <VehicleCard
-                  key={vehicle.id}
-                  vehicle={vehicle as any}
-                  isFavorite={!!favorites[vehicle.id]}
-                  onPress={() => handleVehiclePress(vehicle.id)}
-                  onFavoritePress={() => handleFavoritePress(vehicle.id)}
-                  list={viewMode === "list"}
-                  style={viewMode === "list" ? styles.listCard : undefined}
-                />
-              ))}
-            </Animated.View>
-
-            {/* Stay near section */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Stay near Kumasi Zoological Garden</Text>
-              <Pressable>
-                <Ionicons name="arrow-forward" size={18} color={NAVY} />
-              </Pressable>
-            </View>
-
-            <Animated.View
-              style={[
-                viewMode === "list" ? styles.list : styles.grid,
-                {
-                  opacity: sectionAnims[5],
-                  transform: [
-                    {
-                      scale: sectionAnims[5].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.96, 1],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              {POPULAR.map((item) => (
-                <Pressable key={item.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]}>
+              {sortedFeaturedVehicles.map((vehicle) => {
+                const heartScale = getHeartAnim(vehicle.id);
+                const triggerHeartBeat = () => {
+                  heartScale.setValue(1);
+                  Animated.sequence([
+                    Animated.timing(heartScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
+                    Animated.timing(heartScale, { toValue: 0.85, duration: 120, useNativeDriver: true }),
+                    Animated.timing(heartScale, { toValue: 1.15, duration: 120, useNativeDriver: true }),
+                    Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
+                  ]).start();
+                };
+                return (
+                <Pressable key={vehicle.id} style={[styles.featuredCard, viewMode === "list" ? styles.listCard : undefined]} onPress={() => handleVehiclePress(vehicle.id)}>
                   <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
                     <Image
-                      source={{ uri: item.image }}
+                      source={{ uri: vehicle.image }}
                       style={styles.cardImage}
                       contentFit="cover"
-                      onError={() => handleImageError(item.id)}
+                      onError={() => handleImageError(vehicle.id)}
                     />
-                    {imageErrors[item.id] && (
+                    {imageErrors[vehicle.id] && (
                       <View style={styles.imageFallback}>
                         <Ionicons name="image-outline" size={24} color="#9CA3AF" />
                       </View>
                     )}
+                    <Pressable style={styles.favoriteBadge} onPress={() => {
+                      triggerHeartBeat();
+                      Alert.alert("Favorite", `Added ${vehicle.title} to favorites`);
+                    }}>
+                      <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                        <Ionicons name="heart-outline" size={22} color="#FFFFFF" />
+                      </Animated.View>
+                    </Pressable>
                   </View>
                   <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
-                      {item.title}
+                      {vehicle.title}
                     </Text>
-                    <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+                    <Text style={styles.cardSubtitle}>{vehicle.subtitle}</Text>
                   </View>
                 </Pressable>
-              ))}
+              );
+            })}
             </Animated.View>
           </>
         )}
@@ -1225,6 +1151,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
+  featuredCard: {
+    width: "47%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   imageWrap: {
     position: "relative",
     width: "100%",
@@ -1238,12 +1172,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
   },
   imageFallback: {
     position: "absolute",
@@ -1273,6 +1203,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    marginTop: 4,
+  },
+  rateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 4,
   },
   ratingText: {
@@ -1439,6 +1375,25 @@ const styles = StyleSheet.create({
   },
   sortOptionTextActive: {
     fontWeight: "700",
+  },
+  cardTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  verifiedBadgeInline: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    backgroundColor: "#ECFDF5",
+  },
+  verifiedBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#10B981",
   },
 });
 

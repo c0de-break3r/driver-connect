@@ -1,0 +1,1154 @@
+import { useState, useRef, useEffect } from "react";
+import { ScrollView, StyleSheet, Text, View, Pressable, Alert, Dimensions } from "react-native";
+import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Animated } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+
+const NAVY = "#2C3E5B";
+const GREEN = "#10B981";
+
+const VEHICLES = [
+  {
+    id: "v1",
+    title: "Toyota Hilux 2022",
+    subtitle: "Double Cab · 4x4 · Ashanti",
+    images: [
+      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
+      "https://images.unsplash.com/photo-1507133750069-b736b0a46290?w=800&q=80",
+      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
+    ],
+    price: "$169",
+    originalPrice: "$182",
+    rating: 4.9,
+    trips: 42,
+    seats: "5 seats",
+    fuel: "Gas (Regular)",
+    mpg: "22 MPG",
+    transmission: "Automatic transmission",
+    location: "Kumasi, Ashanti",
+    hostName: "Rochelle",
+    hostAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+    hostRating: 4.9,
+    hostTrips: 3785,
+    joinedDate: "Apr 2021",
+  },
+  {
+    id: "v2",
+    title: "Mercedes-Benz C300",
+    subtitle: "Luxury sedan · Greater Accra",
+    images: [
+      "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80",
+      "https://images.unsplash.com/photo-1617447278431-e1e96c2bff8e?w=800&q=80",
+      "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&q=80",
+    ],
+    price: "$220",
+    originalPrice: "$240",
+    rating: 5.0,
+    trips: 28,
+    seats: "5 seats",
+    fuel: "Petrol",
+    mpg: "25 MPG",
+    transmission: "Automatic transmission",
+    location: "Accra, Greater Accra",
+    hostName: "Rochelle",
+    hostAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+    hostRating: 4.9,
+    hostTrips: 3785,
+    joinedDate: "Apr 2021",
+  },
+  {
+    id: "v3",
+    title: "Toyota Hiace 2021",
+    subtitle: "14-seater bus · Central Region",
+    images: [
+      "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
+      "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=800&q=80",
+    ],
+    price: "$180",
+    rating: 4.8,
+    trips: 56,
+    seats: "14 seats",
+    fuel: "Diesel",
+    mpg: "18 MPG",
+    transmission: "Manual",
+    location: "Cape Coast, Central",
+    hostName: "Rochelle",
+    hostAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+    hostRating: 4.9,
+    hostTrips: 3785,
+    joinedDate: "Apr 2021",
+  },
+  {
+    id: "v4",
+    title: "Yamaha YZF-R3",
+    subtitle: "Sport motorcycle · Accra",
+    images: [
+      "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
+      "https://images.unsplash.com/photo-1558981397-1c40b4d9a057?w=800&q=80",
+    ],
+    price: "$85",
+    rating: 4.95,
+    trips: 18,
+    seats: "2 seats",
+    fuel: "Petrol",
+    mpg: "45 MPG",
+    transmission: "Manual",
+    location: "Accra, Greater Accra",
+    hostName: "Rochelle",
+    hostAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+    hostRating: 4.9,
+    hostTrips: 3785,
+    joinedDate: "Apr 2021",
+  },
+  {
+    id: "f1",
+    title: "Toyota Hilux 2022",
+    subtitle: "Double Cab · 4x4 · Ashanti",
+    images: [
+      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
+      "https://images.unsplash.com/photo-1507133750069-b736b0a46290?w=800&q=80",
+    ],
+    price: "$169",
+    originalPrice: "$182",
+    rating: 4.9,
+    trips: 42,
+    seats: "5 seats",
+    fuel: "Gas (Regular)",
+    mpg: "22 MPG",
+    transmission: "Automatic transmission",
+    location: "Kumasi, Ashanti",
+    hostName: "Rochelle",
+    hostAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+    hostRating: 4.9,
+    hostTrips: 3785,
+    joinedDate: "Apr 2021",
+  },
+  {
+    id: "f2",
+    title: "Mercedes-Benz C300",
+    subtitle: "Luxury sedan · Greater Accra",
+    images: [
+      "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80",
+      "https://images.unsplash.com/photo-1617447278431-e1e96c2bff8e?w=800&q=80",
+    ],
+    price: "$220",
+    rating: 5.0,
+    trips: 28,
+    seats: "5 seats",
+    fuel: "Petrol",
+    mpg: "25 MPG",
+    transmission: "Automatic transmission",
+    location: "Accra, Greater Accra",
+    hostName: "Rochelle",
+    hostAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+    hostRating: 4.9,
+    hostTrips: 3785,
+    joinedDate: "Apr 2021",
+  },
+  {
+    id: "f3",
+    title: "Toyota Hiace 2021",
+    subtitle: "14-seater bus · Central Region",
+    images: [
+      "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
+      "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=800&q=80",
+    ],
+    price: "$180",
+    rating: 4.8,
+    trips: 56,
+    seats: "14 seats",
+    fuel: "Diesel",
+    mpg: "18 MPG",
+    transmission: "Manual",
+    location: "Cape Coast, Central",
+    hostName: "Rochelle",
+    hostAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+    hostRating: 4.9,
+    hostTrips: 3785,
+    joinedDate: "Apr 2021",
+  },
+  {
+    id: "f4",
+    title: "Yamaha YZF-R3",
+    subtitle: "Sport motorcycle · Accra",
+    images: [
+      "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
+      "https://images.unsplash.com/photo-1558981397-1c40b4d9a057?w=800&q=80",
+    ],
+    price: "$85",
+    rating: 4.95,
+    trips: 18,
+    seats: "2 seats",
+    fuel: "Petrol",
+    mpg: "45 MPG",
+    transmission: "Manual",
+    location: "Accra, Greater Accra",
+    hostName: "Rochelle",
+    hostAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
+    hostRating: 4.9,
+    hostTrips: 3785,
+    joinedDate: "Apr 2021",
+  },
+];
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+export default function VehicleDetailsScreen() {
+  const params = useLocalSearchParams();
+  const rawId = params.id;
+  const vehicleId = Array.isArray(rawId) ? rawId[0] : typeof rawId === "string" ? rawId : "v1";
+  const vehicle = VEHICLES.find((v) => v.id === vehicleId) || VEHICLES[0];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showFullscreenImage, setShowFullscreenImage] = useState(false);
+  const heartScale = useRef(new Animated.Value(1)).current;
+
+  // Fullscreen gallery state
+  const [fullscreenIndex, setFullscreenIndex] = useState(0);
+  const fullscreenScrollRef = useRef<ScrollView>(null);
+  const fullscreenAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    setCurrentImageIndex(0);
+    scrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [vehicleId]);
+
+  useEffect(() => {
+    if (showFullscreenImage) {
+      fullscreenAnim.setValue(0);
+      Animated.timing(fullscreenAnim, {
+        toValue: 1,
+        duration: 280,
+        useNativeDriver: true,
+      }).start();
+      setFullscreenIndex(0);
+      fullscreenScrollRef.current?.scrollTo({ x: 0, animated: false });
+    }
+  }, [showFullscreenImage]);
+
+  const triggerHeartBeat = () => {
+    heartScale.setValue(1);
+    Animated.sequence([
+      Animated.timing(heartScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
+      Animated.timing(heartScale, { toValue: 0.85, duration: 120, useNativeDriver: true }),
+      Animated.timing(heartScale, { toValue: 1.15, duration: 120, useNativeDriver: true }),
+      Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
+    ]).start();
+  };
+
+  const handleFavorite = () => {
+    triggerHeartBeat();
+    setIsFavorite((prev) => !prev);
+    Alert.alert(
+      isFavorite ? "Removed from favorites" : "Added to favorites",
+      isFavorite ? "" : `${vehicle.title} has been added to your favorites`
+    );
+  };
+
+  const handleBook = () => {
+    Alert.alert("Book", `Booking ${vehicle.title}...`);
+  };
+
+  const openFullscreenImage = () => {
+    setShowFullscreenImage(true);
+  };
+
+  const closeFullscreenImage = () => {
+    setShowFullscreenImage(false);
+  };
+
+  const handleFullscreenMomentum = (e: any) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+    setFullscreenIndex(index);
+  };
+
+  return (
+    <View key={vehicleId} style={styles.safeArea}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Hero Image Gallery */}
+        <View style={styles.imageWrap}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            ref={scrollRef}
+            onMomentumScrollEnd={(e) => {
+              const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+              setCurrentImageIndex(index);
+            }}
+          >
+            {vehicle.images.map((image, index) => (
+              <Pressable key={index} onPress={openFullscreenImage}>
+                <Image source={{ uri: image }} style={styles.heroImage} contentFit="cover" />
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          <View style={styles.imageCounter}>
+            <Text style={styles.imageCounterText}>
+              {currentImageIndex + 1} / {vehicle.images.length}
+            </Text>
+          </View>
+
+          {/* Top actions */}
+          <View style={styles.topActions}>
+            <Pressable style={styles.iconButton} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+            </Pressable>
+            <View style={styles.topRightActions}>
+              <Pressable style={styles.iconButton}>
+                <Ionicons name="share-outline" size={22} color="#FFFFFF" />
+              </Pressable>
+              <Pressable style={styles.iconButton} onPress={handleFavorite}>
+                <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                  <Ionicons
+                    name={isFavorite ? "heart" : "heart-outline"}
+                    size={22}
+                    color={isFavorite ? "#E74C3C" : "#FFFFFF"}
+                  />
+                </Animated.View>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Expand hint */}
+          <View style={styles.expandHint}>
+            <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.expandHintText}>Tap to expand</Text>
+          </View>
+        </View>
+
+        {/* Title & Rating */}
+        <View style={styles.content}>
+          <View style={styles.titleRow}>
+            <View style={styles.titleWrap}>
+              <Text style={styles.title}>{vehicle.title}</Text>
+              <Text style={styles.subtitle}>{vehicle.subtitle}</Text>
+            </View>
+            <View style={styles.priceBadge}>
+              <Text style={styles.priceBadgeText}>{vehicle.price}</Text>
+              <Text style={styles.priceBadgeSub}>/day</Text>
+            </View>
+          </View>
+
+          <View style={styles.ratingRow}>
+            <View style={styles.ratingBadge}>
+              <Ionicons name="star" size={16} color="#FFB800" />
+              <Text style={styles.ratingText}>{vehicle.rating}</Text>
+            </View>
+            <Text style={styles.tripsText}>({vehicle.trips} trips)</Text>
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark-circle" size={14} color={GREEN} />
+              <Text style={styles.verifiedBadgeText}>Verified</Text>
+            </View>
+          </View>
+
+          {/* Tags */}
+          <View style={styles.tagsRow}>
+            {vehicle.seats && (
+              <View style={styles.tag}>
+                <Ionicons name="people-outline" size={14} color={NAVY} />
+                <Text style={styles.tagText}>{vehicle.seats}</Text>
+              </View>
+            )}
+            {vehicle.fuel && (
+              <View style={styles.tag}>
+                <MaterialCommunityIcons name={"gas-pump" as any} size={14} color={NAVY} />
+                <Text style={styles.tagText}>{vehicle.fuel}</Text>
+              </View>
+            )}
+            {vehicle.mpg && (
+              <View style={styles.tag}>
+                <Ionicons name="speedometer-outline" size={14} color={NAVY} />
+                <Text style={styles.tagText}>{vehicle.mpg}</Text>
+              </View>
+            )}
+            {vehicle.transmission && (
+              <View style={styles.tag}>
+                <Ionicons name="settings-outline" size={14} color={NAVY} />
+                <Text style={styles.tagText}>{vehicle.transmission}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Trip Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Trip Details</Text>
+            <View style={styles.tripRow}>
+              <View style={styles.tripIcon}>
+                <Ionicons name="calendar-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.tripInfo}>
+                <Text style={styles.tripLabel}>Pick-up</Text>
+                <Text style={styles.tripValue}>Sat, 26 Sep · 10:00 am</Text>
+              </View>
+              <Pressable style={styles.editButton}>
+                <Ionicons name="pencil-outline" size={18} color={NAVY} />
+              </Pressable>
+            </View>
+            <View style={[styles.tripRow, { marginTop: 16 }]}>
+              <View style={styles.tripIcon}>
+                <Ionicons name="location-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.tripInfo}>
+                <Text style={styles.tripLabel}>Return</Text>
+                <Text style={styles.tripValue}>Tue, 29 Sep · 10:00 am</Text>
+              </View>
+              <Pressable style={styles.editButton}>
+                <Ionicons name="pencil-outline" size={18} color={NAVY} />
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Vehicle Overview */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Vehicle Overview</Text>
+            <View style={styles.overviewGrid}>
+              <View style={styles.overviewItem}>
+                <Text style={styles.overviewValue}>4x4</Text>
+                <Text style={styles.overviewLabel}>Drive type</Text>
+              </View>
+              <View style={styles.overviewItem}>
+                <Text style={styles.overviewValue}>{vehicle.seats}</Text>
+                <Text style={styles.overviewLabel}>Seats</Text>
+              </View>
+              <View style={styles.overviewItem}>
+                <Text style={styles.overviewValue}>{vehicle.mpg}</Text>
+                <Text style={styles.overviewLabel}>Fuel economy</Text>
+              </View>
+              <View style={styles.overviewItem}>
+                <Text style={styles.overviewValue}>{vehicle.transmission}</Text>
+                <Text style={styles.overviewLabel}>Transmission</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Vehicle Features */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>What this vehicle offers</Text>
+            <View style={styles.featuresList}>
+              <View style={styles.featureItem}>
+                <View style={styles.featureIcon}>
+                  <Ionicons name="car-outline" size={18} color={NAVY} />
+                </View>
+                <Text style={styles.featureText}>All-wheel drive</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <View style={styles.featureIcon}>
+                  <Ionicons name="tv-outline" size={18} color={NAVY} />
+                </View>
+                <Text style={styles.featureText}>Backup camera</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <View style={styles.featureIcon}>
+                  <MaterialCommunityIcons name="bluetooth" size={18} color={NAVY} />
+                </View>
+                <Text style={styles.featureText}>Bluetooth</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <View style={styles.featureIcon}>
+                  <Ionicons name="musical-notes-outline" size={18} color={NAVY} />
+                </View>
+                <Text style={styles.featureText}>Apple CarPlay</Text>
+              </View>
+            </View>
+            <Pressable style={styles.seeAllButton}>
+              <Text style={styles.seeAllText}>See all 11 features</Text>
+              <Ionicons name="chevron-forward" size={18} color={NAVY} />
+            </Pressable>
+          </View>
+
+          {/* Host Info */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Host</Text>
+            <Pressable style={styles.hostCard}>
+              <Image
+                source={{ uri: vehicle.hostAvatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80" }}
+                style={styles.hostAvatar}
+                contentFit="cover"
+              />
+              <View style={styles.hostInfo}>
+                <Text style={styles.hostName}>{vehicle.hostName || "Rochelle"}</Text>
+                <Text style={styles.hostMeta}>
+                  {vehicle.hostTrips || 3785} trips · Joined {vehicle.joinedDate || "Apr 2021"}
+                </Text>
+              </View>
+              <View style={styles.hostRatingBadge}>
+                <Text style={styles.hostRatingText}>{vehicle.hostRating || 4.9}</Text>
+                <Ionicons name="star" size={12} color="#FFB800" />
+              </View>
+            </Pressable>
+          </View>
+
+          {/* Reviews */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Reviews</Text>
+            <View style={styles.reviewsHeader}>
+              <Text style={styles.reviewsOverall}>5.0</Text>
+              <Ionicons name="star" size={16} color="#FFB800" />
+              <Text style={styles.reviewsCount}>({vehicle.trips} ratings)</Text>
+            </View>
+
+            <View style={styles.reviewCard}>
+              <Image
+                source={{ uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80" }}
+                style={styles.reviewAvatar}
+                contentFit="cover"
+              />
+              <View style={styles.reviewContent}>
+                <View style={styles.reviewHeader}>
+                  <Text style={styles.reviewName}>Ingrid</Text>
+                  <View style={styles.reviewStars}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Ionicons key={star} name="star" size={14} color="#FFB800" />
+                    ))}
+                  </View>
+                  <Text style={styles.reviewDate}>28 Jul 2026</Text>
+                </View>
+                <Text style={styles.reviewText}>
+                  Vehicle worked perfectly. Owner was totally flexible and communicative with me. Vehicle handles the driving through vario...
+                </Text>
+                <Pressable>
+                  <Text style={styles.readMore}>Read more</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+
+          {/* Cancellation Policy */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cancellation Policy</Text>
+            <View style={styles.cancellationRow}>
+              <View style={styles.cancellationIcon}>
+                <Ionicons name="shield-checkmark-outline" size={22} color={NAVY} />
+              </View>
+              <View style={styles.cancellationInfo}>
+                <Text style={styles.cancellationTitle}>Free cancellation</Text>
+                <Text style={styles.cancellationSubtitle}>
+                  Full refund within 24 hours of booking.
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Bottom spacing for book button */}
+          <View style={styles.bottomSpacer} />
+        </View>
+      </ScrollView>
+
+      {/* Bottom Bar */}
+      <View style={styles.bottomBar}>
+        <View style={styles.priceInfo}>
+          <Text style={styles.originalPrice}>{vehicle.originalPrice || vehicle.price}</Text>
+          <Text style={styles.totalPrice}>{vehicle.price}</Text>
+          <Text style={styles.priceNote}>Total before taxes</Text>
+        </View>
+        <Pressable style={styles.bookButton} onPress={handleBook}>
+          <Text style={styles.bookButtonText}>Reserve</Text>
+        </Pressable>
+      </View>
+
+      {/* Fullscreen Image Overlay */}
+      {showFullscreenImage && (
+        <Animated.View
+          style={[
+            styles.fullscreenOverlay,
+            {
+              opacity: fullscreenAnim,
+            },
+          ]}
+        >
+          <Pressable style={styles.fullscreenCloseButton} onPress={closeFullscreenImage}>
+            <Ionicons name="close" size={24} color="#FFFFFF" />
+          </Pressable>
+
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            ref={fullscreenScrollRef}
+            onMomentumScrollEnd={handleFullscreenMomentum}
+          >
+            {vehicle.images.map((image, index) => (
+              <Image
+                key={index}
+                source={{ uri: image }}
+                style={styles.fullscreenImage}
+                contentFit="contain"
+              />
+            ))}
+          </ScrollView>
+
+          <View style={styles.fullscreenCounter}>
+            <Text style={styles.fullscreenCounterText}>
+              {fullscreenIndex + 1} / {vehicle.images.length}
+            </Text>
+          </View>
+
+          <View style={styles.fullscreenDots}>
+            {vehicle.images.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.fullscreenDot,
+                  index === fullscreenIndex && styles.fullscreenDotActive,
+                ]}
+              />
+            ))}
+          </View>
+        </Animated.View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  imageWrap: {
+    position: "relative",
+    width: "100%",
+    height: 300,
+  },
+  heroImage: {
+    width: SCREEN_WIDTH,
+    height: 300,
+  },
+  imageCounter: {
+    position: "absolute",
+    bottom: 16,
+    left: 16,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  imageCounterText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  topActions: {
+    position: "absolute",
+    top: 48,
+    left: 16,
+    right: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  topRightActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  expandHint: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  expandHintText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 100,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    gap: 12,
+  },
+  titleWrap: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: NAVY,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  priceBadge: {
+    backgroundColor: "#F0FDF4",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#D1FAE5",
+    alignItems: "center",
+  },
+  priceBadgeText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: GREEN,
+  },
+  priceBadgeSub: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
+  },
+  ratingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  ratingText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  tripsText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  verifiedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#ECFDF5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D1FAE5",
+  },
+  verifiedBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: GREEN,
+  },
+  tagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 24,
+  },
+  tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  tagText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: NAVY,
+  },
+  section: {
+    marginBottom: 28,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: NAVY,
+    marginBottom: 16,
+  },
+  tripRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  tripIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  tripInfo: {
+    flex: 1,
+  },
+  tripLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: NAVY,
+    marginBottom: 2,
+  },
+  tripValue: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  overviewGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  overviewItem: {
+    flex: 1,
+    minWidth: "45%",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  overviewValue: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: NAVY,
+    marginBottom: 4,
+  },
+  overviewLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  featuresList: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  featureItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  featureIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  featureText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: NAVY,
+  },
+  seeAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  hostCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  hostAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+  },
+  hostInfo: {
+    flex: 1,
+  },
+  hostName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: NAVY,
+    marginBottom: 2,
+  },
+  hostMeta: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  hostRatingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
+  hostRatingText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  reviewsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
+  },
+  reviewsOverall: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: NAVY,
+  },
+  reviewsCount: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  reviewCard: {
+    flexDirection: "row",
+    gap: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  reviewAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  reviewContent: {
+    flex: 1,
+  },
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  reviewName: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  reviewStars: {
+    flexDirection: "row",
+    gap: 2,
+  },
+  reviewDate: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#9CA3AF",
+    marginLeft: "auto",
+  },
+  reviewText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#4B5563",
+    lineHeight: 18,
+  },
+  readMore: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: GREEN,
+    marginTop: 8,
+  },
+  cancellationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  cancellationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  cancellationInfo: {
+    flex: 1,
+  },
+  cancellationTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+    marginBottom: 4,
+  },
+  cancellationSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6B7280",
+    lineHeight: 18,
+  },
+  bottomSpacer: {
+    height: 20,
+  },
+  bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  priceInfo: {
+    flex: 1,
+  },
+  originalPrice: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#9CA3AF",
+    textDecorationLine: "line-through",
+  },
+  totalPrice: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: NAVY,
+  },
+  priceNote: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#9CA3AF",
+    marginTop: 2,
+  },
+  bookButton: {
+    backgroundColor: NAVY,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  bookButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  fullscreenOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#000000",
+    zIndex: 1000,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullscreenCloseButton: {
+    position: "absolute",
+    top: 48,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1001,
+  },
+  fullscreenImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+  },
+  fullscreenCounter: {
+    position: "absolute",
+    bottom: 32,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  fullscreenCounterText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  fullscreenDots: {
+    position: "absolute",
+    bottom: 24,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+  },
+  fullscreenDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.4)",
+  },
+  fullscreenDotActive: {
+    backgroundColor: "#FFFFFF",
+    width: 24,
+  },
+});

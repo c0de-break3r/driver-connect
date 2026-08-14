@@ -15,9 +15,10 @@ type VehicleCardProps = {
   onFavoritePress?: () => void;
   list?: boolean;
   style?: any;
+  verified?: boolean;
 };
 
-export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style }: VehicleCardProps) {
+export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style, verified = vehicle.isVerified }: VehicleCardProps) {
   const heartScale = useRef(new Animated.Value(1)).current;
 
   const triggerHeartBeat = () => {
@@ -43,8 +44,8 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
           <Animated.View style={{ transform: [{ scale: heartScale }] }}>
             <Ionicons
               name={isFavorite ? "heart" : "heart-outline"}
-              size={18}
-              color={isFavorite ? "#E74C3C" : "#6B7280"}
+              size={22}
+              color={isFavorite ? "#E74C3C" : "#9CA3AF"}
             />
           </Animated.View>
         </Pressable>
@@ -59,6 +60,12 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
         <View style={styles.priceRow}>
           <Text style={styles.price}>{vehicle.price}</Text>
           <Text style={styles.pricePeriod}>/day</Text>
+          {verified && (
+            <View style={styles.verifiedBadgeInline}>
+              <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+              <Text style={styles.verifiedBadgeText}>Verified</Text>
+            </View>
+          )}
         </View>
       </View>
     </Pressable>
@@ -95,12 +102,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
   },
   cardBody: {
     padding: 10,
@@ -137,5 +140,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     color: "#6B7280",
+  },
+  verifiedBadgeInline: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginLeft: "auto",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    backgroundColor: "#ECFDF5",
+  },
+  verifiedBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#10B981",
   },
 });
