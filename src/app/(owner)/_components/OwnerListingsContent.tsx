@@ -154,8 +154,8 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
         <EmptyState
           image={images.benz}
           title="No listings yet"
-          subtitle="Create your first vehicle listing to start receiving booking requests."
-          ctaText="Create a listing"
+          subtitle="Create your first vehicle listing to start receiving bookings."
+          ctaText="Add a vehicle"
           onCtaPress={() => router.push("/create-listing" as any)}
         />
       ) : (

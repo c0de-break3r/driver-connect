@@ -120,6 +120,9 @@ export default defineSchema({
     longitude: v.optional(v.number()),
     serviceType: v.optional(v.string()),
     mileage: v.optional(v.number()),
+    vin: v.optional(v.string()),
+    bodyStyle: v.optional(v.string()),
+    driveType: v.optional(v.string()),
     condition: v.optional(v.string()),
     negotiable: v.optional(v.boolean()),
     inspectionReport: v.optional(v.string()),
@@ -136,6 +139,19 @@ export default defineSchema({
     showPreciseLocation: v.optional(v.boolean()),
     deliveryAvailable: v.optional(v.boolean()),
     deliveryFee: v.optional(v.number()),
+    hasBluetooth: v.optional(v.boolean()),
+    hasBackupCamera: v.optional(v.boolean()),
+    hasUsbPort: v.optional(v.boolean()),
+    hasSunroof: v.optional(v.boolean()),
+    hasHeatedSeats: v.optional(v.boolean()),
+    hasLeatherSeats: v.optional(v.boolean()),
+    hasChildSeat: v.optional(v.boolean()),
+    hasPetFriendly: v.optional(v.boolean()),
+    hasSkiRack: v.optional(v.boolean()),
+    hasBikeRack: v.optional(v.boolean()),
+    hasSnowTires: v.optional(v.boolean()),
+    hasRoofBox: v.optional(v.boolean()),
+    hasTowHitch: v.optional(v.boolean()),
     status: v.string(),
     isFeatured: v.boolean(),
     rating: v.number(),
@@ -241,4 +257,45 @@ export default defineSchema({
     .index("by_event", ["event"])
     .index("by_user", ["userId"])
     .index("by_created_at", ["createdAt"]),
+
+  searchHistory: defineTable({
+    userId: v.string(),
+    query: v.string(),
+    location: v.optional(v.string()),
+    category: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_created", ["userId", "createdAt"]),
+
+  vehicleViews: defineTable({
+    userId: v.string(),
+    vehicleId: v.string(),
+    vehicleTitle: v.string(),
+    vehicleCategory: v.optional(v.string()),
+    vehicleCity: v.optional(v.string()),
+    vehicleRegion: v.optional(v.string()),
+    vehiclePricePerDay: v.optional(v.number()),
+    vehicleImage: v.optional(v.string()),
+    vehicleRating: v.optional(v.number()),
+    viewedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_viewed", ["userId", "viewedAt"])
+    .index("by_vehicle", ["vehicleId"]),
+
+  recommendations: defineTable({
+    userId: v.string(),
+    type: v.union(v.literal("recent_search"), v.literal("similar_vehicle"), v.literal("trending")),
+    title: v.string(),
+    subtitle: v.optional(v.string()),
+    vehicleIds: v.array(v.string()),
+    sectionId: v.string(),
+    priority: v.number(),
+    expiresAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "type"])
+    .index("by_section", ["sectionId"]),
 });

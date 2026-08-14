@@ -16,6 +16,7 @@ import type * as listingQueries from "../listingQueries.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as referralCodes from "../referralCodes.js";
+import type * as userBehavior from "../userBehavior.js";
 import type * as users from "../users.js";
 import type * as verifications from "../verifications.js";
 
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   notifications: typeof notifications;
   referralCodes: typeof referralCodes;
+  userBehavior: typeof userBehavior;
   users: typeof users;
   verifications: typeof verifications;
 }>;

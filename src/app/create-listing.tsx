@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Alert,
   Animated,
@@ -16,12 +16,27 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useMutation, useAction } from "convex/react";
 import { api } from "@/lib/convexApi";
 
 const NAVY = "#2C3E5B";
+
+const LIGHT_MAP_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#F5F5F5" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#FFFFFF" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#FFFFFF" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#E5E7EB" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#E3F2FD" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#F9FAFB" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#E8F5E9" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#F3F4F6" }] },
+  { featureType: "administrative", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+];
+const LIGHT_MAP_STYLE_STRING = JSON.stringify(LIGHT_MAP_STYLE);
 
 const VEHICLE_CATEGORIES = [
   "Car",
@@ -43,6 +58,8 @@ const SERVICE_TYPES = [
 
 const TRANSMISSION_OPTIONS = ["Manual", "Automatic", "Semi-Automatic"];
 const FUEL_TYPE_OPTIONS = ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"];
+const BODY_STYLES = ["Sedan", "Hatchback", "SUV", "Pickup", "Van", "Bus", "Truck", "Motorcycle", "Convertible", "Other"];
+const DRIVE_TYPES = ["FWD", "RWD", "AWD", "4WD"];
 const OCCASION_TYPES = ["Wedding", "Airport transfer", "Corporate event", "Daily commute", "Funeral", "Other"];
 const CONDITION_OPTIONS = ["New", "Excellent", "Good", "Fair", "Needs work"];
 const BOOKING_MODES = [
@@ -67,7 +84,7 @@ const IntroStep = () => {
       />
       <Text style={styles.introTitle}>Tell us about your vehicle</Text>
       <Text style={styles.introHelper}>
-        In this step, we&apos;ll ask about the type of vehicle you&apos;re listing, its condition, and where it&apos;s based. Then we&apos;ll set up pricing, availability, and booking preferences.
+        In this step, we&apos;ll ask about the type of vehicle you&apos;re hosting, its condition, and where it&apos;s based. Then we&apos;ll set up pricing, availability, and booking preferences.
       </Text>
     </View>
   );
@@ -98,6 +115,7 @@ export default function CreateListingScreen() {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const isAnimating = useRef(false);
   const currentStepRef = useRef(0);
+  const geocodeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Service type
   const [serviceType, setServiceType] = useState<string>("rent");
@@ -110,6 +128,10 @@ export default function CreateListingScreen() {
   const [year, setYear] = useState("");
   const [color, setColor] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
+  const [mileage, setMileage] = useState("");
+  const [vin, setVin] = useState("");
+  const [bodyStyle, setBodyStyle] = useState("");
+  const [driveType, setDriveType] = useState("");
 
   // Step 2 - Specs & features
   const [transmission, setTransmission] = useState("Automatic");
@@ -118,11 +140,23 @@ export default function CreateListingScreen() {
   const [doors, setDoors] = useState("");
   const [hasAc, setHasAc] = useState(true);
   const [hasGps, setHasGps] = useState(false);
+  const [hasBluetooth, setHasBluetooth] = useState(false);
+  const [hasBackupCamera, setHasBackupCamera] = useState(false);
+  const [hasUsbPort, setHasUsbPort] = useState(false);
+  const [hasSunroof, setHasSunroof] = useState(false);
+  const [hasHeatedSeats, setHasHeatedSeats] = useState(false);
+  const [hasLeatherSeats, setHasLeatherSeats] = useState(false);
+  const [hasChildSeat, setHasChildSeat] = useState(false);
+  const [hasPetFriendly, setHasPetFriendly] = useState(false);
+  const [hasSkiRack, setHasSkiRack] = useState(false);
+  const [hasBikeRack, setHasBikeRack] = useState(false);
+  const [hasSnowTires, setHasSnowTires] = useState(false);
+  const [hasRoofBox, setHasRoofBox] = useState(false);
+  const [hasTowHitch, setHasTowHitch] = useState(false);
   const [features, setFeatures] = useState<string[]>([]);
   const [featureText, setFeatureText] = useState("");
 
   // Sell-specific
-  const [mileage, setMileage] = useState("");
   const [condition, setCondition] = useState("");
   const [negotiable, setNegotiable] = useState(false);
   const [inspectionReport, setInspectionReport] = useState("");
@@ -178,7 +212,20 @@ export default function CreateListingScreen() {
   const [tripMinDays, setTripMinDays] = useState("1");
   const [showPlacesResults, setShowPlacesResults] = useState(false);
   const [placesResults, setPlacesResults] = useState<any[]>([]);
-  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
+
+  // Location sub-steps
+  const [locationSubStep, setLocationSubStep] = useState(0);
+  const [selectedLat, setSelectedLat] = useState<number | null>(null);
+  const [selectedLng, setSelectedLng] = useState<number | null>(null);
+  const [mapSearchQuery, setMapSearchQuery] = useState("");
+  const [showMapSearchResults, setShowMapSearchResults] = useState(false);
+  const [mapSearchResults, setMapSearchResults] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (step === 6) {
+      setLocationSubStep(0);
+    }
+  }, [step]);
 
   const uriToBase64 = async (uri: string): Promise<string> => {
     const base64 = await FileSystem.readAsStringAsync(uri, {
@@ -189,14 +236,26 @@ export default function CreateListingScreen() {
 
   const addFeature = () => {
     const trimmed = featureText.trim();
-    if (trimmed && !features.includes(trimmed)) {
-      setFeatures([...features, trimmed]);
-      setFeatureText("");
-    }
+    if (!trimmed) return;
+    setFeatures((prev) => {
+      if (prev.includes(trimmed)) return prev;
+      return [...prev, trimmed];
+    });
+    setFeatureText("");
   };
 
   const removeFeature = (feature: string) => {
     setFeatures(features.filter((f) => f !== feature));
+  };
+
+  const swapWithCover = (index: number) => {
+    setImages((prev) => {
+      if (index <= 0 || index >= prev.length) return prev;
+      const updated = [...prev];
+      [updated[0], updated[index]] = [updated[index], updated[0]];
+      return updated;
+    });
+    setSelectedImageIndex(0);
   };
 
   const fillLocationFromCurrent = async () => {
@@ -210,14 +269,21 @@ export default function CreateListingScreen() {
         Alert.alert("Permission denied", "Location access is needed to fill your city and area automatically.");
         return;
       }
-      const position = await LocationModule.getCurrentPositionAsync({});
+      const position = await LocationModule.getCurrentPositionAsync({
+        accuracy: 4,
+      });
       const [place] = await LocationModule.reverseGeocodeAsync({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       });
       if (place.city || place.region) {
-        setCity(place.city || place.subregion || place.region || "");
-        setRegion(place.region || place.country || "");
+        const locationCity = place.city || place.subregion || place.region || "";
+        const locationRegion = place.region || place.country || "";
+        setCity(locationCity);
+        setRegion(locationRegion);
+        setSelectedLat(position.coords.latitude);
+        setSelectedLng(position.coords.longitude);
+        setLocationSubStep(1);
       }
     } catch {
       Alert.alert("Error", "Unable to get your current location. Please enter it manually.");
@@ -231,9 +297,9 @@ export default function CreateListingScreen() {
         Alert.alert("Permission needed", "Please allow access to your photos to upload vehicle images.");
         return;
       }
-      const remaining = 5 - images.length;
+      const remaining = 10 - images.length;
       if (remaining <= 0) {
-        Alert.alert("Limit reached", "You can upload up to 5 photos.");
+        Alert.alert("Limit reached", "You can upload up to 10 photos.");
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -247,8 +313,8 @@ export default function CreateListingScreen() {
       if (!result.canceled && result.assets.length > 0) {
         const newUris = result.assets.map((asset: any) => asset.uri);
         setImages((prev) => {
-          const combined = [...prev, ...newUris];
-          return combined.slice(0, 5);
+          const combined = [...newUris, ...prev];
+          return combined.slice(0, 10);
         });
         setAutomationLoading(true);
         setAnalysisProgress("Preparing image...");
@@ -383,7 +449,6 @@ export default function CreateListingScreen() {
       setShowPlacesResults(false);
       return;
     }
-    setIsSearchingPlaces(true);
     try {
       const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
       const response = await fetch(
@@ -400,16 +465,123 @@ export default function CreateListingScreen() {
     } catch {
       setPlacesResults([]);
       setShowPlacesResults(false);
-    } finally {
-      setIsSearchingPlaces(false);
+    }
+
+    if (geocodeTimerRef.current) {
+      clearTimeout(geocodeTimerRef.current);
+    }
+    geocodeTimerRef.current = setTimeout(async () => {
+      try {
+        const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+        const geoResponse = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&components=country:gh&key=${apiKey}`
+        );
+        const geoData = await geoResponse.json();
+        if (geoData.status === "OK" && geoData.results && geoData.results[0]) {
+          const location = geoData.results[0].geometry.location;
+          const formattedAddress = geoData.results[0].formatted_address;
+          setSelectedLat(location.lat);
+          setSelectedLng(location.lng);
+          setCity(formattedAddress);
+          setLocationSubStep(1);
+        }
+      } catch {
+        // geocode failed silently
+      }
+    }, 1200);
+  };
+
+  const handlePlaceSelect = async (prediction: any) => {
+    const description = prediction.description || "";
+    const secondaryText = prediction.structured_formatting?.secondary_text || "";
+    
+    setCity(description);
+    setRegion(secondaryText);
+    setShowPlacesResults(false);
+    setPlacesResults([]);
+
+    try {
+      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+      const placeId = prediction.place_id;
+      if (placeId) {
+        const placeResponse = await fetch(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_address,geometry&key=${apiKey}`
+        );
+        const placeData = await placeResponse.json();
+        if (placeData.status === "OK" && placeData.result) {
+          const formattedAddress = placeData.result.formatted_address || description;
+          const location = placeData.result.geometry?.location;
+          if (location) {
+            setSelectedLat(location.lat);
+            setSelectedLng(location.lng);
+          }
+          setCity(formattedAddress);
+        }
+      }
+    } catch {
+      // place details fetch failed silently
+    }
+    
+    setLocationSubStep(1);
+  };
+
+  const handleMapSearch = async (query: string) => {
+    setMapSearchQuery(query);
+    if (!query.trim()) {
+      setShowMapSearchResults(false);
+      setMapSearchResults([]);
+      return;
+    }
+    try {
+      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&components=country:gh&locationbias=circle:80000000@7.9465,-1.0232&key=${apiKey}`
+      );
+      const data = await response.json();
+      if (data.status === "OK" && data.predictions) {
+        setMapSearchResults(data.predictions);
+        setShowMapSearchResults(true);
+      } else {
+        setMapSearchResults([]);
+        setShowMapSearchResults(false);
+      }
+    } catch {
+      setMapSearchResults([]);
+      setShowMapSearchResults(false);
     }
   };
 
-  const handlePlaceSelect = (prediction: any) => {
-    setCity(prediction.description || prediction.structured_formatting?.main_text || "");
-    setRegion(prediction.structured_formatting?.secondary_text || "");
-    setShowPlacesResults(false);
-    setPlacesResults([]);
+  const handleMapSearchSelect = async (prediction: any) => {
+    const description = prediction.description || "";
+    const secondaryText = prediction.structured_formatting?.secondary_text || "";
+    
+    setCity(description);
+    setRegion(secondaryText);
+    setMapSearchQuery("");
+    setShowMapSearchResults(false);
+    setMapSearchResults([]);
+
+    try {
+      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+      const placeId = prediction.place_id;
+      if (placeId) {
+        const placeResponse = await fetch(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_address,geometry&key=${apiKey}`
+        );
+        const placeData = await placeResponse.json();
+        if (placeData.status === "OK" && placeData.result) {
+          const formattedAddress = placeData.result.formatted_address || description;
+          const location = placeData.result.geometry?.location;
+          if (location) {
+            setSelectedLat(location.lat);
+            setSelectedLng(location.lng);
+          }
+          setCity(formattedAddress);
+        }
+      }
+    } catch {
+      // place details fetch failed silently
+    }
   };
 
   const handleSubmit = async () => {
@@ -418,7 +590,7 @@ export default function CreateListingScreen() {
     try {
       const vehicleId = await createVehicle({
         ownerId: userId,
-        title: title || "Untitled Listing",
+        title: title || "Untitled Vehicle",
         description: `${make} ${model} (${year || "N/A"}). ${transmission} transmission, ${fuelType} engine. ${seats} seats, ${doors} doors. Features: ${features.join(", ") || "None specified"}. ${serviceType === "sell" ? `For sale. Mileage: ${mileage || "N/A"} km. Condition: ${condition || "N/A"}.${negotiable ? " Price negotiable." : ""}` : ""} ${serviceType === "work_and_pay" ? `Work & Pay. Down payment: ${downPaymentPercent || "N/A"}%. Term: ${termMonths || "N/A"} months. Total payable: GHS ${totalPayable || "N/A"}.${earlyBuyout ? " Early buyout allowed." : ""}` : ""} ${serviceType === "chauffeur" ? `Chauffeur service. ${driverIncluded ? "Driver included." : "Vehicle only."} Driver rate: GHS ${driverRate || "N/A"}/day.` : ""} ${serviceType === "event" ? `Event package. Occasion: ${occasionType || "N/A"}. Inclusions: ${packageInclusions || "None specified"}.` : ""} ${serviceType === "fleet" ? `Fleet leasing. Fleet size: ${fleetSize || "N/A"} vehicles. Terms: ${contractTerms || "N/A"}.` : ""}`,
         category,
         make: make || "Unknown",
@@ -432,8 +604,21 @@ export default function CreateListingScreen() {
         doors: doors ? Number(doors) : undefined,
         hasAc,
         hasGps,
+        hasBluetooth,
+        hasBackupCamera,
+        hasUsbPort,
+        hasSunroof,
+        hasHeatedSeats,
+        hasLeatherSeats,
+        hasChildSeat,
+        hasPetFriendly,
+        hasSkiRack,
+        hasBikeRack,
+        hasSnowTires,
+        hasRoofBox,
+        hasTowHitch,
         features,
-        images: images.slice(0, 5),
+        images: images.slice(0, 10),
         pricePerDay: Number(pricePerDay) || 0,
         pricePerWeek: pricePerWeek ? Number(pricePerWeek) : undefined,
         pricePerMonth: pricePerMonth ? Number(pricePerMonth) : undefined,
@@ -443,6 +628,9 @@ export default function CreateListingScreen() {
         region: region || "Unknown",
         serviceType,
         mileage: mileage ? Number(mileage) : undefined,
+        vin: vin || undefined,
+        bodyStyle: bodyStyle || undefined,
+        driveType: driveType || undefined,
         condition: condition || undefined,
         negotiable: serviceType === "sell" ? negotiable : undefined,
         inspectionReport: inspectionReport || undefined,
@@ -484,7 +672,7 @@ export default function CreateListingScreen() {
       case 2:
         return true;
       case 3:
-        return title.trim().length > 0 && make.trim().length > 0 && model.trim().length > 0;
+        return title.trim().length > 0 && make.trim().length > 0 && model.trim().length > 0 && mileage.trim().length > 0;
       case 4:
         return true;
       case 5:
@@ -493,7 +681,13 @@ export default function CreateListingScreen() {
         }
         return pricePerDay.trim().length > 0 && Number(pricePerDay) >= 10;
       case 6:
-        return city.trim().length > 0;
+        if (locationSubStep === 0) {
+          return city.trim().length > 0;
+        }
+        if (locationSubStep === 1) {
+          return selectedLat !== null && selectedLng !== null;
+        }
+        return true;
       case 7:
         return true;
       case 8:
@@ -504,6 +698,11 @@ export default function CreateListingScreen() {
   };
 
   const nextStep = () => {
+    if (step === 6 && locationSubStep === 0) {
+      if (!canProceed()) return;
+      setLocationSubStep(1);
+      return;
+    }
     if (canProceed() && step < 9 && !isAnimating.current) {
       isAnimating.current = true;
       currentStepRef.current = step;
@@ -535,6 +734,31 @@ export default function CreateListingScreen() {
   };
 
   const prevStep = () => {
+    if (step === 6 && locationSubStep > 0) {
+      if (!isAnimating.current) {
+        isAnimating.current = true;
+        Animated.timing(slideAnim, {
+          toValue: 1,
+          duration: 240,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }).start(() => {
+          setLocationSubStep((prev) => prev - 1);
+          slideAnim.setValue(-1);
+          InteractionManager.runAfterInteractions(() => {
+            Animated.timing(slideAnim, {
+              toValue: 0,
+              duration: 240,
+              easing: Easing.out(Easing.quad),
+              useNativeDriver: true,
+            }).start(() => {
+              isAnimating.current = false;
+            });
+          });
+        });
+      }
+      return;
+    }
     if (step > 0 && !isAnimating.current) {
       isAnimating.current = true;
       Animated.timing(slideAnim, {
@@ -562,7 +786,7 @@ export default function CreateListingScreen() {
   };
 
   const stepTitles = [
-    "List Your Vehicle",
+    "Host Your Vehicle",
     "Photos",
     "Service Type",
     "Vehicle Details",
@@ -579,17 +803,6 @@ export default function CreateListingScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sale Details</Text>
           <View style={styles.row}>
-            <View style={[styles.field, { flex: 1, marginRight: 12 }]}>
-              <Text style={styles.label}>Mileage (km)</Text>
-              <TextInput
-                style={styles.input}
-                value={mileage}
-                onChangeText={setMileage}
-                placeholder="e.g. 45000"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="number-pad"
-              />
-            </View>
             <View style={[styles.field, { flex: 1, marginLeft: 12 }]}>
               <Text style={styles.label}>Condition</Text>
               <View style={styles.chipRow}>
@@ -774,7 +987,7 @@ export default function CreateListingScreen() {
             </View>
           </View>
           <Text style={styles.publishedTitle}>Congratulations!</Text>
-          <Text style={styles.publishedSubtitle}>Your listing is live. Here&apos;s what to do next.</Text>
+          <Text style={styles.publishedSubtitle}>Your vehicle is now live. Here&apos;s what to do next.</Text>
 
           <View style={styles.checklistCard}>
             <View style={styles.checklistItem}>
@@ -782,7 +995,7 @@ export default function CreateListingScreen() {
                 <Ionicons name="checkmark" size={18} color="#FFFFFF" />
               </View>
               <View style={styles.checklistTextWrap}>
-                <Text style={styles.checklistTitle}>Listing published</Text>
+                <Text style={styles.checklistTitle}>Published</Text>
                 <Text style={styles.checklistDesc}>Your vehicle is now visible to clients.</Text>
               </View>
             </View>
@@ -874,8 +1087,10 @@ export default function CreateListingScreen() {
       ) : (
         <View style={styles.stepLayout}>
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingTop: 40 }]}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
+            scrollEnabled={step !== 1}
           >
             <Animated.View
               style={[
@@ -895,7 +1110,7 @@ export default function CreateListingScreen() {
               {/* STEP 2 - Service type */}
               {step === 2 && (
               <View style={styles.section}>
-              <Text style={styles.sectionTitle}>How Do You Want To List Your Vehicle?</Text>
+              <Text style={styles.sectionTitle}>How Do You Want To Host Your Vehicle?</Text>
               <Text style={styles.sectionHelper}>Choose the service that best fits what you&apos;re offering.</Text>
               {SERVICE_TYPES.map((svc) => (
               <TouchableOpacity
@@ -903,7 +1118,6 @@ export default function CreateListingScreen() {
                 style={[styles.serviceCard, serviceType === svc.id && styles.serviceCardActive]}
                 onPress={() => {
                   setServiceType(svc.id);
-                  nextStep();
                 }}
               >
                 <View style={styles.serviceLeft}>
@@ -928,7 +1142,7 @@ export default function CreateListingScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Give It A Title</Text>
             <View style={styles.field}>
-              <Text style={styles.label}>Listing title</Text>
+              <Text style={styles.label}>Vehicle title</Text>
               <TextInput
                 style={styles.input}
                 value={title}
@@ -983,6 +1197,66 @@ export default function CreateListingScreen() {
                   placeholder="White"
                   placeholderTextColor="#9CA3AF"
                 />
+              </View>
+            </View>
+
+            <Text style={styles.sectionTitle}>Vehicle Details</Text>
+            <View style={styles.row}>
+              <View style={[styles.field, { flex: 1, marginRight: 12 }]}>
+                <Text style={styles.label}>Mileage (km)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={mileage}
+                  onChangeText={setMileage}
+                  placeholder="e.g. 45000"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="number-pad"
+                />
+              </View>
+              <View style={[styles.field, { flex: 1, marginLeft: 12 }]}>
+                <Text style={styles.label}>VIN (optional)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={vin}
+                  onChangeText={setVin}
+                  placeholder="e.g. 1HGCM82633A123456"
+                  placeholderTextColor="#9CA3AF"
+                  autoCapitalize="characters"
+                />
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.field, { flex: 1, marginRight: 12 }]}>
+                <Text style={styles.label}>Body style</Text>
+                <View style={styles.chipRow}>
+                  {BODY_STYLES.map((opt) => (
+                    <TouchableOpacity
+                      key={opt}
+                      style={[styles.chip, bodyStyle === opt && styles.chipActive]}
+                      onPress={() => setBodyStyle(opt)}
+                    >
+                      <Text style={[styles.chipText, bodyStyle === opt && styles.chipTextActive]}>{opt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.field, { flex: 1, marginRight: 12 }]}>
+                <Text style={styles.label}>Drive type</Text>
+                <View style={styles.chipRow}>
+                  {DRIVE_TYPES.map((opt) => (
+                    <TouchableOpacity
+                      key={opt}
+                      style={[styles.chip, driveType === opt && styles.chipActive]}
+                      onPress={() => setDriveType(opt)}
+                    >
+                      <Text style={[styles.chipText, driveType === opt && styles.chipTextActive]}>{opt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             </View>
 
@@ -1078,6 +1352,84 @@ export default function CreateListingScreen() {
                 </View>
                 <Text style={styles.toggleLabel}>GPS navigation</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasBluetooth(!hasBluetooth)}>
+                <View style={[styles.toggleBox, hasBluetooth && styles.toggleBoxActive]}>
+                  {hasBluetooth && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Bluetooth</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasBackupCamera(!hasBackupCamera)}>
+                <View style={[styles.toggleBox, hasBackupCamera && styles.toggleBoxActive]}>
+                  {hasBackupCamera && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Backup camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasUsbPort(!hasUsbPort)}>
+                <View style={[styles.toggleBox, hasUsbPort && styles.toggleBoxActive]}>
+                  {hasUsbPort && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>USB charging</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasSunroof(!hasSunroof)}>
+                <View style={[styles.toggleBox, hasSunroof && styles.toggleBoxActive]}>
+                  {hasSunroof && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Sunroof</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasHeatedSeats(!hasHeatedSeats)}>
+                <View style={[styles.toggleBox, hasHeatedSeats && styles.toggleBoxActive]}>
+                  {hasHeatedSeats && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Heated seats</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasLeatherSeats(!hasLeatherSeats)}>
+                <View style={[styles.toggleBox, hasLeatherSeats && styles.toggleBoxActive]}>
+                  {hasLeatherSeats && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Leather seats</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasChildSeat(!hasChildSeat)}>
+                <View style={[styles.toggleBox, hasChildSeat && styles.toggleBoxActive]}>
+                  {hasChildSeat && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Child seat</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasPetFriendly(!hasPetFriendly)}>
+                <View style={[styles.toggleBox, hasPetFriendly && styles.toggleBoxActive]}>
+                  {hasPetFriendly && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Pet friendly</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasSkiRack(!hasSkiRack)}>
+                <View style={[styles.toggleBox, hasSkiRack && styles.toggleBoxActive]}>
+                  {hasSkiRack && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Ski rack</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasBikeRack(!hasBikeRack)}>
+                <View style={[styles.toggleBox, hasBikeRack && styles.toggleBoxActive]}>
+                  {hasBikeRack && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Bike rack</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasSnowTires(!hasSnowTires)}>
+                <View style={[styles.toggleBox, hasSnowTires && styles.toggleBoxActive]}>
+                  {hasSnowTires && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Snow tires</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasRoofBox(!hasRoofBox)}>
+                <View style={[styles.toggleBox, hasRoofBox && styles.toggleBoxActive]}>
+                  {hasRoofBox && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Roof box</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasTowHitch(!hasTowHitch)}>
+                <View style={[styles.toggleBox, hasTowHitch && styles.toggleBoxActive]}>
+                  {hasTowHitch && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.toggleLabel}>Tow hitch</Text>
+              </TouchableOpacity>
             </View>
 
             <Text style={styles.sectionTitle}>Features</Text>
@@ -1093,6 +1445,21 @@ export default function CreateListingScreen() {
                 <TouchableOpacity style={styles.addFeatureButton} onPress={addFeature}>
                   <Ionicons name="add" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
+              </View>
+              <View style={styles.featureSuggestions}>
+                {["Bluetooth", "Backup camera", "USB charging", "Heated seats", "Sunroof", "Roof rack", "Tow hitch", "Leather seats"].map((suggestion) => (
+                  <TouchableOpacity
+                    key={suggestion}
+                    style={styles.featureSuggestionChip}
+                    onPress={() => {
+                      if (!features.includes(suggestion)) {
+                        setFeatures([...features, suggestion]);
+                      }
+                    }}
+                  >
+                    <Text style={styles.featureSuggestionText}>{suggestion}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
               {features.length > 0 && (
                 <View style={styles.featureChips}>
@@ -1115,7 +1482,7 @@ export default function CreateListingScreen() {
         {/* STEP 1 - Photos */}
         {step === 1 && (
           <View style={[styles.section, styles.photoSection]}>
-            <Text style={styles.sectionTitle}>Vehicle Photos</Text>
+            <Text style={[styles.sectionTitle, styles.photoTitle]}>Vehicle Photos</Text>
             <Text style={styles.sectionHelper}>Add at least 3 photos. The first photo will be the cover image.</Text>
 
             {images.length === 0 ? (
@@ -1128,7 +1495,7 @@ export default function CreateListingScreen() {
                       <Ionicons name="camera-outline" size={32} color={NAVY} />
                     </View>
                     <Text style={styles.photoUploadTitle}>Upload photos</Text>
-                    <Text style={styles.photoUploadHint}>Tap to add up to 5 photos</Text>
+                    <Text style={styles.photoUploadHint}>Tap to add up to 10 photos</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -1151,12 +1518,14 @@ export default function CreateListingScreen() {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.photoRowContent}
+                  snapToInterval={190}
+                  decelerationRate="fast"
                 >
                   {images.slice(1).map((uri, idx) => (
                     <TouchableOpacity
                       key={idx + 1}
                       style={styles.photoThumb}
-                      onPress={() => setSelectedImageIndex(idx + 1)}
+                      onPress={() => swapWithCover(idx + 1)}
                     >
                       <Image source={{ uri }} style={styles.photoThumbImage} contentFit="cover" />
                       <TouchableOpacity
@@ -1167,7 +1536,7 @@ export default function CreateListingScreen() {
                       </TouchableOpacity>
                     </TouchableOpacity>
                   ))}
-                  {images.length < 5 && (
+                  {images.length < 10 && (
                     <TouchableOpacity style={styles.photoAddMore} onPress={handleImageUpload} disabled={automationLoading}>
                       <Ionicons name="add-outline" size={28} color="#9CA3AF" />
                       <Text style={styles.photoAddMoreText}>Add more</Text>
@@ -1176,18 +1545,18 @@ export default function CreateListingScreen() {
                 </ScrollView>
 
                 <Text style={styles.photoCountText}>
-                  {images.length} of 5 photos uploaded
+                  {images.length} of 10 photos uploaded
                   {images.length < 3 && <Text style={styles.photoCountWarning}> (minimum 3 required)</Text>}
                 </Text>
               </View>
             )}
 
             {automationLoading && analysisProgress ? (
-              <View style={styles.analysisProgressRow}>
-                <View style={styles.progressBar}>
-                  <View style={styles.progressFill} />
+              <View style={styles.analysisOverlay}>
+                <View style={styles.analysisContentInline}>
+                  <View style={styles.analysisSpinner} />
+                  <Text style={styles.analysisText}>{analysisProgress || "Analyzing vehicle..."}</Text>
                 </View>
-                <Text style={styles.analysisProgress}>{analysisProgress}</Text>
               </View>
             ) : null}
           </View>
@@ -1352,74 +1721,150 @@ export default function CreateListingScreen() {
         {/* STEP 6 - Location & Delivery */}
         {step === 6 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Where Is Your Vehicle Based?</Text>
-            <View style={styles.field}>
-              <Text style={styles.label}>City / Area *</Text>
-              <View style={styles.locationSearchContainer}>
-                <View style={styles.locationInputRow}>
-                  <TouchableOpacity onPress={fillLocationFromCurrent} hitSlop={8}>
-                    <Ionicons name="location-outline" size={20} color="#6B7280" />
-                  </TouchableOpacity>
-                  <TextInput
-                    style={styles.locationInput}
-                    value={city}
-                    onChangeText={handlePlacesSearch}
-                    placeholder="Search city or area..."
-                    placeholderTextColor="#9CA3AF"
-                    autoCapitalize="words"
-                  />
-                </View>
-                {showPlacesResults && placesResults.length > 0 && (
-                  <View style={styles.placesDropdown}>
-                    {placesResults.map((place) => (
-                      <TouchableOpacity
-                        key={place.place_id}
-                        style={styles.placeItem}
-                        onPress={() => handlePlaceSelect(place)}
-                      >
-                        <Text style={styles.placeMainText}>
-                          {place.structured_formatting?.main_text || place.description}
-                        </Text>
-                        <Text style={styles.placeSecondaryText}>
-                          {place.structured_formatting?.secondary_text || ""}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+            {locationSubStep === 0 && (
+              <View>
+                <Text style={styles.sectionTitle}>Where&apos;s your vehicle located?</Text>
+                <Text style={styles.sectionHelper}>
+                  We only share your exact address after a guest books. Until then, they&apos;ll see an approximate location.
+                </Text>
+                <View style={styles.field}>
+                  <View style={styles.locationInputRow}>
+                    <Ionicons name="location-outline" size={20} color="#6B7280" style={{ marginRight: 10 }} />
+                    <TextInput
+                      style={styles.locationInput}
+                      value={city}
+                      onChangeText={handlePlacesSearch}
+                      placeholder="Enter an address"
+                      placeholderTextColor="#9CA3AF"
+                      autoCapitalize="words"
+                    />
                   </View>
-                )}
+                  {showPlacesResults && placesResults.length > 0 && (
+                    <View style={styles.placesDropdown}>
+                      {placesResults.map((place) => (
+                        <TouchableOpacity
+                          key={place.place_id}
+                          style={styles.placeItem}
+                          onPress={() => handlePlaceSelect(place)}
+                        >
+                          <Text style={styles.placeMainText}>
+                            {place.structured_formatting?.main_text || place.description}
+                          </Text>
+                          <Text style={styles.placeSecondaryText}>
+                            {place.structured_formatting?.secondary_text || ""}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+                <View style={styles.useLocationRow}>
+                  <TouchableOpacity style={styles.useLocationButton} onPress={fillLocationFromCurrent}>
+                    <Ionicons name="navigate-outline" size={20} color={NAVY} />
+                    <Text style={styles.useLocationText}>Use my current location</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            )}
 
-            <TouchableOpacity style={styles.toggleRow} onPress={() => setShowPreciseLocation(!showPreciseLocation)}>
-              <View style={[styles.toggleBox, showPreciseLocation && styles.toggleBoxActive]}>
-                {showPreciseLocation && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-              </View>
+            {locationSubStep === 1 && (
               <View>
-                <Text style={styles.toggleLabel}>Show precise location</Text>
-                <Text style={styles.toggleLabelHelper}>Guests will see the exact address after booking.</Text>
-              </View>
-            </TouchableOpacity>
+                <Text style={styles.sectionTitle}>Is the pin in the right spot?</Text>
+                <Text style={styles.sectionHelper}>Drag the map or search to reposition the pin</Text>
+                <View style={styles.mapContainer}>
+                   <MapView
+                     style={styles.map}
+                     provider={PROVIDER_GOOGLE}
+                     // @ts-ignore
+                     customMapStyleString={LIGHT_MAP_STYLE_STRING}
+                     mapType="standard"
+                     logoPosition="none"
+                     initialRegion={{
+                      latitude: selectedLat || 5.6037,
+                      longitude: selectedLng || -0.1870,
+                      latitudeDelta: 0.0922,
+                      longitudeDelta: 0.0421,
+                    }}
+                    onPress={(e) => {
+                      setSelectedLat(e.nativeEvent.coordinate.latitude);
+                      setSelectedLng(e.nativeEvent.coordinate.longitude);
+                    }}
+                  >
+                    {selectedLat !== null && selectedLng !== null && (
+                      <Marker coordinate={{ latitude: selectedLat, longitude: selectedLng }} />
+                    )}
+                  </MapView>
+                   <View style={styles.mapSearchRow}>
+                     <Ionicons name="search" size={18} color="#6B7280" style={{ marginRight: 8 }} />
+                     <TextInput
+                       style={styles.mapSearchInput}
+                       value={mapSearchQuery}
+                       onChangeText={handleMapSearch}
+                       placeholder="Search address..."
+                       placeholderTextColor="#9CA3AF"
+                       autoCapitalize="words"
+                     />
+                   </View>
+                   {showMapSearchResults && mapSearchResults.length > 0 && (
+                     <View style={styles.placesDropdown}>
+                       {mapSearchResults.map((place) => (
+                         <TouchableOpacity
+                           key={place.place_id}
+                           style={styles.placeItem}
+                           onPress={() => handleMapSearchSelect(place)}
+                         >
+                           <Text style={styles.placeMainText}>
+                             {place.structured_formatting?.main_text || place.description}
+                           </Text>
+                           <Text style={styles.placeSecondaryText}>
+                             {place.structured_formatting?.secondary_text || ""}
+                           </Text>
+                         </TouchableOpacity>
+                       ))}
+                     </View>
+                   )}
+                  <View style={styles.mapAddressBadge}>
+                    <Ionicons name="location-outline" size={16} color="#6B7280" />
+                    <Text style={styles.mapAddressText}>
+                      {city || "Selected location"}
+                    </Text>
+                  </View>
+                </View>
 
-            <TouchableOpacity style={styles.toggleRow} onPress={() => setDeliveryAvailable(!deliveryAvailable)}>
-              <View style={[styles.toggleBox, deliveryAvailable && styles.toggleBoxActive]}>
-                {deliveryAvailable && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-              </View>
-              <View>
-                <Text style={styles.toggleLabel}>Delivery available</Text>
-                <Text style={styles.toggleLabelHelper}>You can deliver the vehicle to the guest.</Text>
-              </View>
-            </TouchableOpacity>
-            {deliveryAvailable && (
-              <View style={styles.field}>
-                <Text style={styles.label}>Delivery fee (GHS)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={deliveryFee}
-                  onChangeText={setDeliveryFee}
-                  placeholder="e.g. 50"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="number-pad"
-                />
+                <View style={styles.locationToggleGroup}>
+                  <TouchableOpacity style={styles.toggleRow} onPress={() => setShowPreciseLocation(!showPreciseLocation)}>
+                    <View style={[styles.toggleBox, showPreciseLocation && styles.toggleBoxActive]}>
+                      {showPreciseLocation && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                    </View>
+                    <View>
+                      <Text style={styles.toggleLabel}>Show precise location</Text>
+                      <Text style={styles.toggleLabelHelper}>Guests will see the exact address after booking.</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.toggleRow} onPress={() => setDeliveryAvailable(!deliveryAvailable)}>
+                    <View style={[styles.toggleBox, deliveryAvailable && styles.toggleBoxActive]}>
+                      {deliveryAvailable && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                    </View>
+                    <View>
+                      <Text style={styles.toggleLabel}>Delivery available</Text>
+                      <Text style={styles.toggleLabelHelper}>You can deliver the vehicle to the guest.</Text>
+                    </View>
+                  </TouchableOpacity>
+                  {deliveryAvailable && (
+                    <View style={styles.field}>
+                      <Text style={styles.label}>Delivery fee (GHS)</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={deliveryFee}
+                        onChangeText={setDeliveryFee}
+                        placeholder="e.g. 50"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="number-pad"
+                      />
+                    </View>
+                  )}
+                </View>
               </View>
             )}
           </View>
@@ -1482,7 +1927,7 @@ export default function CreateListingScreen() {
         {/* STEP 8 - Review & Publish */}
         {step === 8 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Review Your Listing</Text>
+            <Text style={styles.sectionTitle}>Review Your Vehicle</Text>
             <Text style={styles.sectionHelper}>Here&apos;s what guests will see. Make sure everything looks good.</Text>
 
             <View style={styles.reviewCard}>
@@ -1510,7 +1955,7 @@ export default function CreateListingScreen() {
                   {images.map((uri, index) => (
                     <TouchableOpacity
                       key={index}
-                      onPress={() => setSelectedImageIndex(index)}
+                      onPress={() => swapWithCover(index)}
                       activeOpacity={0.8}
                     >
                       <Image
@@ -1527,10 +1972,13 @@ export default function CreateListingScreen() {
               )}
 
               <View style={styles.reviewDetails}>
-                <Text style={styles.reviewTitle}>{title || "Untitled Listing"}</Text>
+                <Text style={styles.reviewTitle}>{title || "Untitled Vehicle"}</Text>
                 <Text style={styles.reviewCategory}>{SERVICE_TYPES.find(s => s.id === serviceType)?.label}</Text>
                 <Text style={styles.reviewSubtitle}>
                   {category} · {make} {model} · {year || "N/A"} · {color || ""}
+                </Text>
+                <Text style={styles.reviewMeta}>
+                  {bodyStyle || "N/A"} · {driveType || "N/A"} · {mileage ? `${mileage} km` : ""} · VIN: {vin || "N/A"}
                 </Text>
                 <Text style={styles.reviewPrice}>
                   GHS {pricePerDay || "0"}{serviceType === "sell" ? "" : "/day"}
@@ -1567,6 +2015,84 @@ export default function CreateListingScreen() {
                       <Text style={styles.reviewAmenityText}>GPS</Text>
                     </View>
                   )}
+                  {hasBluetooth && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="bluetooth-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Bluetooth</Text>
+                    </View>
+                  )}
+                  {hasBackupCamera && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="camera-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Backup camera</Text>
+                    </View>
+                  )}
+                  {hasUsbPort && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="checkmark" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>USB</Text>
+                    </View>
+                  )}
+                  {hasSunroof && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="sunny-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Sunroof</Text>
+                    </View>
+                  )}
+                  {hasHeatedSeats && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="thermometer-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Heated seats</Text>
+                    </View>
+                  )}
+                  {hasLeatherSeats && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="checkmark" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Leather seats</Text>
+                    </View>
+                  )}
+                  {hasChildSeat && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="people-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Child seat</Text>
+                    </View>
+                  )}
+                  {hasPetFriendly && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="paw-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Pet friendly</Text>
+                    </View>
+                  )}
+                  {hasSkiRack && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="git-branch-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Ski rack</Text>
+                    </View>
+                  )}
+                  {hasBikeRack && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="bicycle-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Bike rack</Text>
+                    </View>
+                  )}
+                  {hasSnowTires && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="snow-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Snow tires</Text>
+                    </View>
+                  )}
+                  {hasRoofBox && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="cube-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Roof box</Text>
+                    </View>
+                  )}
+                  {hasTowHitch && (
+                    <View style={styles.reviewAmenityChip}>
+                      <Ionicons name="link-outline" size={14} color="#6B7280" />
+                      <Text style={styles.reviewAmenityText}>Tow hitch</Text>
+                    </View>
+                  )}
                   {features.map((feature) => (
                     <View key={feature} style={styles.reviewFeatureChip}>
                       <Text style={styles.reviewFeatureChipText}>{feature}</Text>
@@ -1580,19 +2106,32 @@ export default function CreateListingScreen() {
        </Animated.View>
       </ScrollView>
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.primaryButton,
-            !canProceed() && styles.primaryButtonDisabled,
-            step === 8 && styles.primaryButtonPublish,
-          ]}
-          onPress={step === 8 ? handleSubmit : nextStep}
-          disabled={!canProceed() || saving}
-        >
-          <Text style={styles.primaryButtonText}>
-            {saving ? "Publishing..." : step === 8 ? "Publish listing" : "Continue"}
-          </Text>
-        </TouchableOpacity>
+        {step === 6 && locationSubStep > 0 && locationSubStep < 2 ? (
+          <TouchableOpacity
+            style={[
+              styles.primaryButton,
+              !canProceed() && styles.primaryButtonDisabled,
+            ]}
+            onPress={nextStep}
+            disabled={!canProceed() || saving}
+          >
+            <Text style={styles.primaryButtonText}>Continue</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[
+              styles.primaryButton,
+              !canProceed() && styles.primaryButtonDisabled,
+              step === 8 && styles.primaryButtonPublish,
+            ]}
+            onPress={step === 8 ? handleSubmit : nextStep}
+            disabled={!canProceed() || saving}
+          >
+            <Text style={styles.primaryButtonText}>
+              {saving ? "Publishing..." : step === 8 ? "Publish listing" : "Continue"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
       )}
@@ -1606,9 +2145,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   scrollContent: {
+    minHeight: "100%",
+    justifyContent: "center",
     paddingTop: 0,
     paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
   headerRow: {
     flexDirection: "row",
@@ -1681,10 +2222,10 @@ const styles = StyleSheet.create({
     backgroundColor: NAVY,
   },
   section: {
-    marginBottom: 28,
+    marginBottom: 16,
   },
   photoSection: {
-    paddingTop: 60,
+    paddingTop: 0,
   },
   sectionTitle: {
     fontSize: 15,
@@ -1854,6 +2395,25 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#374151",
   },
+  featureSuggestions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  featureSuggestionChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+  featureSuggestionText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: NAVY,
+  },
   serviceCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -1983,7 +2543,8 @@ const styles = StyleSheet.create({
   },
   photoRowContent: {
     paddingHorizontal: 0,
-    gap: 10,
+    gap: 12,
+    marginTop: 12,
   },
   photoThumb: {
     width: 100,
@@ -2018,6 +2579,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#9CA3AF",
   },
+  photoTitle: {
+    fontSize: 24,
+  },
   photoCountText: {
     fontSize: 13,
     fontWeight: "500",
@@ -2026,6 +2590,30 @@ const styles = StyleSheet.create({
   },
   photoCountWarning: {
     color: "#EF4444",
+  },
+  analysisOverlay: {
+    marginTop: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  analysisContentInline: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  analysisSpinner: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 3,
+    borderColor: "#E5E7EB",
+    borderTopColor: NAVY,
+  },
+  analysisText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+    textAlign: "center",
   },
   priceRow: {
     flexDirection: "row",
@@ -2234,6 +2822,12 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#6B7280",
   },
+  reviewMeta: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6B7280",
+    marginTop: 4,
+  },
   reviewPrice: {
     fontSize: 18,
     fontWeight: "700",
@@ -2438,5 +3032,121 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     lineHeight: 24,
     alignSelf: "flex-start",
+  },
+  useLocationRow: {
+    marginTop: 16,
+  },
+  useLocationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+  },
+  useLocationText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: NAVY,
+  },
+  mapContainer: {
+    height: 320,
+    borderRadius: 16,
+    overflow: "hidden",
+    marginTop: 16,
+    position: "relative",
+  },
+  map: {
+    ...StyleSheet.absoluteFill,
+  },
+  mapAddressBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  mapAddressText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  mapSearchRow: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+    zIndex: 10,
+  },
+  mapSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#374151",
+    paddingVertical: 0,
+  },
+  locationToggleGroup: {
+    marginTop: 24,
+    gap: 4,
+  },
+  selectRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+  },
+  selectValue: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  locationFooterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  backButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
+  },
+  backButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#374151",
   },
 });

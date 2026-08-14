@@ -18,7 +18,6 @@ type VehicleCardProps = {
 };
 
 export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style }: VehicleCardProps) {
-  const avatarUrl = vehicle.ownerAvatar;
   const heartScale = useRef(new Animated.Value(1)).current;
 
   const triggerHeartBeat = () => {
@@ -51,32 +50,15 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
         </Pressable>
       </View>
       <View style={[styles.cardBody, list && styles.listCardBody]}>
-        <Text style={styles.price}>{vehicle.price}</Text>
         <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
           {vehicle.title}
         </Text>
-        <Text style={styles.cardSubtitle}>
-          {vehicle.location} • {vehicle.condition}
+        <Text style={styles.cardMeta}>
+          {vehicle.condition} • <Ionicons name="star" size={14} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
         </Text>
-        <Text style={styles.cardTransmission}>{vehicle.transmission}</Text>
-        <View style={styles.metaRow}>
-          {vehicle.isVerified && (
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={12} color={GREEN} />
-              <Text style={styles.verifiedText}>Verified</Text>
-            </View>
-          )}
-          {vehicle.isVerified && vehicle.yearsOnPlatform ? (
-            <Text style={styles.yearsText}>• {vehicle.yearsOnPlatform}</Text>
-          ) : (
-            <Text style={styles.yearsText}>{vehicle.yearsOnPlatform}</Text>
-          )}
-        </View>
-        <View style={styles.ownerRow}>
-          <Image source={{ uri: avatarUrl }} style={styles.ownerAvatar} contentFit="cover" />
-          <Text style={styles.ownerName} numberOfLines={1} ellipsizeMode="tail">
-            {vehicle.ownerName}
-          </Text>
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>{vehicle.price}</Text>
+          <Text style={styles.pricePeriod}>/day</Text>
         </View>
       </View>
     </Pressable>
@@ -89,11 +71,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
   },
   listCard: {
     width: "100%",
@@ -103,11 +80,11 @@ const styles = StyleSheet.create({
   imageWrap: {
     position: "relative",
     width: "100%",
-    height: 120,
+    aspectRatio: 1.5,
   },
   listImageWrap: {
     width: 140,
-    height: 140,
+    aspectRatio: 1.5,
     flexShrink: 1,
   },
   cardImage: {
@@ -127,71 +104,38 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     padding: 10,
-    gap: 3,
+    gap: 4,
     flex: 1,
   },
   listCardBody: {
     padding: 12,
     justifyContent: "center",
   },
-  price: {
+  cardTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: GREEN,
+    color: NAVY,
+    flexShrink: 1,
   },
-  cardTitle: {
-    fontSize: 13,
+  cardMeta: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 4,
+    marginTop: 4,
+  },
+  price: {
+    fontSize: 16,
     fontWeight: "700",
-    color: NAVY,
-    flexShrink: 1,
-  },
-  cardSubtitle: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  cardTransmission: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  verifiedText: {
-    fontSize: 10,
-    fontWeight: "600",
     color: GREEN,
   },
-  yearsText: {
-    fontSize: 10,
+  pricePeriod: {
+    fontSize: 12,
     fontWeight: "500",
-    color: "#9CA3AF",
-  },
-  ownerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 4,
-  },
-  ownerAvatar: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#F3F4F6",
-  },
-  ownerName: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: NAVY,
-    flexShrink: 1,
+    color: "#6B7280",
   },
 });

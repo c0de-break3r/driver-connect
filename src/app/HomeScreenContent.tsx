@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Easing } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -106,6 +106,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const [placesResults, setPlacesResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [sortBy, setSortBy] = useState<"recommended" | "price_asc" | "price_desc" | "rating">("recommended");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const convexVehicles = useQuery(api.jobs.listVehicles, {});
   const vehicles = (convexVehicles ?? []).map((v: any) => ({
@@ -264,17 +266,55 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
 
   const handleViewModeToggle = () => {
     setViewMode((prev) => (prev === "grid" ? "list" : "grid"));
+  };
 
-    sectionAnims.forEach((anim) => anim.setValue(0));
+  const sortVehicles = (list: any[]) => {
+    const sorted = [...list];
+    switch (sortBy) {
+      case "price_asc":
+        return sorted.sort((a, b) => (a.pricePerDay ?? 0) - (b.pricePerDay ?? 0));
+      case "price_desc":
+        return sorted.sort((a, b) => (b.pricePerDay ?? 0) - (a.pricePerDay ?? 0));
+      case "rating":
+        return sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      default:
+        return sorted;
+    }
+  };
 
-    Animated.stagger(20, sectionAnims.map((anim) =>
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 200,
-        easing: Easing.inOut(Easing.cubic),
-        useNativeDriver: true,
-      })
-    )).start();
+  const displayedVehicles = sortVehicles(vehicles);
+
+  const chips = [
+    { id: "all", label: "All", icon: "car-outline" },
+    { id: "airports", label: "Airports", icon: "airplane-outline" },
+    { id: "monthly", label: "Monthly", icon: "calendar-outline" },
+    { id: "nearby", label: "Nearby", icon: "location-outline" },
+    { id: "delivered", label: "Delivered", icon: "car-outline" },
+    { id: "cities", label: "Cities", icon: "business-outline" },
+  ];
+
+  const handleSort = (option: "recommended" | "price_asc" | "price_desc" | "rating") => {
+    setSortBy(option);
+    setShowSortDropdown(false);
+  };
+
+  const categoryScrollViewRef = useRef<ScrollView>(null);
+  const chipLayouts = useRef<{ [key: string]: { x: number; width: number } }>({}).current;
+
+  const handleCategoryPress = (id: string) => {
+    setSelectedCategory(id);
+
+    const layout = chipLayouts[id];
+    if (layout && categoryScrollViewRef.current) {
+      const scrollViewWidth = Dimensions.get("window").width - 40;
+      const targetX = layout.x - scrollViewWidth / 2 + layout.width / 2;
+      categoryScrollViewRef.current.scrollTo({ x: Math.max(0, targetX), animated: true });
+    }
+  };
+
+  const handleChipLayout = (id: string, event: any) => {
+    const { x, width } = event.nativeEvent.layout;
+    chipLayouts[id] = { x, width };
   };
 
   const iconScale = iconAnim.interpolate({
@@ -402,12 +442,37 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
 
         {/* Active chips + count + sort + view toggle */}
         <View style={styles.exploreControls}>
-          <Text style={styles.adsCount}>Found 46 ads</Text>
+          <Text style={styles.adsCount}>Found {displayedVehicles.length} ads</Text>
           <View style={styles.controlsRight}>
-            <Pressable style={styles.sortButton} onPress={() => setShowSortDropdown(!showSortDropdown)}>
-              <Text style={styles.sortButtonText}>Sort</Text>
-              <Ionicons name={showSortDropdown ? "chevron-up" : "chevron-down"} size={14} color={NAVY} />
-            </Pressable>
+            <View style={styles.sortWrapper}>
+              <Pressable style={styles.sortButton} onPress={() => setShowSortDropdown(!showSortDropdown)}>
+                <Text style={styles.sortButtonText}>Sort</Text>
+                <Ionicons name={showSortDropdown ? "chevron-up" : "chevron-down"} size={14} color={NAVY} />
+              </Pressable>
+              {showSortDropdown && (
+                <View style={styles.sortDropdown}>
+                  {[
+                    { id: "recommended", label: "Recommended" },
+                    { id: "price_asc", label: "Price: Low to High" },
+                    { id: "price_desc", label: "Price: High to Low" },
+                    { id: "rating", label: "Highest Rated" },
+                  ].map((option) => (
+                    <Pressable
+                      key={option.id}
+                      style={[styles.sortOption, sortBy === option.id && styles.sortOptionActive]}
+                      onPress={() => handleSort(option.id as any)}
+                    >
+                      <Text style={[styles.sortOptionText, sortBy === option.id && styles.sortOptionTextActive]}>
+                        {option.label}
+                      </Text>
+                      {sortBy === option.id && (
+                        <Ionicons name="checkmark" size={18} color={NAVY} />
+                      )}
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
             <Pressable
               style={styles.viewToggle}
               onPress={handleViewModeToggle}
@@ -416,6 +481,26 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
             </Pressable>
           </View>
         </View>
+
+        {/* Category filter chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryChipsRow}
+          ref={categoryScrollViewRef}
+        >
+          {chips.map((chip) => (
+            <Pressable
+              key={chip.id}
+              style={[styles.categoryChip, selectedCategory === chip.id && styles.categoryChipActive]}
+              onPress={() => handleCategoryPress(chip.id)}
+              onLayout={(e) => handleChipLayout(chip.id, e)}
+            >
+              <Ionicons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
+              <Text style={[styles.categoryChipText, selectedCategory === chip.id && styles.categoryChipTextActive]}>{chip.label}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Scrollable content */}
@@ -455,7 +540,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-              {vehicles.filter((v) => {
+              {displayedVehicles.filter((v) => {
                 const query = searchQuery.toLowerCase();
                 return (
                   v.title.toLowerCase().includes(query) ||
@@ -1285,6 +1370,75 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
+  },
+
+  /* Category chips */
+  categoryChipsRow: {
+    paddingHorizontal: 20,
+    gap: 10,
+    marginTop: 12,
+  },
+  categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
+  },
+  categoryChipActive: {
+    backgroundColor: NAVY,
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: NAVY,
+  },
+  categoryChipTextActive: {
+    color: "#FFFFFF",
+  },
+
+  /* Sort */
+  sortWrapper: {
+    position: "relative",
+  },
+  sortDropdown: {
+    position: "absolute",
+    top: "100%",
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingVertical: 6,
+    zIndex: 50,
+    elevation: 10,
+    minWidth: 200,
+    shadowColor: NAVY,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    marginTop: 4,
+  },
+  sortOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  sortOptionActive: {
+    backgroundColor: "#F3F4F6",
+  },
+  sortOptionText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: NAVY,
+  },
+  sortOptionTextActive: {
+    fontWeight: "700",
   },
 });
 

@@ -471,7 +471,7 @@ export default function OwnerDashboard() {
                   <EmptyState
                     image={benz}
                     title="No listings"
-                    subtitle="Log in to create and manage your vehicle listings."
+                    subtitle="Log in to create and manage your vehicles."
                     ctaText="Log in"
                     onCtaPress={openAuth}
                   />
@@ -493,7 +493,7 @@ export default function OwnerDashboard() {
                   <EmptyState
                     image={setting3dIcon}
                     title="No menu"
-                    subtitle="Log in to access your owner dashboard, manage listings, and view bookings."
+                    subtitle="Log in to access your owner dashboard, manage your vehicles, and view bookings."
                     ctaText="Log in"
                     onCtaPress={openAuth}
                   />
