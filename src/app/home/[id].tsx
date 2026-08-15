@@ -437,8 +437,8 @@ const MOCK_VEHICLES: MockVehicle[] = [
       { icon: "call-outline", title: "24/7 customer support", description: "" },
     ],
     rulesOfTheRoad: [
-      { icon: "close-circle-outline", title: "No smoking allowed", description: "Smoking in any Turo vehicle would result in a US$150 fee" },
-      { icon: "sparkles-outline", title: "Keep the vehicle tidy", description: "Unreasonably dirty vehicles may result in a US$150 fee" },
+      { icon: "close-circle-outline", title: "No smoking allowed", description: "Smoking in any Africana vehicle would result in a GH₵150 fee" },
+      { icon: "sparkles-outline", title: "Keep the vehicle tidy", description: "Unreasonably dirty vehicles may result in a GH₵150 fee" },
       { icon: "water-outline", title: "Refuel the vehicle", description: "Missing fuel may result in an additional fee" },
       { icon: "git-branch-outline", title: "No off-roading", description: "" },
     ],
@@ -448,8 +448,8 @@ const MOCK_VEHICLES: MockVehicle[] = [
         {
           category: "Beach gear",
           items: [
-            { name: "Beach chair", price: "US$25/trip", available: 3 },
-            { name: "Beach umbrella", price: "US$25/trip", available: 2 },
+             { name: "Beach chair", price: "GH₵25/trip", available: 3 },
+             { name: "Beach umbrella", price: "GH₵25/trip", available: 2 },
           ],
         },
       ],
@@ -469,10 +469,10 @@ const MOCK_VEHICLES: MockVehicle[] = [
         text: "Vehicle worked perfectly. Owner was totally flexible and communicative with me. Vehicle handles the driving through vario...",
       },
     ],
-    tripSavings: { label: "3+ day discount", amount: "$18" },
+    tripSavings: { label: "3+ day discount", amount: "GH₵18" },
     cancellationPolicy: { title: "Free cancellation", description: "Full refund within 24 hours of booking. More flexible options available at checkout." },
-    paymentOptions: { title: "Flexible payment", description: "$0 due now when you choose the Refundable option at checkout." },
-    milesIncluded: { amount: "600 MI", extraCharge: "US$0.26 charge for each additional mile" },
+    paymentOptions: { title: "Flexible payment", description: "GH₵0 due now when you choose the Refundable option at checkout." },
+    milesIncluded: { amount: "600 MI", extraCharge: "GH₵0.26 charge for each additional mile" },
     insurance: "Insurance via Travelers",
     vehicleFeatures: [
       { category: "Safety", items: ["All-wheel drive", "Backup camera"] },
@@ -1122,8 +1122,8 @@ export default function VehicleDetailScreen() {
       {/* Bottom Continue Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.bottomPriceWrap}>
-          <Text style={styles.bottomPriceOriginal}>$169</Text>
-          <Text style={styles.bottomPrice}> $152 total</Text>
+          <Text style={styles.bottomPriceOriginal}>GH₵ 169</Text>
+          <Text style={styles.bottomPrice}> GH₵ 152 total</Text>
           <Text style={styles.bottomPriceLabel}>Before taxes</Text>
         </View>
         <Pressable style={styles.continueButton} onPress={handleBookNow}>
@@ -1898,7 +1898,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through",
   },
   continueButton: {
-    backgroundColor: "#6366F1",
+    backgroundColor: NAVY,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 28,

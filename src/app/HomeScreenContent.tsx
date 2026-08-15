@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Dimensions, Alert } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
@@ -12,7 +10,6 @@ import { api } from "@/lib/convexApi";
 import { VehicleCard } from "@/components/VehicleCard";
 
 const NAVY = "#2C3E5B";
-const GREEN = "#10B981";
 const ICON_SIZE_BASE = 20;
 const ICON_SIZE_ACTIVE = 24;
 
@@ -185,7 +182,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     router.push(`/vehicle-details?id=${id}` as any);
   };
 
-  const handleFavoritePress = (id: string) => {
+  const handleFavoritePress = (id: string, title: string, image: string, price: string, location: string, rating: number) => {
     if (!signedIn) {
       onLoginPress?.();
       return;
@@ -193,10 +190,14 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     const anim = getHeartAnim(id);
     anim.setValue(1);
     Animated.sequence([
-      Animated.spring(anim, { toValue: 1.4, useNativeDriver: true, tension: 200, friction: 3 }),
-      Animated.spring(anim, { toValue: 1, useNativeDriver: true, tension: 200, friction: 5 }),
+      Animated.timing(anim, { toValue: 1.35, duration: 120, useNativeDriver: true }),
+      Animated.timing(anim, { toValue: 0.85, duration: 120, useNativeDriver: true }),
+      Animated.timing(anim, { toValue: 1.15, duration: 120, useNativeDriver: true }),
+      Animated.spring(anim, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
     ]).start();
-    toggleFavorite(id);
+    router.push(`/favorites/save-to-favorites?vehicle=${encodeURIComponent(JSON.stringify({
+      id, title, image, price, location, rating,
+    }))}` as any);
   };
 
   const handleImageError = (id: string) => {
@@ -299,8 +300,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const sortedFeaturedVehicles = sortVehicles(FEATURED_VEHICLES);
 
   const chips = [
-    { id: "all", label: "All", icon: "people-pulling", family: "fa6" as const },
-    { id: "drivers", label: "Drivers", icon: "steering", family: "mci" as const },
+    { id: "all", label: "All", icon: "people-outline", family: "ion" as const },
+    { id: "drivers", label: "Drivers", icon: "car-outline", family: "ion" as const },
     { id: "airports", label: "Airports", icon: "airplane-outline", family: "ion" as const },
     { id: "monthly", label: "Monthly", icon: "calendar-outline", family: "ion" as const },
     { id: "nearby", label: "Nearby", icon: "location-outline", family: "ion" as const },
@@ -511,13 +512,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               onPress={() => handleCategoryPress(chip.id)}
               onLayout={(e) => handleChipLayout(chip.id, e)}
             >
-              {chip.family === "fa6" ? (
-                <FontAwesome6 name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
-              ) : chip.family === "mci" ? (
-                <MaterialCommunityIcons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
-              ) : (
-                <Ionicons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
-              )}
+              <Ionicons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
               <Text style={[styles.categoryChipText, selectedCategory === chip.id && styles.categoryChipTextActive]}>{chip.label}</Text>
             </Pressable>
           )
@@ -530,7 +525,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#F97316" colors={["#F97316"]} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#10B981" colors={["#10B981"]} />
         }
       >
         {selectedResult ? (
@@ -601,7 +596,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   vehicle={vehicle as any}
                   isFavorite={!!favorites[vehicle.id]}
                   onPress={() => handleVehiclePress(vehicle.id)}
-                  onFavoritePress={() => handleFavoritePress(vehicle.id)}
+                  onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, vehicle.price, vehicle.location, vehicle.rating)}
                   list={viewMode === "list"}
                   style={viewMode === "list" ? styles.listCard : undefined}
                 />
@@ -631,7 +626,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-              {DRIVERS.map((driver) => {
+               {DRIVERS.map((driver) => {
                 const heartScale = getHeartAnim(driver.id);
                 const triggerHeartBeat = () => {
                   heartScale.setValue(1);
@@ -646,14 +641,18 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => router.push(`/driver-details?id=${driver.id}` as any)}>
                   <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
                     <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
-                     <Pressable style={styles.favoriteBadge} onPress={() => {
-                       triggerHeartBeat();
-                       Alert.alert("Favorite", `Added ${driver.name} to favorites`);
-                     }}>
-                       <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                         <Ionicons name="heart-outline" size={22} color="#FFFFFF" />
-                       </Animated.View>
-                     </Pressable>
+                      <Pressable style={styles.favoriteBadge} onPress={() => {
+                        triggerHeartBeat();
+                        handleFavoritePress(driver.id, driver.name, driver.image, driver.hourlyRate, driver.location, driver.rating);
+                      }}>
+                        <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                          <Ionicons
+                            name={favorites[driver.id] ? "heart" : "heart-outline"}
+                            size={22}
+                            color={favorites[driver.id] ? "#E74C3C" : "#FFFFFF"}
+                          />
+                        </Animated.View>
+                      </Pressable>
                   </View>
                   <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
@@ -730,14 +729,20 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                         <Ionicons name="image-outline" size={24} color="#9CA3AF" />
                       </View>
                     )}
-                    <Pressable style={styles.favoriteBadge} onPress={() => {
-                      triggerHeartBeat();
-                      Alert.alert("Favorite", `Added ${vehicle.title} to favorites`);
-                    }}>
-                      <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                        <Ionicons name="heart-outline" size={22} color="#FFFFFF" />
-                      </Animated.View>
-                    </Pressable>
+                    <View style={styles.topRightActions}>
+                      <Pressable style={styles.favoriteBadge} onPress={() => {
+                        triggerHeartBeat();
+                        handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, `GH₵ ${vehicle.pricePerDay}`, vehicle.location, vehicle.rating);
+                      }}>
+                        <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                          <Ionicons
+                            name={favorites[vehicle.id] ? "heart" : "heart-outline"}
+                            size={22}
+                            color={favorites[vehicle.id] ? "#E74C3C" : "#FFFFFF"}
+                          />
+                        </Animated.View>
+                      </Pressable>
+                    </View>
                   </View>
                   <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
@@ -809,34 +814,34 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
     textDecorationLine: "none",
   },
-  searchTextInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    height: 44,
-    gap: 10,
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-  },
-  searchAutocompleteContainer: {
-    marginHorizontal: 20,
-    position: "relative",
-    zIndex: 10,
-  },
-  searchListView: {
-    marginTop: 4,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    maxHeight: 240,
-    width: "100%",
-    zIndex: 10,
-    elevation: 10,
-  },
+   searchTextInputContainer: {
+     flexDirection: "row",
+     alignItems: "center",
+     backgroundColor: "#FFFFFF",
+     borderRadius: 20,
+     paddingHorizontal: 14,
+     paddingVertical: 10,
+     height: 44,
+     gap: 10,
+     borderWidth: 1.5,
+     borderColor: "#E5E7EB",
+   },
+   searchAutocompleteContainer: {
+     marginHorizontal: 20,
+     position: "relative",
+     zIndex: 10,
+   },
+   searchListView: {
+     marginTop: 4,
+     backgroundColor: "#FFFFFF",
+     borderRadius: 14,
+     borderWidth: 1,
+     borderColor: "#E5E7EB",
+     maxHeight: 240,
+     width: "100%",
+     zIndex: 10,
+     elevation: 10,
+   },
   searchRow: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -848,36 +853,36 @@ const styles = StyleSheet.create({
     position: "relative",
     zIndex: 20,
   },
-   unifiedSearchResults: {
-     position: "absolute",
-     top: 56,
-     left: 0,
-     right: 0,
-     backgroundColor: "#FFFFFF",
-     borderRadius: 14,
-     borderWidth: 1,
-     borderColor: "#E5E7EB",
-     height: 180,
-     zIndex: 30,
-     elevation: 30,
-   },
+    unifiedSearchResults: {
+      position: "absolute",
+      top: 56,
+      left: 0,
+      right: 0,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+      height: 180,
+      zIndex: 30,
+      elevation: 30,
+    },
   searchResultRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
-    gap: 12,
-  },
-  searchResultIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+     borderBottomColor: "#E5E7EB",
+     gap: 12,
+   },
+   searchResultIcon: {
+     width: 36,
+     height: 36,
+     borderRadius: 18,
+     backgroundColor: "#F3F4F6",
+     alignItems: "center",
+     justifyContent: "center",
+   },
   searchResultAvatar: {
     width: 36,
     height: 36,
@@ -943,7 +948,7 @@ const styles = StyleSheet.create({
   },
   searchResultsQuery: {
     fontWeight: "800",
-    color: NAVY,
+    color: "#2C3E5B",
   },
   searchResultsSubtitle: {
     fontSize: 13,
@@ -992,7 +997,7 @@ const styles = StyleSheet.create({
   adsCount: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#6B7280",
+    color: "#9CA3AF",
   },
   sortButton: {
     flexDirection: "row",
@@ -1008,7 +1013,7 @@ const styles = StyleSheet.create({
   sortButtonText: {
     fontSize: 12,
     fontWeight: "600",
-    color: NAVY,
+    color: "#2C3E5B",
   },
   viewToggle: {
     width: 36,
@@ -1039,7 +1044,7 @@ const styles = StyleSheet.create({
   rateText: {
     fontSize: 12,
     fontWeight: "700",
-    color: GREEN,
+    color: "#10B981",
     marginTop: 4,
   },
   vehicleTypeText: {
@@ -1061,12 +1066,12 @@ const styles = StyleSheet.create({
 
   /* Continue searching */
   continueCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#111111",
     borderRadius: 20,
     padding: 16,
-    shadowColor: NAVY,
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -1082,12 +1087,12 @@ const styles = StyleSheet.create({
   continueTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: NAVY,
+    color: "#FFFFFF",
   },
   continueDate: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#6B7280",
+    color: "#9CA3AF",
     marginTop: 6,
   },
   continueImageWrap: {
@@ -1111,7 +1116,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: NAVY,
+    color: "#FFFFFF",
     flex: 1,
   },
 
@@ -1175,6 +1180,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  saveBadge: {
+    position: "absolute",
+    top: 8,
+    right: 44,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topRightActions: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    gap: 8,
+  },
   imageFallback: {
     position: "absolute",
     top: 0,
@@ -1192,7 +1215,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: NAVY,
+    color: "#2C3E5B",
   },
   cardCategory: {
     fontSize: 12,
@@ -1329,7 +1352,7 @@ const styles = StyleSheet.create({
   categoryChipText: {
     fontSize: 13,
     fontWeight: "600",
-    color: NAVY,
+    color: "#2C3E5B",
   },
   categoryChipTextActive: {
     color: "#FFFFFF",
@@ -1371,7 +1394,7 @@ const styles = StyleSheet.create({
   sortOptionText: {
     fontSize: 14,
     fontWeight: "500",
-    color: NAVY,
+    color: "#2C3E5B",
   },
   sortOptionTextActive: {
     fontWeight: "700",

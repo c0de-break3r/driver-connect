@@ -26,7 +26,7 @@ export type OwnerListingsContentProps = {
 function getStatusColor(status: string) {
   switch (status) {
     case "active":
-      return "#10B981";
+      return "#F97316";
     case "inactive":
       return "#6B7280";
     default:

@@ -25,12 +25,19 @@ export type Collection = {
   name: string;
   vehicleIds: string[];
   coverImage?: string;
+  tripDates?: {
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    endTime: string;
+  };
 };
 
 type FavoriteState = {
   favorites: Record<string, boolean>;
   userEmail: string | null;
   collections: Collection[];
+  pendingVehicle: VehicleFavorite | null;
   toggleFavorite: (id: string) => void;
   removeFavorite: (id: string) => void;
   isFavorite: (id: string) => boolean;
@@ -41,12 +48,16 @@ type FavoriteState = {
   createCollection: (name: string) => Collection;
   renameCollection: (collectionId: string, name: string) => void;
   deleteCollection: (collectionId: string) => void;
+  setPendingVehicle: (vehicle: VehicleFavorite | null) => void;
+  updateCollectionTripDates: (collectionId: string, tripDates: Collection["tripDates"]) => void;
+  clearPendingVehicle: () => void;
 };
 
 export const useFavoritesStore = create<FavoriteState>((set, get) => ({
   favorites: {},
   userEmail: null,
   collections: [],
+  pendingVehicle: null,
 
   toggleFavorite: (id) => {
     const newFavorites = { ...get().favorites, [id]: !get().favorites[id] };
@@ -68,11 +79,11 @@ export const useFavoritesStore = create<FavoriteState>((set, get) => ({
 
   isFavorite: (id: string) => !!get().favorites[id],
 
-  reset: () => set({ favorites: {}, userEmail: null, collections: [] }),
+  reset: () => set({ favorites: {}, userEmail: null, collections: [], pendingVehicle: null }),
 
   loadForUser: async (email) => {
     if (!email) {
-      set({ favorites: {}, userEmail: null, collections: [] });
+      set({ favorites: {}, userEmail: null, collections: [], pendingVehicle: null });
       return;
     }
     try {
@@ -84,9 +95,10 @@ export const useFavoritesStore = create<FavoriteState>((set, get) => ({
         favorites: storedFav ? JSON.parse(storedFav) : {},
         collections: storedCol ? JSON.parse(storedCol) : [],
         userEmail: email,
+        pendingVehicle: null,
       });
     } catch {
-      set({ favorites: {}, collections: [], userEmail: email });
+      set({ favorites: {}, collections: [], userEmail: email, pendingVehicle: null });
     }
   },
 
@@ -149,4 +161,19 @@ export const useFavoritesStore = create<FavoriteState>((set, get) => ({
       AsyncStorage.setItem(`africana-collections-${email}`, JSON.stringify(collections));
     }
   },
+
+  setPendingVehicle: (vehicle) => set({ pendingVehicle: vehicle }),
+
+  updateCollectionTripDates: (collectionId, tripDates) => {
+    const collections = get().collections.map((c) =>
+      c.id === collectionId ? { ...c, tripDates } : c
+    );
+    set({ collections });
+    const email = get().userEmail;
+    if (email) {
+      AsyncStorage.setItem(`africana-collections-${email}`, JSON.stringify(collections));
+    }
+  },
+
+  clearPendingVehicle: () => set({ pendingVehicle: null }),
 }));

@@ -40,15 +40,17 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
     <Pressable style={[styles.card, list && styles.listCard, style]} onPress={onPress}>
       <View style={[styles.imageWrap, list && styles.listImageWrap]}>
         <Image source={{ uri: vehicle.image }} style={styles.cardImage} contentFit="cover" />
-        <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
-          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-            <Ionicons
-              name={isFavorite ? "heart" : "heart-outline"}
-              size={22}
-              color={isFavorite ? "#E74C3C" : "#9CA3AF"}
-            />
-          </Animated.View>
-        </Pressable>
+        <View style={styles.topRightActions}>
+          <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
+            <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={22}
+                color={isFavorite ? "#E74C3C" : "#FFFFFF"}
+              />
+            </Animated.View>
+          </Pressable>
+        </View>
       </View>
       <View style={[styles.cardBody, list && styles.listCardBody]}>
         <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
@@ -62,7 +64,7 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
           <Text style={styles.pricePeriod}>/day</Text>
           {verified && (
             <View style={styles.verifiedBadgeInline}>
-              <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+               <Ionicons name="checkmark-circle" size={14} color={GREEN} />
               <Text style={styles.verifiedBadgeText}>Verified</Text>
             </View>
           )}
@@ -104,6 +106,13 @@ const styles = StyleSheet.create({
     right: 8,
     alignItems: "center",
     justifyContent: "center",
+  },
+  topRightActions: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    gap: 8,
   },
   cardBody: {
     padding: 10,
@@ -149,7 +158,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
-    backgroundColor: "#ECFDF5",
+    backgroundColor: "#FFF7ED",
   },
   verifiedBadgeText: {
     fontSize: 11,

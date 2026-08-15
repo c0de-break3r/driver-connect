@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useState, useCallback, forwardRef } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
 import {
@@ -10,51 +10,38 @@ import {
   Animated,
   TextInput,
   Modal,
-  PanResponder,
-  Dimensions,
 } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthProvider";
+import { useUser } from "@clerk/expo";
 import { router } from "expo-router";
-import { useFavoritesStore, type VehicleFavorite } from "@/store/useFavoritesStore";
-import { images } from "@/constants/images";
-import EmptyState from "@/components/EmptyState";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function FavoritesScreen() {
-  const { signedIn, email } = useAuth();
+  const { signedIn } = useAuth();
+  const { user } = useUser();
   const favorites = useFavoritesStore((state) => state.favorites);
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
   const loadForUser = useFavoritesStore((state) => state.loadForUser);
   const collections = useFavoritesStore((state) => state.collections);
   const createCollection = useFavoritesStore((state) => state.createCollection);
-  const addVehicleToCollection = useFavoritesStore((state) => state.addVehicleToCollection);
-  const deleteCollection = useFavoritesStore((state) => state.deleteCollection);
-  const removeFavorite = useFavoritesStore((state) => state.removeFavorite);
   const heartAnims = useRef<Map<string, Animated.Value>>(new Map()).current;
-  const collectionCardRefs = useRef<{ [key: string]: View | null }>({});
-  const collectionBoundsMap = useRef<{ [key: string]: { x: number; y: number; width: number; height: number } | null }>({});
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-  const [showAddToCollectionModal, setShowAddToCollectionModal] = useState(false);
-  const [dragOverCollectionId, setDragOverCollectionId] = useState<string | null>(null);
-  const [receivingCollectionId, setReceivingCollectionId] = useState<string | null>(null);
-  const [draggedVehicleId, setDraggedVehicleId] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
-    loadForUser(email);
-  }, [email, loadForUser]);
+    loadForUser(user?.primaryEmailAddress?.emailAddress ?? "");
+  }, [user?.primaryEmailAddress?.emailAddress, loadForUser]);
 
   const allVehicles = useQuery(api.jobs.listVehicles, {});
   const favoriteVehicles = useMemo<any[]>(() => {
-    return (allVehicles ?? []).filter((v: any) => v._id !== "14" && favorites[v._id] && v.images?.[0]);
+    return (allVehicles ?? []).filter((v: any) => favorites[v._id] && v.images?.[0]);
   }, [favorites, allVehicles]);
 
   const getHeartAnim = (id: string) => {
@@ -82,96 +69,25 @@ export default function FavoritesScreen() {
     setShowCreateModal(false);
   };
 
-  const openAddToCollection = (vehicleId: string) => {
-    setSelectedVehicleId(vehicleId);
-    setShowAddToCollectionModal(true);
-  };
-
-  const handleAddToCollection = (collectionId: string) => {
-    if (!selectedVehicleId) return;
-    addVehicleToCollection(collectionId, selectedVehicleId);
-    setShowAddToCollectionModal(false);
-    setSelectedVehicleId(null);
-  };
-
   const handleOpenCollection = (collectionId: string) => {
     router.push(`/favorites/collection/${collectionId}`);
   };
 
-  const handleDeleteCollection = (collectionId: string) => {
-    deleteCollection(collectionId);
+  const handleVehiclePress = (vehicleId: string) => {
+    router.push(`/vehicle-details?id=${vehicleId}`);
   };
-
-  const handleDropOnCollection = useCallback((collectionId: string, vehicleId: string) => {
-    addVehicleToCollection(collectionId, vehicleId);
-    removeFavorite(vehicleId);
-    setDragOverCollectionId(null);
-    setReceivingCollectionId(collectionId);
-    setTimeout(() => setReceivingCollectionId(null), 600);
-  }, [addVehicleToCollection, removeFavorite]);
-
-  const measureCollection = useCallback((id: string): Promise<{ x: number; y: number; width: number; height: number } | null> => {
-    const ref = collectionCardRefs.current[id];
-    if (!ref) return Promise.resolve(null);
-    return new Promise((resolve) => {
-      ref.measure((fx, fy, fw, fh, px, py) => {
-        resolve({ x: px, y: py, width: fw, height: fh });
-      });
-    });
-  }, []);
-
-  const refreshAllCollectionBounds = useCallback(async () => {
-    const updated: { [key: string]: { x: number; y: number; width: number; height: number } } = {};
-    for (const collection of collections) {
-      const bounds = await measureCollection(collection.id);
-      if (bounds) {
-        updated[collection.id] = bounds;
-      }
-    }
-    Object.assign(collectionBoundsMap.current, updated);
-  }, [collections, measureCollection]);
-
-  const checkFolderHover = useCallback((moveX: number, moveY: number): string | null => {
-    for (const collection of collections) {
-      const bounds = collectionBoundsMap.current[collection.id];
-      if (!bounds) continue;
-      if (
-        moveX >= bounds.x &&
-        moveX <= bounds.x + bounds.width &&
-        moveY >= bounds.y &&
-        moveY <= bounds.y + bounds.height
-      ) {
-        return collection.id;
-      }
-    }
-    return null;
-  }, [collections]);
-
-  const handleDragMove = useCallback((gesture: any) => {
-    const hoveredId = checkFolderHover(gesture.moveX, gesture.moveY);
-    setDragOverCollectionId(hoveredId);
-  }, [checkFolderHover]);
-
-  const handleDragEnd = useCallback((gesture: any, vehicleId: string) => {
-    const hoveredId = checkFolderHover(gesture.moveX, gesture.moveY);
-    if (hoveredId) {
-      handleDropOnCollection(hoveredId, vehicleId);
-    } else {
-      setDragOverCollectionId(null);
-    }
-    setDraggedVehicleId(null);
-    setIsDragging(false);
-  }, [checkFolderHover, handleDropOnCollection]);
 
   if (!signedIn) {
     return (
-      <EmptyState
-        image={images.favoritesHeart}
-        title="No favorites"
-        subtitle="Log in to view your favorites. You can save, view, or edit favorites once you've logged in."
-        ctaText="Log in"
-        onCtaPress={() => {}}
-      />
+      <View style={styles.container}>
+        <View style={styles.loginEmpty}>
+          <View style={styles.emptyIconWrap}>
+            <Ionicons name="heart-outline" size={36} color={NAVY} />
+          </View>
+          <Text style={styles.emptyTitle}>Sign in to view favorites</Text>
+          <Text style={styles.emptySubtitle}>Your saved vehicles and collections will appear here once you log in.</Text>
+        </View>
+      </View>
     );
   }
 
@@ -181,463 +97,247 @@ export default function FavoritesScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Favorites</Text>
-          <Text style={styles.headerSubtitle}>
-            {favoriteVehicles.length} {favoriteVehicles.length === 1 ? "item" : "items"} saved
+        {/* Controls */}
+        <View style={styles.controls}>
+          <Text style={styles.controlsCount}>
+            {collections.length === 0
+              ? "No collections"
+              : `${collections.length} collection${collections.length === 1 ? "" : "s"}`}
           </Text>
+          <View style={styles.controlsRight}>
+            <Pressable
+              style={styles.viewToggle}
+              onPress={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+            >
+              <Ionicons
+                name={viewMode === "grid" ? "grid-outline" : "list-outline"}
+                size={18}
+                color={NAVY}
+              />
+            </Pressable>
+          </View>
         </View>
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Collections</Text>
-          <Pressable style={styles.addCollectionButton} onPress={() => setShowCreateModal(true)}>
-            <Ionicons name="add" size={20} color={NAVY} />
-          </Pressable>
-        </View>
-
+        {/* Collections */}
         {collections.length === 0 ? (
-          <View style={styles.emptyCollections}>
-            <Text style={styles.emptyCollectionsText}>No collections yet. Create one to organize your favorites.</Text>
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIconWrap}>
+              <Ionicons name="heart-outline" size={36} color={NAVY} />
+            </View>
+            <Text style={styles.emptyTitle}>No favorites yet</Text>
+            <Text style={styles.emptySubtitle}>Tap the heart icon on any vehicle or driver to save it here.</Text>
           </View>
         ) : (
-          <View style={styles.collectionsGrid}>
+          <View style={viewMode === "grid" ? styles.collectionsGrid : styles.collectionsList}>
             {collections.map((collection) => {
-              const stackedImages = (allVehicles ?? [])
+              const collectionVehicles = (allVehicles ?? [])
                 .filter((v: any) => collection.vehicleIds.includes(v._id))
-                .slice(-3)
-                .map((v: any) => ({ id: v._id, image: v.images?.[0] ?? "" }));
-              const isDragOver = dragOverCollectionId === collection.id;
-              const isReceiving = receivingCollectionId === collection.id;
+                .slice(0, 1);
+
+              if (viewMode === "grid") {
+                return (
+                  <Pressable
+                    key={collection.id}
+                    style={styles.collectionCard}
+                    onPress={() => handleOpenCollection(collection.id)}
+                  >
+                    <View style={styles.collectionImageWrap}>
+                      {collectionVehicles.length > 0 ? (
+                        <Image
+                          source={{ uri: collectionVehicles[0].images?.[0] }}
+                          style={styles.collectionImage}
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <View style={styles.collectionPlaceholder}>
+                          <Ionicons name="car-outline" size={36} color="#9CA3AF" />
+                        </View>
+                      )}
+                      <View style={styles.collectionBadge}>
+                        <Text style={styles.collectionBadgeText}>{collection.vehicleIds.length}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.collectionInfo}>
+                      <Text style={styles.collectionName} numberOfLines={1}>
+                        {collection.name}
+                      </Text>
+                      <Text style={styles.collectionCount}>
+                        {collection.vehicleIds.length === 1 ? "1 vehicle" : `${collection.vehicleIds.length} vehicles`}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              }
+
               return (
-                <CollectionCard
+                <Pressable
                   key={collection.id}
-                  ref={(ref) => { collectionCardRefs.current[collection.id] = ref as View; }}
-                  collection={collection}
-                  stackedImages={stackedImages}
-                  isDragOver={isDragOver}
-                  isReceiving={isReceiving}
+                  style={styles.collectionListItem}
                   onPress={() => handleOpenCollection(collection.id)}
-                  onDrop={(vehicleId) => handleDropOnCollection(collection.id, vehicleId)}
-                  onDelete={() => handleDeleteCollection(collection.id)}
-                  onLayout={(id, x, y, width, height) => {
-                    collectionBoundsMap.current[id] = { x, y, width, height };
-                  }}
-                />
+                >
+                  <View style={styles.collectionListImageWrap}>
+                    {collectionVehicles.length > 0 ? (
+                      <Image
+                        source={{ uri: collectionVehicles[0].images?.[0] }}
+                        style={styles.collectionListImage}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <View style={styles.collectionListPlaceholder}>
+                        <Ionicons name="car-outline" size={20} color="#9CA3AF" />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.collectionListInfo}>
+                    <Text style={styles.collectionName} numberOfLines={1}>
+                      {collection.name}
+                    </Text>
+                    <Text style={styles.collectionCount}>
+                      {collection.vehicleIds.length === 1 ? "1 vehicle" : `${collection.vehicleIds.length} vehicles`}
+                    </Text>
+                  </View>
+                  <View style={styles.collectionListBadge}>
+                    <Text style={styles.collectionBadgeText}>{collection.vehicleIds.length}</Text>
+                  </View>
+                </Pressable>
               );
             })}
           </View>
         )}
 
-        {favoriteVehicles.length === 0 ? (
-          <EmptyState
-            image={images.favoritesHeart}
-            title="No favorites yet"
-            subtitle="Tap the heart icon on any vehicle to save it here."
-          />
-        ) : (
-          <View style={styles.grid}>
-            {favoriteVehicles.map((vehicle) => (
-              <DraggableCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                onFavoritePress={() => handleFavoritePress(vehicle.id)}
-                onAddToCollection={() => openAddToCollection(vehicle.id)}
-                isDragOver={draggedVehicleId === vehicle.id && dragOverCollectionId !== null}
-                isDragging={isDragging}
-                onDragStart={async () => {
-                  setDragOverCollectionId(null);
-                  setDraggedVehicleId(vehicle.id);
-                  setIsDragging(true);
-                  await refreshAllCollectionBounds();
-                }}
-                onDragMove={handleDragMove}
-                onDragEnd={handleDragEnd}
-              />
-            ))}
+        {/* Saved Vehicles */}
+        {favoriteVehicles.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Saved vehicles</Text>
+            {viewMode === "grid" ? (
+              <View style={styles.grid}>
+                {favoriteVehicles.map((vehicle) => {
+                  const heartScale = getHeartAnim(vehicle._id);
+                  return (
+                    <Pressable
+                      key={vehicle._id}
+                      style={styles.card}
+                      onPress={() => handleVehiclePress(vehicle._id)}
+                    >
+                      <View style={styles.imageWrap}>
+                        <Image
+                          source={{ uri: vehicle.images?.[0] }}
+                          style={styles.cardImage}
+                          contentFit="cover"
+                        />
+                        <Pressable
+                          style={styles.favoriteBadge}
+                          onPress={() => handleFavoritePress(vehicle._id)}
+                        >
+                          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                            <Ionicons name="heart" size={18} color="#FFFFFF" />
+                          </Animated.View>
+                        </Pressable>
+                      </View>
+                      <View style={styles.cardBody}>
+                        <Text style={styles.cardTitle} numberOfLines={1}>
+                          {vehicle.title}
+                        </Text>
+                        <Text style={styles.cardSubtitle} numberOfLines={1}>
+                          {vehicle.city} • {vehicle.region}
+                        </Text>
+                        <View style={styles.cardFooter}>
+                          <Text style={styles.cardPrice}>
+                            {vehicle.pricePerDay ? `GH₵ ${vehicle.pricePerDay}` : ""}
+                          </Text>
+                          <View style={styles.ratingBadge}>
+                            <Ionicons name="star" size={12} color={GREEN} />
+                            <Text style={styles.ratingText}>{vehicle.rating ?? 5.0}</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : (
+              <View style={styles.list}>
+                {favoriteVehicles.map((vehicle) => {
+                  const heartScale = getHeartAnim(vehicle._id);
+                  return (
+                    <Pressable
+                      key={vehicle._id}
+                      style={styles.listItem}
+                      onPress={() => handleVehiclePress(vehicle._id)}
+                    >
+                      <View style={styles.listImageWrap}>
+                        <Image
+                          source={{ uri: vehicle.images?.[0] }}
+                          style={styles.listImage}
+                          contentFit="cover"
+                        />
+                      </View>
+                      <View style={styles.listInfo}>
+                        <Text style={styles.cardTitle} numberOfLines={1}>
+                          {vehicle.title}
+                        </Text>
+                        <Text style={styles.cardSubtitle} numberOfLines={1}>
+                          {vehicle.city} • {vehicle.region}
+                        </Text>
+                        <View style={styles.cardFooter}>
+                          <Text style={styles.cardPrice}>
+                            {vehicle.pricePerDay ? `GH₵ ${vehicle.pricePerDay}` : ""}
+                          </Text>
+                          <View style={styles.ratingBadge}>
+                            <Ionicons name="star" size={12} color={GREEN} />
+                            <Text style={styles.ratingText}>{vehicle.rating ?? 5.0}</Text>
+                          </View>
+                        </View>
+                      </View>
+                      <Pressable
+                        style={styles.listHeartButton}
+                        onPress={() => handleFavoritePress(vehicle._id)}
+                      >
+                        <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                          <Ionicons name="heart" size={18} color="#FFFFFF" />
+                        </Animated.View>
+                      </Pressable>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
           </View>
         )}
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      <BottomSheet visible={showCreateModal} onClose={() => setShowCreateModal(false)}>
-        <View style={styles.bottomSheetHeader}>
-          <Text style={styles.bottomSheetTitle}>New Collection</Text>
-          <Pressable onPress={() => setShowCreateModal(false)} hitSlop={8}>
-            <Ionicons name="close" size={22} color={NAVY} />
-          </Pressable>
-        </View>
-        <TextInput
-          style={styles.modalInput}
-          placeholder="Collection name"
-          placeholderTextColor="#9CA3AF"
-          value={newCollectionName}
-          onChangeText={setNewCollectionName}
-          autoFocus
-        />
-        <View style={styles.modalActions}>
-          <Pressable style={styles.modalCancel} onPress={() => setShowCreateModal(false)}>
-            <Text style={styles.modalCancelText}>Cancel</Text>
-          </Pressable>
-          <Pressable style={styles.modalCreate} onPress={handleCreateCollection}>
-            <Text style={styles.modalCreateText}>Create</Text>
-          </Pressable>
-        </View>
-      </BottomSheet>
-
-      <BottomSheet visible={showAddToCollectionModal} onClose={() => setShowAddToCollectionModal(false)}>
-        <View style={styles.bottomSheetHeader}>
-          <Text style={styles.bottomSheetTitle}>Add to Collection</Text>
-          <Pressable onPress={() => setShowAddToCollectionModal(false)} hitSlop={8}>
-            <Ionicons name="close" size={22} color={NAVY} />
-          </Pressable>
-        </View>
-        {collections.length === 0 ? (
-          <Text style={styles.modalEmptyText}>No collections yet. Create one first.</Text>
-        ) : (
-          <View style={styles.collectionOptionsList}>
-            {collections.map((collection) => (
-              <Pressable
-                key={collection.id}
-                style={styles.collectionOption}
-                onPress={() => handleAddToCollection(collection.id)}
-              >
-                <View style={styles.collectionOptionIcon}>
-                  <Ionicons name="folder-outline" size={20} color={NAVY} />
-                </View>
-                <View style={styles.collectionOptionBody}>
-                  <Text style={styles.collectionOptionText}>{collection.name}</Text>
-                  <Text style={styles.collectionOptionCount}>{collection.vehicleIds.length} items</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+      {/* Create Collection Modal */}
+      <Modal visible={showCreateModal} animationType="none" transparent onRequestClose={() => setShowCreateModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowCreateModal(false)}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>New Collection</Text>
+              <Pressable onPress={() => setShowCreateModal(false)}>
+                <Ionicons name="close" size={22} color={NAVY} />
               </Pressable>
-            ))}
+            </View>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Collection name"
+              placeholderTextColor="#9CA3AF"
+              value={newCollectionName}
+              onChangeText={setNewCollectionName}
+              autoFocus
+            />
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalCancel} onPress={() => setShowCreateModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.modalCreate} onPress={handleCreateCollection}>
+                <Text style={styles.modalCreateText}>Create</Text>
+              </Pressable>
+            </View>
           </View>
-        )}
-        <Pressable style={styles.modalCancelFull} onPress={() => setShowAddToCollectionModal(false)}>
-          <Text style={styles.modalCancelText}>Cancel</Text>
         </Pressable>
-      </BottomSheet>
+      </Modal>
     </View>
-  );
-}
-
-const BottomSheet = ({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: React.ReactNode }) => {
-  const sheetAnim = useRef(new Animated.Value(0)).current;
-
-  const openSheet = useCallback(() => {
-    sheetAnim.setValue(0);
-    Animated.timing(sheetAnim, {
-      toValue: 1,
-      duration: 420,
-      useNativeDriver: true,
-    }).start();
-  }, [sheetAnim]);
-
-  const closeSheet = useCallback(() => {
-    Animated.timing(sheetAnim, {
-      toValue: 0,
-      duration: 320,
-      useNativeDriver: true,
-    }).start(() => onClose());
-  }, [sheetAnim, onClose]);
-
-  useEffect(() => {
-    if (visible) {
-      openSheet();
-    }
-  }, [visible, openSheet]);
-
-  if (!visible) return null;
-
-  return (
-    <Modal visible={visible} animationType="none" transparent onRequestClose={closeSheet}>
-      <Pressable style={styles.bottomSheetOverlay} onPress={closeSheet}>
-        <Animated.View
-          style={[
-            styles.bottomSheetContent,
-            {
-              transform: [
-                {
-                  translateY: sheetAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [600, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <View style={styles.bottomSheetHandle} />
-          <ScrollView
-            contentContainerStyle={styles.bottomSheetScrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {children}
-          </ScrollView>
-        </Animated.View>
-      </Pressable>
-    </Modal>
-  );
-};
-
-const CollectionCard = forwardRef<View, {
-  collection: { id: string; name: string; vehicleIds: string[] };
-  stackedImages: Array<{ id: string; image: string }>;
-  isDragOver: boolean;
-  isReceiving: boolean;
-  onPress: () => void;
-  onDrop: (vehicleId: string) => void;
-  onDelete: () => void;
-  onLayout?: (id: string, x: number, y: number, width: number, height: number) => void;
-}>(({ collection, stackedImages, isDragOver, isReceiving, onPress, onDrop, onDelete, onLayout }, ref) => {
-  const cardScale = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (isReceiving) {
-      cardScale.setValue(1);
-      Animated.sequence([
-        Animated.timing(cardScale, { toValue: 1.12, duration: 150, useNativeDriver: true }),
-        Animated.spring(cardScale, { toValue: isDragOver ? 0.85 : 1, useNativeDriver: true, tension: 200, friction: 3 }),
-      ]).start();
-    } else {
-      Animated.timing(cardScale, {
-        toValue: isDragOver ? 0.85 : 1,
-        duration: 180,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [isReceiving, isDragOver, cardScale]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > Math.abs(gesture.dy),
-      onPanResponderRelease: (_, gesture) => {
-        if (gesture.dx > 50) {
-          onDrop(gesture.dx.toString());
-        }
-      },
-    })
-  ).current;
-
-  const animatedStyle = {
-    transform: [{ scale: cardScale }],
-  };
-
-  return (
-    <Pressable
-      ref={ref}
-      onPress={onPress}
-      style={[styles.collectionCard, isDragOver && styles.collectionCardDragOver]}
-      onLayout={(event) => {
-        const { x, y, width, height } = event.nativeEvent.layout;
-        onLayout?.(collection.id, x, y, width, height);
-      }}
-      {...panResponder.panHandlers}
-    >
-      <Animated.View style={[styles.collectionCardInner, animatedStyle]}>
-        <View style={styles.collectionImageWrap}>
-          {stackedImages.length > 0 ? (
-            <View style={styles.stackedImages}>
-              {stackedImages.slice(-3).reverse().map((vehicle, index) => (
-                <Image
-                  key={vehicle.id}
-                  source={{ uri: vehicle.image }}
-                  style={[
-                    styles.stackedImage,
-                    { zIndex: stackedImages.length - index, transform: [{ translateX: index * 8 }, { translateY: -index * 6 }, { rotate: `${(index - 1) * 6}deg` }] }
-                  ]}
-                  contentFit="cover"
-                />
-              ))}
-            </View>
-          ) : (
-            <View style={styles.collectionImagePlaceholder}>
-              <Ionicons name="folder" size={32} color={NAVY} />
-            </View>
-          )}
-        </View>
-        <Text style={styles.collectionName} numberOfLines={1}>{collection.name}</Text>
-        <Text style={styles.collectionCount}>{collection.vehicleIds.length} items</Text>
-      </Animated.View>
-      <Pressable style={styles.trashButton} onPress={onDelete}>
-        <Ionicons name="trash-outline" size={16} color="#E74C3C" />
-      </Pressable>
-    </Pressable>
-  );
-});
-
-CollectionCard.displayName = "CollectionCard";
-
-function DraggableCard({ vehicle, onFavoritePress, onAddToCollection, onDragStart, onDragMove, onDragEnd, isDragOver, isDragging }: {
-  vehicle: VehicleFavorite;
-  onFavoritePress: () => void;
-  onAddToCollection: () => void;
-  onDragStart?: () => void;
-  onDragMove?: (gesture: any) => void;
-  onDragEnd?: (gesture: any, vehicleId: string) => void;
-  isDragOver?: boolean;
-  isDragging?: boolean;
-}) {
-  const translateY = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
-  const shadow = useRef(new Animated.Value(0)).current;
-  const bodyHeight = useRef(new Animated.Value(0)).current;
-  const cardWidth = useRef(new Animated.Value(1)).current;
-  const [expanded, setExpanded] = useState(false);
-
-  const animatedStyle = {
-    transform: [
-      { translateX },
-      { translateY },
-      { scale },
-    ],
-    opacity,
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: isDragging ? 12 : 2 },
-    shadowOpacity: isDragging ? 0.25 : 0.08,
-    shadowRadius: isDragging ? 16 : 8,
-    elevation: isDragging ? 8 : 2,
-    zIndex: isDragging ? 999 : 1,
-  };
-
-  const toggleExpand = () => {
-    const next = !expanded;
-    setExpanded(next);
-    Animated.timing(bodyHeight, {
-      toValue: next ? 1 : 0,
-      duration: 220,
-      useNativeDriver: false,
-    }).start();
-    Animated.timing(cardWidth, {
-      toValue: next ? 1 : 0,
-      duration: 220,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const bodyInterpolate = bodyHeight.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 120],
-  });
-
-  const widthInterpolate = cardWidth.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 24],
-  });
-
-  const handleStart = () => {
-    onDragStart?.();
-    Animated.parallel([
-      Animated.spring(scale, { toValue: 0.92, useNativeDriver: true, tension: 200, friction: 4 }),
-      Animated.spring(shadow, { toValue: 1, useNativeDriver: true }),
-    ]).start();
-  };
-
-  const handleMove = (_dx: number, _dy: number, gesture: any) => {
-    translateX.setValue(_dx);
-    translateY.setValue(_dy);
-    onDragMove?.(gesture);
-  };
-
-  const handleEnd = (gesture: any) => {
-    Animated.parallel([
-      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-      Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true, tension: 200, friction: 4 }),
-      Animated.spring(shadow, { toValue: 0, useNativeDriver: true }),
-    ]).start(() => {
-      translateX.setValue(0);
-      translateY.setValue(0);
-      scale.setValue(1);
-      shadow.setValue(0);
-      onDragEnd?.(gesture, vehicle.id);
-    });
-  };
-
-  const handleTap = () => {
-    toggleExpand();
-  };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > Math.abs(gesture.dy),
-      onPanResponderGrant: handleStart,
-      onPanResponderMove: (_, gesture) => handleMove(gesture.dx, gesture.dy, gesture),
-      onPanResponderRelease: (_, gesture) => {
-        const totalMovement = Math.sqrt(gesture.dx * gesture.dx + gesture.dy * gesture.dy);
-        if (totalMovement < 5) {
-          handleTap();
-        } else {
-          handleEnd(gesture);
-        }
-      },
-      onPanResponderTerminate: () => {
-        Animated.parallel([
-          Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-          Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-          Animated.spring(scale, { toValue: 1, useNativeDriver: true, tension: 200, friction: 4 }),
-          Animated.spring(shadow, { toValue: 0, useNativeDriver: true }),
-        ]).start(() => {
-          translateX.setValue(0);
-          translateY.setValue(0);
-          scale.setValue(1);
-          shadow.setValue(0);
-        });
-      },
-    })
-  ).current;
-
-  return (
-    <Animated.View style={[styles.card, animatedStyle]} {...panResponder.panHandlers}>
-      <View style={styles.imageWrap}>
-        <Image
-          source={{ uri: vehicle.image }}
-          style={styles.cardImage}
-          contentFit="cover"
-        />
-        <Pressable
-          style={styles.favoriteBadge}
-          onPress={onFavoritePress}
-        >
-          <Ionicons name="heart" size={20} color="#E74C3C" />
-        </Pressable>
-        <Pressable
-          style={styles.addToCollectionButton}
-          onPress={onAddToCollection}
-        >
-          <Ionicons name="folder-outline" size={16} color="#FFFFFF" />
-        </Pressable>
-        <View style={styles.dragHandle} pointerEvents="none">
-          <Ionicons name="reorder-three" size={20} color="#FFFFFF" />
-        </View>
-      </View>
-      <View style={[styles.cardBody, { maxHeight: bodyInterpolate, overflow: "hidden", paddingRight: widthInterpolate }]}>
-        <Text style={styles.price}>{vehicle.price}</Text>
-        <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
-          {vehicle.title}
-        </Text>
-        <Text style={styles.cardSubtitle}>{vehicle.location} • {vehicle.condition}</Text>
-        <Text style={styles.cardTransmission}>{vehicle.transmission}</Text>
-        <View style={styles.metaRow}>
-          {vehicle.isVerified && (
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={12} color="#10B981" />
-              <Text style={styles.verifiedText}>Verified</Text>
-            </View>
-          )}
-          <Text style={styles.yearsText}>{vehicle.yearsOnPlatform}</Text>
-        </View>
-        <View style={styles.ownerRow}>
-          <Image source={{ uri: vehicle.ownerAvatar }} style={styles.ownerAvatar} contentFit="cover" />
-          <Text style={styles.ownerName} numberOfLines={1} ellipsizeMode="tail">
-            {vehicle.ownerName}
-          </Text>
-        </View>
-      </View>
-    </Animated.View>
   );
 }
 
@@ -651,54 +351,46 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 100,
   },
-  loginContainer: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  loginTitle: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: NAVY,
-    marginBottom: 12,
-  },
-  loginSubtitle: {
-    fontSize: 16,
-    color: "#6B7280",
-    lineHeight: 22,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "800",
     color: NAVY,
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500",
     color: "#6B7280",
+    marginTop: 4,
   },
-  sectionHeader: {
+  controls: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginTop: 12,
+    marginBottom: 16,
+    gap: 10,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: NAVY,
+  controlsCount: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
   },
-  addCollectionButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  controlsRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  viewToggle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -708,115 +400,166 @@ const styles = StyleSheet.create({
   collectionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 20,
+    gap: 14,
+    alignItems: "flex-start",
+  },
+  collectionsList: {
+    flexDirection: "column",
+    gap: 14,
   },
   collectionCard: {
     width: "47%",
     backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    gap: 6,
-  },
-  collectionCardInner: {
-    alignItems: "center",
-    gap: 6,
-  },
-  collectionCardDragOver: {
-    borderColor: NAVY,
-    borderWidth: 2.5,
-    backgroundColor: "#F3F4F6",
+    borderRadius: 16,
+    overflow: "hidden",
     shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  trashButton: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10,
-  },
-  particleContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    pointerEvents: "none",
-  },
-  particle: {
-    position: "absolute",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#FFB800",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   collectionImageWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 10,
-    overflow: "hidden",
-    position: "relative",
-  },
-  stackedImages: {
     width: "100%",
-    height: "100%",
-    position: "relative",
-  },
-  stackedImage: {
-    position: "absolute",
-    width: 50,
-    height: 50,
-    borderRadius: 6,
-    top: 15,
-    left: 15,
+    height: 140,
   },
   collectionImage: {
     width: "100%",
     height: "100%",
   },
-  collectionImagePlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 10,
+  collectionPlaceholder: {
+    width: "100%",
+    height: "100%",
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
   },
+  collectionBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  collectionBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  collectionInfo: {
+    padding: 12,
+  },
   collectionName: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: "700",
     color: NAVY,
-    textAlign: "center",
+    marginBottom: 4,
   },
   collectionCount: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "500",
     color: "#6B7280",
   },
-  emptyCollections: {
-    paddingVertical: 12,
+  collectionListItem: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: NAVY,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  emptyCollectionsText: {
+  collectionListImageWrap: {
+    width: 140,
+    height: 140,
+    flexShrink: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#F3F4F6",
+  },
+  collectionListImage: {
+    width: "100%",
+    height: "100%",
+  },
+  collectionListPlaceholder: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  collectionListInfo: {
+    flex: 1,
+  },
+  collectionListBadge: {
+    backgroundColor: NAVY,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 80,
+    flexDirection: "column",
+    gap: 14,
+  },
+  emptyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    marginBottom: 8,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  emptySubtitle: {
     fontSize: 14,
+    fontWeight: "500",
     color: "#6B7280",
+    textAlign: "center",
+    paddingHorizontal: 40,
+  },
+  loginEmpty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 80,
+    flexDirection: "column",
+    gap: 14,
+    paddingHorizontal: 40,
+  },
+  section: {
+    marginTop: 32,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: NAVY,
+    marginBottom: 16,
+    letterSpacing: -0.3,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: 14,
+    alignItems: "flex-start",
+  },
+  list: {
+    flexDirection: "column",
     gap: 14,
   },
   card: {
@@ -829,6 +572,47 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
+  },
+  listItem: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: NAVY,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  listImageWrap: {
+    width: 140,
+    height: 140,
+    flexShrink: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#F3F4F6",
+  },
+  listImage: {
+    width: "100%",
+    height: "100%",
+  },
+  listInfo: {
+    flex: 1,
+    gap: 4,
+    justifyContent: "center",
+  },
+  listHeartButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: NAVY,
+    alignItems: "center",
+    justifyContent: "center",
   },
   imageWrap: {
     position: "relative",
@@ -843,147 +627,89 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
-  },
-  addToCollectionButton: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dragHandle: {
-    position: "absolute",
-    bottom: 8,
-    left: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",
   },
   cardBody: {
-    paddingLeft: 12,
-    paddingTop: 12,
-    paddingBottom: 12,
+    padding: 12,
     gap: 4,
-    overflow: "hidden",
   },
   cardTitle: {
     fontSize: 14,
     fontWeight: "700",
     color: NAVY,
   },
-  cardCategory: {
+  cardSubtitle: {
     fontSize: 12,
     fontWeight: "500",
     color: "#6B7280",
   },
-  ratingRow: {
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  cardPrice: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: GREEN,
+  },
+  ratingBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: 4,
   },
   ratingText: {
     fontSize: 12,
     fontWeight: "700",
     color: NAVY,
   },
-  priceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 4,
+  bottomSpacer: {
+    height: 20,
   },
-  price: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: GREEN,
-  },
-  originalPrice: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#9CA3AF",
-    textDecorationLine: "line-through",
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 80,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: NAVY,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: 32,
-  },
-  bottomSheetOverlay: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "flex-end",
   },
-  bottomSheetContent: {
+  modalContent: {
     backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 28,
-    gap: 8,
-    width: "100%",
-    height: SCREEN_HEIGHT * 0.70,
+    flexDirection: "column",
+    gap: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
   },
-  bottomSheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E5E7EB",
-    alignSelf: "center",
-    marginBottom: 12,
-  },
-  bottomSheetScrollContent: {
-    gap: 8,
-  },
-  bottomSheetHeader: {
+  modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  bottomSheetTitle: {
+  modalTitle: {
     fontSize: 20,
     fontWeight: "800",
     color: NAVY,
+    letterSpacing: -0.3,
   },
   modalInput: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
     backgroundColor: "#F9FAFB",
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
     color: NAVY,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   modalActions: {
     flexDirection: "row",
@@ -997,7 +723,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F9FAFB",
+  },
+  modalCancelText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#6B7280",
   },
   modalCreate: {
     flex: 1,
@@ -1006,172 +737,9 @@ const styles = StyleSheet.create({
     backgroundColor: NAVY,
     alignItems: "center",
   },
-  modalCancelFull: {
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    marginTop: 8,
-  },
-  modalCancelText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#6B7280",
-  },
   modalCreateText: {
     fontSize: 15,
     fontWeight: "700",
     color: "#FFFFFF",
-  },
-  modalEmptyText: {
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
-    paddingVertical: 12,
-  },
-  collectionOptionsList: {
-    gap: 8,
-    marginTop: 4,
-  },
-  collectionOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  collectionOptionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  collectionOptionBody: {
-    flex: 1,
-  },
-  collectionOptionText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: NAVY,
-  },
-  collectionOptionCount: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  collectionDetailHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  collectionDetailBack: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  collectionDetailDelete: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  collectionDetailGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  collectionDetailCard: {
-    width: "47%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  collectionDetailImage: {
-    width: "100%",
-    height: 100,
-  },
-  collectionDetailBody: {
-    padding: 10,
-    gap: 2,
-  },
-  collectionDetailTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  collectionDetailCategory: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  cardTransmission: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  verifiedText: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: GREEN,
-  },
-  yearsText: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: "#9CA3AF",
-  },
-  ownerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 4,
-  },
-  ownerAvatar: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#F3F4F6",
-  },
-  ownerName: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: NAVY,
-    flexShrink: 1,
   },
 });

@@ -4,6 +4,8 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useAuth } from "@/contexts/AuthProvider";
+import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -79,11 +81,14 @@ export default function DriverDetailsScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
+  const [authVisible, setAuthVisible] = useState(false);
   const heartScale = useRef(new Animated.Value(1)).current;
 
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const fullscreenScrollRef = useRef<ScrollView>(null);
   const fullscreenAnim = useRef(new Animated.Value(0)).current;
+
+  const { signedIn } = useAuth();
 
   useEffect(() => {
     setCurrentImageIndex(0);
@@ -115,11 +120,22 @@ export default function DriverDetailsScreen() {
 
   const handleFavorite = () => {
     triggerHeartBeat();
-    setIsFavorite((prev) => !prev);
-    Alert.alert(
-      isFavorite ? "Removed from favorites" : "Added to favorites",
-      isFavorite ? "" : `${driver.name} has been added to your favorites`
-    );
+    if (!signedIn) {
+      setAuthVisible(true);
+      return;
+    }
+    router.push(`/favorites/save-to-favorites?vehicle=${encodeURIComponent(JSON.stringify({
+      id: driver.id,
+      title: driver.name,
+      image: driver.image,
+      price: driver.hourlyRate,
+      location: driver.location,
+      rating: driver.rating,
+    }))}` as any);
+  };
+
+  const handleAuthDismiss = () => {
+    setAuthVisible(false);
   };
 
   const handleHire = () => {
@@ -216,7 +232,7 @@ export default function DriverDetailsScreen() {
             <Text style={styles.tripsText}>({driver.trips} trips)</Text>
             {driver.isVerified && (
               <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark-circle" size={14} color={GREEN} />
+                 <Ionicons name="checkmark-circle" size={14} color={GREEN} />
                 <Text style={styles.verifiedBadgeText}>Verified</Text>
               </View>
             )}
@@ -335,7 +351,7 @@ export default function DriverDetailsScreen() {
           ]}
         >
           <Pressable style={styles.fullscreenCloseButton} onPress={closeFullscreenImage}>
-            <Ionicons name="close" size={24} color="#FFFFFF" />
+            <Ionicons name="close" size={24} color={NAVY} />
           </Pressable>
 
           <ScrollView
@@ -368,6 +384,7 @@ export default function DriverDetailsScreen() {
           </View>
         </Animated.View>
       )}
+      {authVisible && <WelcomeAuthScreen onDismiss={handleAuthDismiss} />}
     </View>
   );
 }
@@ -480,7 +497,7 @@ const styles = StyleSheet.create({
   rateBadgeValue: {
     fontSize: 16,
     fontWeight: "800",
-    color: GREEN,
+    color: "#10B981",
   },
   rateBadgeSub: {
     fontSize: 11,
@@ -526,7 +543,7 @@ const styles = StyleSheet.create({
   verifiedBadgeText: {
     fontSize: 12,
     fontWeight: "700",
-    color: GREEN,
+    color: "#10B981",
   },
   statsGrid: {
     flexDirection: "row",
@@ -729,7 +746,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#000000",
+    backgroundColor: "#FFFFFF",
     zIndex: 1000,
     justifyContent: "center",
     alignItems: "center",
@@ -741,7 +758,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.05)",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1001,
@@ -758,7 +775,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   fullscreenCounterText: {
-    color: "#FFFFFF",
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -775,10 +792,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "rgba(255,255,255,0.4)",
+    backgroundColor: "#E5E7EB",
   },
   fullscreenDotActive: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: NAVY,
     width: 24,
   },
 });

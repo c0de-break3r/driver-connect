@@ -5,6 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Animated } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useAuth } from "@/contexts/AuthProvider";
+import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -19,8 +21,8 @@ const VEHICLES = [
       "https://images.unsplash.com/photo-1507133750069-b736b0a46290?w=800&q=80",
       "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
     ],
-    price: "$169",
-    originalPrice: "$182",
+    price: "GH₵ 169",
+    originalPrice: "GH₵ 182",
     rating: 4.9,
     trips: 42,
     seats: "5 seats",
@@ -43,8 +45,8 @@ const VEHICLES = [
       "https://images.unsplash.com/photo-1617447278431-e1e96c2bff8e?w=800&q=80",
       "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&q=80",
     ],
-    price: "$220",
-    originalPrice: "$240",
+    price: "GH₵ 220",
+    originalPrice: "GH₵ 240",
     rating: 5.0,
     trips: 28,
     seats: "5 seats",
@@ -66,7 +68,7 @@ const VEHICLES = [
       "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
       "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=800&q=80",
     ],
-    price: "$180",
+    price: "GH₵ 180",
     rating: 4.8,
     trips: 56,
     seats: "14 seats",
@@ -88,7 +90,7 @@ const VEHICLES = [
       "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
       "https://images.unsplash.com/photo-1558981397-1c40b4d9a057?w=800&q=80",
     ],
-    price: "$85",
+    price: "GH₵ 85",
     rating: 4.95,
     trips: 18,
     seats: "2 seats",
@@ -110,8 +112,8 @@ const VEHICLES = [
       "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
       "https://images.unsplash.com/photo-1507133750069-b736b0a46290?w=800&q=80",
     ],
-    price: "$169",
-    originalPrice: "$182",
+    price: "GH₵ 169",
+    originalPrice: "GH₵ 182",
     rating: 4.9,
     trips: 42,
     seats: "5 seats",
@@ -133,7 +135,7 @@ const VEHICLES = [
       "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80",
       "https://images.unsplash.com/photo-1617447278431-e1e96c2bff8e?w=800&q=80",
     ],
-    price: "$220",
+    price: "GH₵ 220",
     rating: 5.0,
     trips: 28,
     seats: "5 seats",
@@ -155,7 +157,7 @@ const VEHICLES = [
       "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
       "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=800&q=80",
     ],
-    price: "$180",
+    price: "GH₵ 180",
     rating: 4.8,
     trips: 56,
     seats: "14 seats",
@@ -177,7 +179,7 @@ const VEHICLES = [
       "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
       "https://images.unsplash.com/photo-1558981397-1c40b4d9a057?w=800&q=80",
     ],
-    price: "$85",
+    price: "GH₵ 85",
     rating: 4.95,
     trips: 18,
     seats: "2 seats",
@@ -205,12 +207,15 @@ export default function VehicleDetailsScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
+  const [authVisible, setAuthVisible] = useState(false);
   const heartScale = useRef(new Animated.Value(1)).current;
 
   // Fullscreen gallery state
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const fullscreenScrollRef = useRef<ScrollView>(null);
   const fullscreenAnim = useRef(new Animated.Value(0)).current;
+
+  const { signedIn } = useAuth();
 
   useEffect(() => {
     setCurrentImageIndex(0);
@@ -242,11 +247,22 @@ export default function VehicleDetailsScreen() {
 
   const handleFavorite = () => {
     triggerHeartBeat();
-    setIsFavorite((prev) => !prev);
-    Alert.alert(
-      isFavorite ? "Removed from favorites" : "Added to favorites",
-      isFavorite ? "" : `${vehicle.title} has been added to your favorites`
-    );
+    if (!signedIn) {
+      setAuthVisible(true);
+      return;
+    }
+    router.push(`/favorites/save-to-favorites?vehicle=${encodeURIComponent(JSON.stringify({
+      id: vehicle.id,
+      title: vehicle.title,
+      image: vehicle.images?.[0] || "",
+      price: vehicle.price,
+      location: vehicle.location,
+      rating: vehicle.rating,
+    }))}` as any);
+  };
+
+  const handleAuthDismiss = () => {
+    setAuthVisible(false);
   };
 
   const handleBook = () => {
@@ -563,7 +579,7 @@ export default function VehicleDetailsScreen() {
           ]}
         >
           <Pressable style={styles.fullscreenCloseButton} onPress={closeFullscreenImage}>
-            <Ionicons name="close" size={24} color="#FFFFFF" />
+            <Ionicons name="close" size={24} color={NAVY} />
           </Pressable>
 
           <ScrollView
@@ -602,6 +618,7 @@ export default function VehicleDetailsScreen() {
           </View>
         </Animated.View>
       )}
+      {authVisible && <WelcomeAuthScreen onDismiss={handleAuthDismiss} />}
     </View>
   );
 }
@@ -714,7 +731,7 @@ const styles = StyleSheet.create({
   priceBadgeText: {
     fontSize: 16,
     fontWeight: "800",
-    color: GREEN,
+    color: "#10B981",
   },
   priceBadgeSub: {
     fontSize: 11,
@@ -760,7 +777,7 @@ const styles = StyleSheet.create({
   verifiedBadgeText: {
     fontSize: 12,
     fontWeight: "700",
-    color: GREEN,
+    color: "#10B981",
   },
   tagsRow: {
     flexDirection: "row",
@@ -1099,7 +1116,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#000000",
+    backgroundColor: "#FFFFFF",
     zIndex: 1000,
     justifyContent: "center",
     alignItems: "center",
@@ -1111,7 +1128,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.05)",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1001,
@@ -1128,7 +1145,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   fullscreenCounterText: {
-    color: "#FFFFFF",
+    color: NAVY,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -1145,10 +1162,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "rgba(255,255,255,0.4)",
+    backgroundColor: "#E5E7EB",
   },
   fullscreenDotActive: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: NAVY,
     width: 24,
   },
 });

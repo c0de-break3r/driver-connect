@@ -729,7 +729,7 @@ function BookingCard({ booking }: { booking: any }) {
   const router = useRouter();
   const statusColor =
     booking.status === "confirmed"
-      ? "#10B981"
+      ? "#F97316"
       : booking.status === "pending"
         ? "#F59E0B"
         : "#6B7280";
