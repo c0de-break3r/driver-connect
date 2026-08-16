@@ -1,15 +1,38 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, Alert, Dimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, Dimensions, PanResponder, Alert, Modal, TextInput } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Animated } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
+import { useQuery } from "convex/react";
+import { api } from "@/lib/convexApi";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
+import Toast from "@/components/Toast";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
+
+const VEHICLE_FEATURES = [
+  { icon: "car-outline", label: "All-wheel drive" },
+  { icon: "tv-outline", label: "Backup camera" },
+  { icon: "radio-outline", label: "Bluetooth" },
+  { icon: "musical-notes-outline", label: "Apple CarPlay" },
+  { icon: "snow-outline", label: "Heated seats" },
+  { icon: "shield-checkmark-outline", label: "ABS" },
+  { icon: "navigate-outline", label: "GPS navigation" },
+  { icon: "sun-outline", label: "Sunroof" },
+  { icon: "wifi-outline", label: "WiFi hotspot" },
+  { icon: "videocam-outline", label: "Dashcam" },
+  { icon: "car-sport-outline", label: "Sport mode" },
+];
+
+const REVIEWS = [
+  { id: 1, name: "Ingrid", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80", rating: 5, date: "28 Jul 2026", text: "Vehicle worked perfectly. Owner was totally flexible and communicative with me. Vehicle handles the driving through various terrains beautifully." },
+  { id: 2, name: "Kwame", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80", rating: 5, date: "15 Jul 2026", text: "Excellent service. The car was clean and well-maintained. Pickup was smooth and the owner was very professional." },
+  { id: 3, name: "Ama", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80", rating: 4, date: "02 Jul 2026", text: "Great experience overall. Would definitely book again. The vehicle had all the features promised and more." },
+  { id: 4, name: "Kofi", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80", rating: 5, date: "20 Jun 2026", text: "Amazing vehicle and even better service. The owner went above and beyond to make sure everything was perfect for our trip." },
+];
 
 const VEHICLES = [
   {
@@ -202,13 +225,53 @@ export default function VehicleDetailsScreen() {
   const params = useLocalSearchParams();
   const rawId = params.id;
   const vehicleId = Array.isArray(rawId) ? rawId[0] : typeof rawId === "string" ? rawId : "v1";
-  const vehicle = VEHICLES.find((v) => v.id === vehicleId) || VEHICLES[0];
+  const staticVehicle = VEHICLES.find((v) => v.id === vehicleId);
+  const looksLikeConvexId = vehicleId.length > 8;
+  const convexVehicle = useQuery(
+    api.jobs.getVehicle,
+    staticVehicle || !looksLikeConvexId ? "skip" : { id: vehicleId as any }
+  );
+  const rawVehicle = (convexVehicle ?? staticVehicle) || VEHICLES[0];
+  const anyVehicle = rawVehicle as any;
+  const vehicle = (anyVehicle
+    ? {
+        ...anyVehicle,
+        id: anyVehicle._id || anyVehicle.id,
+        price: anyVehicle.price ?? `GH₵ ${anyVehicle.pricePerDay}`,
+        originalPrice: anyVehicle.pricePerWeek ? `GH₵ ${anyVehicle.pricePerWeek}` : anyVehicle.originalPrice,
+        location: anyVehicle.location ?? anyVehicle.city,
+        image: anyVehicle.image || anyVehicle.images?.[0] || "",
+        subtitle: anyVehicle.subtitle || `${anyVehicle.make} ${anyVehicle.model}`,
+        trips: anyVehicle.trips ?? anyVehicle.reviewCount ?? 0,
+        fuel: anyVehicle.fuel || anyVehicle.fuelType || "",
+        mpg: anyVehicle.mpg || "",
+        hostName: anyVehicle.hostName || anyVehicle.ownerId || "",
+        hostAvatar: anyVehicle.hostAvatar || "",
+        hostTrips: anyVehicle.hostTrips || 0,
+        joinedDate: anyVehicle.joinedDate || "",
+        hostRating: anyVehicle.hostRating || anyVehicle.rating || 0,
+      }
+    : VEHICLES[0]) as any;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
   const [authVisible, setAuthVisible] = useState(false);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
   const heartScale = useRef(new Animated.Value(1)).current;
+  const [showAllFeatures, setShowAllFeatures] = useState(false);
+  const [expandedReviews, setExpandedReviews] = useState<Record<number, boolean>>({});
+  const reviewsScrollRef = useRef<ScrollView>(null);
+  const swipeY = useRef(new Animated.Value(0)).current;
+  const [editTripVisible, setEditTripVisible] = useState(false);
+  const [editTripType, setEditTripType] = useState<"pickup" | "return">("pickup");
+  const [pickupDate, setPickupDate] = useState("Sat, 26 Sep");
+  const [returnDate, setReturnDate] = useState("Tue, 29 Sep");
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
+  };
 
   // Fullscreen gallery state
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
@@ -265,8 +328,52 @@ export default function VehicleDetailsScreen() {
     setAuthVisible(false);
   };
 
+  const handleEditTrip = (type: "pickup" | "return") => {
+    setEditTripType(type);
+    setEditTripVisible(true);
+  };
+
+  const handleSaveTripEdit = () => {
+    if (editTripType === "pickup") {
+      setPickupDate(pickupDate);
+    } else {
+      setReturnDate(returnDate);
+    }
+    setEditTripVisible(false);
+    showToast("Trip dates updated", "success");
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.dy > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          swipeY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 150) {
+          Animated.timing(swipeY, {
+            toValue: SCREEN_HEIGHT,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => router.back());
+        } else {
+          Animated.spring(swipeY, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 180,
+            friction: 8,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
   const handleBook = () => {
-    Alert.alert("Book", `Booking ${vehicle.title}...`);
+    showToast(`Booking ${vehicle.title}...`, "success");
   };
 
   const openFullscreenImage = () => {
@@ -283,61 +390,70 @@ export default function VehicleDetailsScreen() {
   };
 
   return (
-    <View key={vehicleId} style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Hero Image Gallery */}
-        <View style={styles.imageWrap}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            ref={scrollRef}
-            onMomentumScrollEnd={(e) => {
-              const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-              setCurrentImageIndex(index);
-            }}
-          >
-            {vehicle.images.map((image, index) => (
-              <Pressable key={index} onPress={openFullscreenImage}>
-                <Image source={{ uri: image }} style={styles.heroImage} contentFit="cover" />
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          <View style={styles.imageCounter}>
-            <Text style={styles.imageCounterText}>
-              {currentImageIndex + 1} / {vehicle.images.length}
-            </Text>
-          </View>
-
-          {/* Top actions */}
-          <View style={styles.topActions}>
-            <Pressable style={styles.iconButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+    <Animated.View
+      key={vehicleId}
+      style={[
+        styles.safeArea,
+        {
+          transform: [{ translateY: swipeY }],
+        },
+      ]}
+      {...panResponder.panHandlers}
+    >
+      {/* Hero Image Gallery */}
+      <View style={styles.imageWrap}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          ref={scrollRef}
+          onMomentumScrollEnd={(e) => {
+            const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+            setCurrentImageIndex(index);
+          }}
+        >
+          {vehicle.images.map((image: string, index: number) => (
+            <Pressable key={index} onPress={openFullscreenImage}>
+              <Image source={{ uri: image }} style={styles.heroImage} contentFit="cover" />
             </Pressable>
-            <View style={styles.topRightActions}>
-              <Pressable style={styles.iconButton}>
-                <Ionicons name="share-outline" size={22} color="#FFFFFF" />
-              </Pressable>
-              <Pressable style={styles.iconButton} onPress={handleFavorite}>
-                <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                  <Ionicons
-                    name={isFavorite ? "heart" : "heart-outline"}
-                    size={22}
-                    color={isFavorite ? "#E74C3C" : "#FFFFFF"}
-                  />
-                </Animated.View>
-              </Pressable>
-            </View>
-          </View>
+          ))}
+        </ScrollView>
 
-          {/* Expand hint */}
-          <View style={styles.expandHint}>
-            <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.expandHintText}>Tap to expand</Text>
+        <View style={styles.imageCounter}>
+          <Text style={styles.imageCounterText}>
+            {currentImageIndex + 1} / {vehicle.images.length}
+          </Text>
+        </View>
+
+        {/* Top actions */}
+        <View style={styles.topActions}>
+          <Pressable style={styles.iconButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </Pressable>
+          <View style={styles.topRightActions}>
+            <Pressable style={styles.iconButton}>
+              <Ionicons name="share-outline" size={22} color="#FFFFFF" />
+            </Pressable>
+            <Pressable style={styles.iconButton} onPress={handleFavorite}>
+              <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={22}
+                  color={isFavorite ? "#E74C3C" : "#FFFFFF"}
+                />
+              </Animated.View>
+            </Pressable>
           </View>
         </View>
 
+        {/* Expand hint */}
+        <View style={styles.expandHint}>
+          <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
+          <Text style={styles.expandHintText}>Tap to expand</Text>
+        </View>
+      </View>
+
+      <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
         {/* Title & Rating */}
         <View style={styles.content}>
           <View style={styles.titleRow}>
@@ -373,7 +489,7 @@ export default function VehicleDetailsScreen() {
             )}
             {vehicle.fuel && (
               <View style={styles.tag}>
-                <MaterialCommunityIcons name={"gas-pump" as any} size={14} color={NAVY} />
+                <Ionicons name="car-sport-outline" size={14} color={NAVY} />
                 <Text style={styles.tagText}>{vehicle.fuel}</Text>
               </View>
             )}
@@ -400,9 +516,9 @@ export default function VehicleDetailsScreen() {
               </View>
               <View style={styles.tripInfo}>
                 <Text style={styles.tripLabel}>Pick-up</Text>
-                <Text style={styles.tripValue}>Sat, 26 Sep · 10:00 am</Text>
+                <Text style={styles.tripValue}>{pickupDate} · 10:00 am</Text>
               </View>
-              <Pressable style={styles.editButton}>
+              <Pressable style={styles.editButton} onPress={() => handleEditTrip("pickup")}>
                 <Ionicons name="pencil-outline" size={18} color={NAVY} />
               </Pressable>
             </View>
@@ -412,9 +528,9 @@ export default function VehicleDetailsScreen() {
               </View>
               <View style={styles.tripInfo}>
                 <Text style={styles.tripLabel}>Return</Text>
-                <Text style={styles.tripValue}>Tue, 29 Sep · 10:00 am</Text>
+                <Text style={styles.tripValue}>{returnDate} · 10:00 am</Text>
               </View>
-              <Pressable style={styles.editButton}>
+              <Pressable style={styles.editButton} onPress={() => handleEditTrip("return")}>
                 <Ionicons name="pencil-outline" size={18} color={NAVY} />
               </Pressable>
             </View>
@@ -447,34 +563,18 @@ export default function VehicleDetailsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>What this vehicle offers</Text>
             <View style={styles.featuresList}>
-              <View style={styles.featureItem}>
-                <View style={styles.featureIcon}>
-                  <Ionicons name="car-outline" size={18} color={NAVY} />
+              {(showAllFeatures ? VEHICLE_FEATURES : VEHICLE_FEATURES.slice(0, 4)).map((feature, index) => (
+                <View key={index} style={styles.featureItem}>
+                  <View style={styles.featureIcon}>
+                    <Ionicons name={feature.icon as any} size={18} color={NAVY} />
+                  </View>
+                  <Text style={styles.featureText}>{feature.label}</Text>
                 </View>
-                <Text style={styles.featureText}>All-wheel drive</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <View style={styles.featureIcon}>
-                  <Ionicons name="tv-outline" size={18} color={NAVY} />
-                </View>
-                <Text style={styles.featureText}>Backup camera</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <View style={styles.featureIcon}>
-                  <MaterialCommunityIcons name="bluetooth" size={18} color={NAVY} />
-                </View>
-                <Text style={styles.featureText}>Bluetooth</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <View style={styles.featureIcon}>
-                  <Ionicons name="musical-notes-outline" size={18} color={NAVY} />
-                </View>
-                <Text style={styles.featureText}>Apple CarPlay</Text>
-              </View>
+              ))}
             </View>
-            <Pressable style={styles.seeAllButton}>
-              <Text style={styles.seeAllText}>See all 11 features</Text>
-              <Ionicons name="chevron-forward" size={18} color={NAVY} />
+            <Pressable style={styles.seeAllButton} onPress={() => setShowAllFeatures((prev) => !prev)}>
+              <Text style={styles.seeAllText}>{showAllFeatures ? "Show less" : `See all ${VEHICLE_FEATURES.length} features`}</Text>
+              <Ionicons name={showAllFeatures ? "chevron-up" : "chevron-forward"} size={18} color={NAVY} />
             </Pressable>
           </View>
 
@@ -509,29 +609,44 @@ export default function VehicleDetailsScreen() {
               <Text style={styles.reviewsCount}>({vehicle.trips} ratings)</Text>
             </View>
 
-            <View style={styles.reviewCard}>
-              <Image
-                source={{ uri: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80" }}
-                style={styles.reviewAvatar}
-                contentFit="cover"
-              />
-              <View style={styles.reviewContent}>
-                <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewName}>Ingrid</Text>
-                  <View style={styles.reviewStars}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Ionicons key={star} name="star" size={14} color="#FFB800" />
-                    ))}
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              ref={reviewsScrollRef}
+            >
+              {REVIEWS.map((review) => {
+                const isExpanded = !!expandedReviews[review.id];
+                const displayText = isExpanded ? review.text : `${review.text.slice(0, 120)}...`;
+                return (
+                  <View key={review.id} style={styles.reviewCard}>
+                    <Image source={{ uri: review.avatar }} style={styles.reviewAvatar} contentFit="cover" />
+                    <View style={styles.reviewContent}>
+                      <View style={styles.reviewHeader}>
+                        <Text style={styles.reviewName}>{review.name}</Text>
+                        <View style={styles.reviewStars}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Ionicons key={star} name="star" size={14} color="#FFB800" />
+                          ))}
+                        </View>
+                        <Text style={styles.reviewDate}>{review.date}</Text>
+                      </View>
+                      <Text style={styles.reviewText}>{displayText}</Text>
+                      {review.text.length > 120 && (
+                        <Pressable onPress={() => setExpandedReviews((prev) => ({ ...prev, [review.id]: !prev[review.id] }))}>
+                          <Text style={styles.readMore}>{isExpanded ? "Show less" : "Read more"}</Text>
+                        </Pressable>
+                      )}
+                    </View>
                   </View>
-                  <Text style={styles.reviewDate}>28 Jul 2026</Text>
-                </View>
-                <Text style={styles.reviewText}>
-                  Vehicle worked perfectly. Owner was totally flexible and communicative with me. Vehicle handles the driving through vario...
-                </Text>
-                <Pressable>
-                  <Text style={styles.readMore}>Read more</Text>
-                </Pressable>
-              </View>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.reviewDots}>
+              {REVIEWS.map((_, index) => (
+                <View key={index} style={[styles.reviewDot, index === 0 && styles.reviewDotActive]} />
+              ))}
             </View>
           </View>
 
@@ -589,7 +704,7 @@ export default function VehicleDetailsScreen() {
             ref={fullscreenScrollRef}
             onMomentumScrollEnd={handleFullscreenMomentum}
           >
-            {vehicle.images.map((image, index) => (
+            {vehicle.images.map((image: string, index: number) => (
               <Image
                 key={index}
                 source={{ uri: image }}
@@ -606,7 +721,7 @@ export default function VehicleDetailsScreen() {
           </View>
 
           <View style={styles.fullscreenDots}>
-            {vehicle.images.map((_, index) => (
+            {vehicle.images.map((_: string, index: number) => (
               <View
                 key={index}
                 style={[
@@ -619,7 +734,41 @@ export default function VehicleDetailsScreen() {
         </Animated.View>
       )}
       {authVisible && <WelcomeAuthScreen onDismiss={handleAuthDismiss} />}
-    </View>
+
+      {/* Trip Edit Modal */}
+      <Modal visible={editTripVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{editTripType === "pickup" ? "Edit Pick-up" : "Edit Return"}</Text>
+              <Pressable onPress={() => setEditTripVisible(false)}>
+                <Ionicons name="close" size={24} color={NAVY} />
+              </Pressable>
+            </View>
+            <View style={styles.modalBody}>
+              <Text style={styles.modalLabel}>Date</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="e.g. Sat, 26 Sep"
+                placeholderTextColor="#9CA3AF"
+                value={editTripType === "pickup" ? pickupDate : returnDate}
+                onChangeText={editTripType === "pickup" ? setPickupDate : setReturnDate}
+              />
+              <Pressable style={styles.confirmButton} onPress={handleSaveTripEdit}>
+                <Text style={styles.confirmButtonText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+      />
+    </Animated.View>
   );
 }
 
@@ -628,7 +777,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  container: {
+  contentScroll: {
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
@@ -985,6 +1134,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: "#E5E7EB",
+    width: SCREEN_WIDTH - 40,
+    marginRight: 12,
   },
   reviewAvatar: {
     width: 40,
@@ -1026,6 +1177,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: GREEN,
     marginTop: 8,
+  },
+  reviewDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 16,
+  },
+  reviewDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#D1D5DB",
+  },
+  reviewDotActive: {
+    backgroundColor: NAVY,
   },
   cancellationRow: {
     flexDirection: "row",
@@ -1167,5 +1333,83 @@ const styles = StyleSheet.create({
   fullscreenDotActive: {
     backgroundColor: NAVY,
     width: 24,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 24,
+    left: 20,
+    right: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 28,
+    flexDirection: "column",
+    gap: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: NAVY,
+    letterSpacing: -0.3,
+  },
+  modalBody: {
+    flexDirection: "column",
+    gap: 12,
+  },
+  modalLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: NAVY,
+    marginBottom: 4,
+  },
+  modalInput: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: NAVY,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  confirmButton: {
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: NAVY,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  confirmButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });

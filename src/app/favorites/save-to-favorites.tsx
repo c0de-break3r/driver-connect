@@ -9,6 +9,8 @@ import { Image } from "expo-image";
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
 
+export const options = { animation: "slide_from_left" };
+
 export default function SaveToFavoritesScreen() {
   const params = useLocalSearchParams();
   const vehicleParam = params.vehicle as string | undefined;
@@ -36,7 +38,7 @@ export default function SaveToFavoritesScreen() {
 
   const handleSave = () => {
     if (!vehicle || !selectedCollectionId) return;
-    addVehicleToCollection(selectedCollectionId, vehicle.id);
+    addVehicleToCollection(selectedCollectionId, vehicle);
     clearPendingVehicle();
     setActiveTab("favorites");
     router.replace(`/favorites/collection/${selectedCollectionId}`);
@@ -115,14 +117,14 @@ export default function SaveToFavoritesScreen() {
                     <View style={styles.collectionIcon}>
                       <Ionicons name="bookmark" size={18} color={NAVY} />
                     </View>
-                    <View style={styles.collectionBody}>
-                      <Text style={styles.collectionName} numberOfLines={1}>
-                        {collection.name}
-                      </Text>
-                      <Text style={styles.collectionCount}>
-                        {collection.vehicleIds.length} {collection.vehicleIds.length === 1 ? "vehicle" : "vehicles"}
-                      </Text>
-                    </View>
+                     <View style={styles.collectionBody}>
+                       <Text style={styles.collectionName} numberOfLines={1}>
+                         {collection.name}
+                       </Text>
+                       <Text style={styles.collectionCount}>
+                         {collection.items.length} {collection.items.length === 1 ? "vehicle" : "vehicles"}
+                       </Text>
+                     </View>
                     <View style={[styles.checkbox, selectedCollectionId === collection.id && styles.checkboxSelected]}>
                       {selectedCollectionId === collection.id && (
                         <Ionicons name="checkmark" size={14} color="#FFFFFF" />

@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, Alert } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { useHomeStore } from "@/store/useHomeStore";
+import Toast from "@/components/Toast";
 
 const NAVY = "#2C3E5B";
 const ORANGE = "#F97316";
@@ -36,6 +37,12 @@ export default function TripDatesScreen() {
   const [selectedEnd, setSelectedEnd] = useState<number | null>(null);
   const [pickupTime, setPickupTime] = useState("10:00 am");
   const [returnTime, setReturnTime] = useState("10:00 am");
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
+  };
 
   const daysInMonth = useMemo(() => {
     const monthIndex = viewMonthIndex;
@@ -81,11 +88,11 @@ export default function TripDatesScreen() {
 
   const handleAddTripDates = () => {
     if (!collectionId) {
-      Alert.alert("Missing collection", "We couldn't find this list. Please try again.");
+      showToast("We couldn't find this list. Please try again.", "error");
       return;
     }
     if (selectedStart === null || selectedEnd === null) {
-      Alert.alert("Select dates", "Please choose both pickup and return dates to continue.");
+      showToast("Please choose both pickup and return dates to continue.", "warning");
       return;
     }
 
@@ -286,6 +293,13 @@ export default function TripDatesScreen() {
           <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
         </Pressable>
       </View>
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+      />
     </View>
   );
 }
@@ -567,5 +581,22 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 24,
+    left: 20,
+    right: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
 });

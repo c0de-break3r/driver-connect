@@ -705,6 +705,10 @@ export default function VehicleDetailScreen() {
   };
 
   const handleConfirmBooking = () => {
+    if (!bookingStartDate || !bookingEndDate) {
+      Alert.alert("Dates required", "Please select both pickup and return dates to continue.");
+      return;
+    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setShowBookingModal(false);
     Alert.alert("Booking submitted", "Your booking request has been received.");

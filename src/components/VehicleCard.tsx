@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, Pressable } from "react-native";
-import { useRef } from "react";
+import { useRef, useState, useCallback, memo } from "react";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
@@ -18,8 +18,9 @@ type VehicleCardProps = {
   verified?: boolean;
 };
 
-export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style, verified = vehicle.isVerified }: VehicleCardProps) {
+export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style, verified = vehicle.isVerified }: VehicleCardProps) {
   const heartScale = useRef(new Animated.Value(1)).current;
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const triggerHeartBeat = () => {
     heartScale.setValue(1);
@@ -36,8 +37,15 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
     onFavoritePress?.();
   };
 
+  const handlePress = useCallback(() => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+    setTimeout(() => setIsNavigating(false), 600);
+    onPress?.();
+  }, [isNavigating, onPress]);
+
   return (
-    <Pressable style={[styles.card, list && styles.listCard, style]} onPress={onPress}>
+    <Pressable style={[styles.card, list && styles.listCard, style]} onPress={handlePress}>
       <View style={[styles.imageWrap, list && styles.listImageWrap]}>
         <Image source={{ uri: vehicle.image }} style={styles.cardImage} contentFit="cover" />
         <View style={styles.topRightActions}>
@@ -72,7 +80,7 @@ export function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePr
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

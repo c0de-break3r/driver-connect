@@ -1,64 +1,112 @@
-import { useMemo } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/lib/convexApi";
+import { useMemo, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   Pressable,
+  Modal,
 } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useFavoritesStore, type VehicleFavorite } from "@/store/useFavoritesStore";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
+import { useHomeStore } from "@/store/useHomeStore";
+import { Share } from "react-native";
+import Toast from "@/components/Toast";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
+
+export const options = { animation: "slide_from_left" };
 
 export default function CollectionDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
   const collectionId = params.id;
   const collections = useFavoritesStore((state) => state.collections);
+  const renameCollection = useFavoritesStore((state) => state.renameCollection);
+  const deleteCollection = useFavoritesStore((state) => state.deleteCollection);
+  const setActiveTab = useHomeStore((state) => state.setActiveTab);
 
   const collection = collections.find((c) => c.id === collectionId);
 
-  const allVehicles = useQuery(api.jobs.listVehicles, {});
   const vehicles = useMemo(() => {
-    if (!collection || !allVehicles) return [];
-    return collection.vehicleIds
-      .map((id) => allVehicles.find((v: any) => v._id === id))
-      .filter((v: any): v is VehicleFavorite => !!v && typeof v.images?.[0] === "string" && typeof v.category === "string")
-      .map((v: any) => ({
-        id: v._id,
-        title: v.title,
-        category: v.category,
-        location: v.city,
-        region: v.region,
-        price: `GH₵ ${v.pricePerDay}`,
-        originalPrice: v.pricePerWeek ? `GH₵ ${v.pricePerWeek}` : "",
-        period: "per day",
-        rating: v.rating,
-        image: v.images?.[0] ?? "",
-        ownerName: v.ownerId,
-        ownerAvatar: "",
-        isVerified: true,
-        condition: "Listed",
-        transmission: v.transmission ?? "Automatic",
-        yearsOnPlatform: "New",
-      }));
-  }, [collection, allVehicles]);
+    if (!collection) return [];
+    return collection.items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      category: "Vehicle",
+      location: item.location,
+      region: "",
+      price: item.price,
+      originalPrice: "",
+      period: "per day",
+      rating: item.rating,
+      image: item.image || "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
+      ownerName: "",
+      ownerAvatar: "",
+      isVerified: true,
+      condition: "Listed",
+      transmission: "Automatic",
+      yearsOnPlatform: "New",
+    }));
+  }, [collection]);
 
-  const handleShare = () => {
+  const [settingsVisible, setSettingsVisible] = useState(false);
+  const [renameVisible, setRenameVisible] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [deleteItemVisible, setDeleteItemVisible] = useState(false);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
+  };
+
+  const handleShare = async () => {
     if (!collection) return;
+    try {
+      await Share.share({
+        message: `Check out my "${collection.name}" collection on Africana Driver Connect.`,
+      });
+    } catch {
+      // share cancelled
+    }
   };
 
-  const handleSettings = () => {
-    // settings action placeholder
+  const openRename = () => {
+    if (!collection) return;
+    setRenameValue(collection.name);
+    setSettingsVisible(false);
+    setRenameVisible(true);
   };
 
-  const handleAddTripDates = () => {
+  const confirmRename = () => {
+    if (!collection || !renameValue.trim()) return;
+    renameCollection(collection.id, renameValue.trim());
+    setRenameVisible(false);
+    showToast("Collection renamed", "success");
+  };
+
+  const confirmDeleteCollection = () => {
+    if (!collection) return;
+    deleteCollection(collection.id);
+    setSettingsVisible(false);
+    setActiveTab("favorites");
+    router.replace("/home");
+  };
+
+  const confirmDeleteItem = (itemId: string) => {
+    if (!collection) return;
+    const removeVehicleFromCollection = useFavoritesStore.getState().removeVehicleFromCollection;
+    removeVehicleFromCollection(collection.id, itemId);
+    setDeleteItemVisible(false);
+    showToast("Item removed from collection", "error");
+  };
+
+  const handleAddTripDates = (vehicleId: string) => {
     if (!collectionId) return;
     router.push(`/favorites/trip-dates?collectionId=${collectionId}`);
   };
@@ -67,7 +115,7 @@ export default function CollectionDetailScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Pressable onPress={() => { setActiveTab("favorites"); router.replace("/home"); }} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </Pressable>
           <Text style={styles.headerTitle}>Collection</Text>
@@ -83,7 +131,7 @@ export default function CollectionDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => { setActiveTab("favorites"); router.replace("/home"); }} style={styles.backButton}>
           <Ionicons name="arrow-back" size={22} color={NAVY} />
         </Pressable>
         <Text style={styles.headerTitle}>{collection.name}</Text>
@@ -91,7 +139,7 @@ export default function CollectionDetailScreen() {
           <Pressable style={styles.iconButton} onPress={handleShare}>
             <Ionicons name="share-outline" size={20} color={NAVY} />
           </Pressable>
-          <Pressable style={styles.iconButton} onPress={handleSettings}>
+          <Pressable style={styles.iconButton} onPress={() => setSettingsVisible(true)}>
             <Ionicons name="settings-outline" size={20} color={NAVY} />
           </Pressable>
         </View>
@@ -101,12 +149,6 @@ export default function CollectionDetailScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Add Trip Dates Button */}
-        <Pressable style={styles.addTripDatesButton} onPress={handleAddTripDates}>
-          <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.addTripDatesText}>Add trip dates</Text>
-        </Pressable>
-
         {vehicles.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>This collection is empty</Text>
@@ -121,36 +163,88 @@ export default function CollectionDetailScreen() {
                 onPress={() => router.push(`/vehicle-details?id=${vehicle.id}`)}
               >
                 <Image source={{ uri: vehicle.image }} style={styles.vehicleImage} contentFit="cover" />
-                <View style={styles.vehicleOverlay}>
-                  <Pressable style={styles.heartButton} pointerEvents="none">
-                    <Ionicons name="heart" size={20} color="#EF4444" />
+                <View style={styles.cardActions}>
+                  <Pressable style={styles.viewDetailsButton} onPress={() => router.push(`/vehicle-details?id=${vehicle.id}`)}>
+                    <Text style={styles.viewDetailsText}>View details</Text>
+                  </Pressable>
+                  <Pressable style={styles.addTripsButton} onPress={() => handleAddTripDates(vehicle.id)}>
+                    <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
+                    <Text style={styles.addTripsText}>Add trips</Text>
                   </Pressable>
                 </View>
-                <View style={styles.vehicleBody}>
-                  <Text style={styles.vehicleTitle} numberOfLines={1}>
-                    {vehicle.title}
-                  </Text>
-                  <View style={styles.vehicleMeta}>
-                    <Text style={styles.vehicleYear}>2026</Text>
-                    <View style={styles.vehicleRating}>
-                      <Ionicons name="star" size={12} color={GREEN} />
-                      <Text style={styles.vehicleRatingText}>5.0</Text>
-                      <Text style={styles.vehicleRatingCount}>(2)</Text>
-                    </View>
-                  </View>
-                  <View style={styles.vehicleLocation}>
-                    <Ionicons name="location-outline" size={14} color="#6B7280" />
-                    <Text style={styles.vehicleLocationText}>{vehicle.location}</Text>
-                  </View>
-                </View>
-                <Pressable style={styles.viewDetailsButton}>
-                  <Text style={styles.viewDetailsText}>View details</Text>
-                </Pressable>
               </Pressable>
             ))}
           </View>
         )}
       </ScrollView>
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+      />
+
+      <Modal visible={settingsVisible} animationType="none" transparent onRequestClose={() => setSettingsVisible(false)}>
+        <Pressable style={styles.sheetOverlay} onPress={() => setSettingsVisible(false)}>
+          <View style={styles.sheetContent}>
+            <Pressable style={styles.sheetItem} onPress={openRename}>
+              <Ionicons name="pencil-outline" size={20} color={NAVY} />
+              <Text style={styles.sheetItemText}>Rename</Text>
+            </Pressable>
+            <View style={styles.sheetDivider} />
+            <Pressable style={styles.sheetItem} onPress={() => { setSettingsVisible(false); setDeleteItemVisible(true); }}>
+              <Ionicons name="trash-outline" size={20} color="#EF4444" />
+              <Text style={[styles.sheetItemText, styles.sheetItemDanger]}>Delete</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={deleteItemVisible} animationType="none" transparent onRequestClose={() => setDeleteItemVisible(false)}>
+        <Pressable style={styles.sheetOverlay} onPress={() => setDeleteItemVisible(false)}>
+          <View style={styles.sheetContent}>
+            <Text style={styles.sheetTitle}>Delete item</Text>
+            <View style={styles.sheetDivider} />
+            {vehicles.map((vehicle) => (
+              <Pressable
+                key={vehicle.id}
+                style={styles.sheetItem}
+                onPress={() => confirmDeleteItem(vehicle.id)}
+              >
+                <Image source={{ uri: vehicle.image }} style={styles.sheetItemImage} contentFit="cover" />
+                <View style={styles.sheetItemBody}>
+                  <Text style={styles.sheetItemText} numberOfLines={1}>{vehicle.title}</Text>
+                  <Text style={styles.sheetItemSub} numberOfLines={1}>{vehicle.location}</Text>
+                </View>
+                <Ionicons name="trash-outline" size={18} color="#EF4444" />
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={renameVisible} animationType="none" transparent onRequestClose={() => setRenameVisible(false)}>
+        <Pressable style={styles.sheetOverlay} onPress={() => setRenameVisible(false)}>
+          <View style={styles.renameContent}>
+            <Text style={styles.renameTitle}>Rename collection</Text>
+            <TextInput
+              style={styles.renameInput}
+              value={renameValue}
+              onChangeText={setRenameValue}
+              autoFocus
+            />
+            <View style={styles.renameActions}>
+              <Pressable style={styles.renameCancel} onPress={() => setRenameVisible(false)}>
+                <Text style={styles.renameCancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.renameSave} onPress={confirmRename}>
+                <Text style={styles.renameSaveText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -159,6 +253,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+    position: "relative",
   },
   header: {
     flexDirection: "row",
@@ -184,16 +279,6 @@ const styles = StyleSheet.create({
     color: NAVY,
     textAlign: "center",
     flex: 1,
-  },
-  deleteButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FEF2F2",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#FECACA",
   },
   headerRight: {
     flexDirection: "row",
@@ -232,26 +317,6 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     textAlign: "center",
   },
-  addTripDatesButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: NAVY,
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginBottom: 24,
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  addTripDatesText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
   vehiclesList: {
     gap: 16,
   },
@@ -269,76 +334,165 @@ const styles = StyleSheet.create({
   },
   vehicleImage: {
     width: "100%",
-    height: 220,
+    height: 160,
   },
-  vehicleOverlay: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-  },
-  heartButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  vehicleBody: {
-    padding: 16,
-  },
-  vehicleTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: NAVY,
-    marginBottom: 8,
-  },
-  vehicleMeta: {
+  cardActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginBottom: 8,
-  },
-  vehicleYear: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  vehicleRating: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  vehicleRatingText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  vehicleRatingCount: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  vehicleLocation: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  vehicleLocationText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  viewDetailsButton: {
-    marginTop: 12,
-    paddingVertical: 14,
-    alignItems: "center",
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
+  },
+  viewDetailsButton: {
+    flex: 1,
+    paddingVertical: 14,
+    alignItems: "center",
   },
   viewDetailsText: {
     fontSize: 15,
     fontWeight: "700",
     color: NAVY,
+  },
+  addTripsButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 14,
+    backgroundColor: NAVY,
+  },
+  addTripsText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  sheetOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+  sheetContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  sheetItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  sheetItemText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  sheetItemDanger: {
+    color: "#EF4444",
+  },
+  sheetItemImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+  },
+  sheetItemBody: {
+    flex: 1,
+  },
+  sheetItemSub: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  sheetTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: NAVY,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  sheetDivider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 24,
+  },
+  renameContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 28,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  renameTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: NAVY,
+    marginBottom: 12,
+  },
+  renameInput: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: NAVY,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 16,
+  },
+  renameActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  renameCancel: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  renameCancelText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#6B7280",
+  },
+  renameSave: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: NAVY,
+    alignItems: "center",
+  },
+  renameSaveText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  toast: {
+    position: "absolute",
+    bottom: 24,
+    left: 20,
+    right: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
 });

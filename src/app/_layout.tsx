@@ -76,7 +76,7 @@ function AppInner() {
     <>
       <NotificationSetup />
       <ConvexSync />
-      <Stack screenOptions={{ headerShown: false, animation: "none" }} />
+      <Stack screenOptions={{ headerShown: false }} />
     </>
   );
 }

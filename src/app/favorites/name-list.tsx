@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
+import { useHomeStore } from "@/store/useHomeStore";
+import Toast from "@/components/Toast";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
+
+export const options = { animation: "slide_from_left" };
 
 export default function NameListScreen() {
   const params = useLocalSearchParams();
@@ -16,9 +20,16 @@ export default function NameListScreen() {
   const addVehicleToCollection = useFavoritesStore((state) => state.addVehicleToCollection);
   const setPendingVehicle = useFavoritesStore((state) => state.setPendingVehicle);
   const clearPendingVehicle = useFavoritesStore((state) => state.clearPendingVehicle);
+  const setActiveTab = useHomeStore((state) => state.setActiveTab);
 
   const [listName, setListName] = useState("");
   const [vehicle, setVehicle] = useState<any>(null);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
+  };
 
   useEffect(() => {
     if (vehicleParam) {
@@ -34,12 +45,12 @@ export default function NameListScreen() {
 
   const handleCreate = () => {
     if (!listName.trim()) {
-      Alert.alert("List name required", "Please enter a name for your list.");
+      showToast("Please enter a name for your list.", "warning");
       return;
     }
     const collection = createCollection(listName.trim());
     if (vehicle) {
-      addVehicleToCollection(collection.id, vehicle.id);
+      addVehicleToCollection(collection.id, vehicle);
     }
     clearPendingVehicle();
     router.replace(`/favorites/collection/${collection.id}`);
@@ -52,7 +63,7 @@ export default function NameListScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
     >
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => { setActiveTab("favorites"); router.replace("/home"); }} style={styles.backButton}>
           <Ionicons name="arrow-back" size={22} color={NAVY} />
         </Pressable>
         <Text style={styles.headerTitle}>Name this list</Text>
@@ -104,6 +115,13 @@ export default function NameListScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -231,5 +249,22 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 24,
+    left: 20,
+    right: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
 });

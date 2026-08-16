@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
-import { VehicleCard } from "@/components/VehicleCard";
+import VehicleCard from "@/components/VehicleCard";
 
 const NAVY = "#2C3E5B";
 const ICON_SIZE_BASE = 20;
@@ -44,6 +44,34 @@ const FEATURED_VEHICLES = [
     subtitle: "Sport motorcycle · Accra",
     image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
     pricePerDay: 85,
+  },
+  {
+    id: "f5",
+    title: "Ford Ranger 2023",
+    subtitle: "Pickup · 4x4 · Eastern Region",
+    image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&q=80",
+    pricePerDay: 195,
+  },
+  {
+    id: "f6",
+    title: "Honda Accord 2022",
+    subtitle: "Sedan · Greater Accra",
+    image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
+    pricePerDay: 140,
+  },
+  {
+    id: "f7",
+    title: "Nissan Patrol 2021",
+    subtitle: "SUV · 7 seats · Northern Region",
+    image: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80",
+    pricePerDay: 210,
+  },
+  {
+    id: "f8",
+    title: "Suzuki GSX-R750",
+    subtitle: "Sport bike · Ashanti",
+    image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&q=80",
+    pricePerDay: 95,
   },
 ];
 
@@ -100,6 +128,45 @@ const DRIVERS = [
     yearsOnPlatform: "5+ years",
     vehicleType: "Sedan, Truck",
   },
+  {
+    id: "d5",
+    name: "Yaw Boateng",
+    role: "Driver",
+    location: "Accra, Greater Accra",
+    rating: 4.85,
+    trips: 178,
+    hourlyRate: "GH₵ 32",
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80",
+    isVerified: true,
+    yearsOnPlatform: "3+ years",
+    vehicleType: "Sedan, Hatchback",
+  },
+  {
+    id: "d6",
+    name: "Fatima Ibrahim",
+    role: "Driver",
+    location: "Tamale, Northern",
+    rating: 4.97,
+    trips: 410,
+    hourlyRate: "GH₵ 38",
+    image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80",
+    isVerified: true,
+    yearsOnPlatform: "7+ years",
+    vehicleType: "SUV, Van",
+  },
+  {
+    id: "d7",
+    name: "Emmanuel Tetteh",
+    role: "Driver",
+    location: "Koforidua, Eastern",
+    rating: 4.91,
+    trips: 256,
+    hourlyRate: "GH₵ 36",
+    image: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&q=80",
+    isVerified: true,
+    yearsOnPlatform: "5+ years",
+    vehicleType: "Sedan, SUV",
+  },
 ];
 
 type HomeScreenContentProps = {
@@ -151,6 +218,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   ).current;
   const { signedIn, email } = useAuth();
   const favorites = useFavoritesStore((state) => state.favorites);
+  const savedItems = useFavoritesStore((state) => state.savedItems);
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
   const loadFavoritesForUser = useFavoritesStore((state) => state.loadForUser);
 
@@ -296,8 +364,23 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     }
   };
 
+  const sortDrivers = (list: typeof DRIVERS) => {
+    const sorted = [...list];
+    switch (sortBy) {
+      case "price_asc":
+        return sorted.sort((a, b) => parseFloat(a.hourlyRate.replace(/[^0-9.]/g, "")) - parseFloat(b.hourlyRate.replace(/[^0-9.]/g, "")));
+      case "price_desc":
+        return sorted.sort((a, b) => parseFloat(b.hourlyRate.replace(/[^0-9.]/g, "")) - parseFloat(a.hourlyRate.replace(/[^0-9.]/g, "")));
+      case "rating":
+        return sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      default:
+        return sorted;
+    }
+  };
+
   const displayedVehicles = sortVehicles(vehicles);
   const sortedFeaturedVehicles = sortVehicles(FEATURED_VEHICLES);
+  const sortedDrivers = sortDrivers(DRIVERS);
 
   const chips = [
     { id: "all", label: "All", icon: "people-outline", family: "ion" as const },
@@ -594,7 +677,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 <VehicleCard
                   key={vehicle.id}
                   vehicle={vehicle as any}
-                  isFavorite={!!favorites[vehicle.id]}
+                  isFavorite={savedItems.some((item) => item.id === vehicle.id)}
                   onPress={() => handleVehiclePress(vehicle.id)}
                   onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, vehicle.price, vehicle.location, vehicle.rating)}
                   list={viewMode === "list"}
@@ -626,7 +709,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 },
               ]}
             >
-               {DRIVERS.map((driver) => {
+               {sortedDrivers.map((driver) => {
                 const heartScale = getHeartAnim(driver.id);
                 const triggerHeartBeat = () => {
                   heartScale.setValue(1);
@@ -647,9 +730,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                       }}>
                         <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                           <Ionicons
-                            name={favorites[driver.id] ? "heart" : "heart-outline"}
+                            name={savedItems.some((item) => item.id === driver.id) ? "heart" : "heart-outline"}
                             size={22}
-                            color={favorites[driver.id] ? "#E74C3C" : "#FFFFFF"}
+                            color={savedItems.some((item) => item.id === driver.id) ? "#E74C3C" : "#FFFFFF"}
                           />
                         </Animated.View>
                       </Pressable>
@@ -736,9 +819,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                       }}>
                         <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                           <Ionicons
-                            name={favorites[vehicle.id] ? "heart" : "heart-outline"}
+                            name={savedItems.some((item) => item.id === vehicle.id) ? "heart" : "heart-outline"}
                             size={22}
-                            color={favorites[vehicle.id] ? "#E74C3C" : "#FFFFFF"}
+                            color={savedItems.some((item) => item.id === vehicle.id) ? "#E74C3C" : "#FFFFFF"}
                           />
                         </Animated.View>
                       </Pressable>

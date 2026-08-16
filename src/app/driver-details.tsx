@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, Alert, Dimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
+import Toast from "@/components/Toast";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -82,7 +83,13 @@ export default function DriverDetailsScreen() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
   const [authVisible, setAuthVisible] = useState(false);
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
   const heartScale = useRef(new Animated.Value(1)).current;
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
+  };
 
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const fullscreenScrollRef = useRef<ScrollView>(null);
@@ -139,7 +146,7 @@ export default function DriverDetailsScreen() {
   };
 
   const handleHire = () => {
-    Alert.alert("Hire", `Hire request sent to ${driver.name}...`);
+    showToast(`Hire request sent to ${driver.name}`, "success");
   };
 
   const openFullscreenImage = () => {
@@ -385,6 +392,13 @@ export default function DriverDetailsScreen() {
         </Animated.View>
       )}
       {authVisible && <WelcomeAuthScreen onDismiss={handleAuthDismiss} />}
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+      />
     </View>
   );
 }
@@ -797,5 +811,22 @@ const styles = StyleSheet.create({
   fullscreenDotActive: {
     backgroundColor: NAVY,
     width: 24,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 24,
+    left: 20,
+    right: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
 });
