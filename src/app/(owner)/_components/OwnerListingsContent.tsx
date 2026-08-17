@@ -55,6 +55,14 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
     await toggleStatus({ vehicleId, status: newStatus });
   };
 
+  const handleOpenSettings = (vehicleId: any) => {
+    router.push({ pathname: "/(owner)/listing-settings", params: { vehicleId } } as any);
+  };
+
+  const handleOpenCalendar = (vehicleId: any) => {
+    router.push({ pathname: "/(owner)/availability-calendar", params: { vehicleId } } as any);
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchWidthAnim = useRef(new Animated.Value(0)).current;
@@ -186,6 +194,12 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
                     {vehicle.status}
                   </Text>
                 </View>
+                {vehicle.instantBook && (
+                  <View style={styles.instantBookBadge}>
+                    <Ionicons name="flash" size={12} color="#FFFFFF" />
+                    <Text style={styles.instantBookText}>Instant Book</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.listingInfo}>
@@ -215,6 +229,20 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
                   >
                     <Ionicons name="pencil-outline" size={16} color={NAVY} />
                     <Text style={styles.actionButtonText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => handleOpenSettings(vehicle._id)}
+                  >
+                    <Ionicons name="settings-outline" size={16} color={NAVY} />
+                    <Text style={styles.actionButtonText}>Settings</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => handleOpenCalendar(vehicle._id)}
+                  >
+                    <Ionicons name="calendar-outline" size={16} color={NAVY} />
+                    <Text style={styles.actionButtonText}>Calendar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.actionButton}
@@ -401,6 +429,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     color: "#9CA3AF",
+  },
+  instantBookBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: NAVY,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  instantBookText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
   statusBadge: {
     position: "absolute",

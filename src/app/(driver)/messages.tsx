@@ -13,9 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 const NAVY = "#2C3E5B";
 
-export default function OwnerMessagesScreen() {
+export default function DriverMessagesScreen() {
   const [showSettings, setShowSettings] = useState(false);
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const settingsSheetAnim = useRef(new Animated.Value(0)).current;
@@ -124,11 +123,11 @@ export default function OwnerMessagesScreen() {
 
           <TouchableOpacity
             style={styles.sortButton}
-            onPress={() => setShowSortDropdown(!showSortDropdown)}
+            onPress={() => {}}
             hitSlop={8}
           >
             <Text style={styles.sortButtonText}>Sort</Text>
-            <Ionicons name={showSortDropdown ? "chevron-up" : "chevron-down"} size={14} color={NAVY} />
+            <Ionicons name="chevron-down" size={14} color={NAVY} />
           </TouchableOpacity>
           <TouchableOpacity onPress={openSettings} hitSlop={8} style={styles.iconButton}>
             <Ionicons name="settings-outline" size={22} color={NAVY} />
@@ -136,9 +135,7 @@ export default function OwnerMessagesScreen() {
         </View>
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>You don&apos;t have any messages</Text>
-          <Text style={styles.emptySubtitle}>
-            When you receive a new message, it will appear here.
-          </Text>
+          <Text style={styles.emptySubtitle}>When you receive a new message, it will appear here.</Text>
         </View>
       </ScrollView>
 
@@ -263,25 +260,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 80,
+    gap: 12,
   },
   emptyIconCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: "#F3F4F6",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   emptyTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "800",
     color: NAVY,
-    marginTop: 24,
-    marginBottom: 12,
+    textAlign: "center",
   },
   emptySubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "500",
     color: "#6B7280",
     textAlign: "center",

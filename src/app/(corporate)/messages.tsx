@@ -1,11 +1,10 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Animated,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -13,14 +12,9 @@ import { Ionicons } from "@expo/vector-icons";
 
 const NAVY = "#2C3E5B";
 
-export default function OwnerMessagesScreen() {
+export default function CorporateMessagesScreen() {
   const [showSettings, setShowSettings] = useState(false);
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchExpanded, setSearchExpanded] = useState(false);
   const settingsSheetAnim = useRef(new Animated.Value(0)).current;
-  const searchWidthAnim = useRef(new Animated.Value(0)).current;
-  const searchInputRef = useRef<TextInput>(null);
 
   const openSettings = () => {
     setShowSettings(true);
@@ -40,37 +34,6 @@ export default function OwnerMessagesScreen() {
     }).start(() => setShowSettings(false));
   };
 
-  const toggleSearch = () => {
-    if (searchExpanded) {
-      setSearchExpanded(false);
-      Animated.timing(searchWidthAnim, {
-        toValue: 0,
-        duration: 240,
-        useNativeDriver: false,
-      }).start();
-    } else {
-      setSearchExpanded(true);
-      searchWidthAnim.setValue(0);
-      Animated.timing(searchWidthAnim, {
-        toValue: 1,
-        duration: 240,
-        useNativeDriver: false,
-      }).start(() => {
-        searchInputRef.current?.focus();
-      });
-    }
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchExpanded(false);
-    Animated.timing(searchWidthAnim, {
-      toValue: 0,
-      duration: 240,
-      useNativeDriver: false,
-    }).start();
-  };
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -79,56 +42,18 @@ export default function OwnerMessagesScreen() {
       >
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <Animated.View
-              style={{
-                opacity: searchWidthAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [1, 0],
-                }),
-                position: "absolute",
-                left: 0,
-              }}
-            >
-              <TouchableOpacity onPress={toggleSearch} hitSlop={8} style={styles.iconButton}>
-                <Ionicons name="search" size={22} color={NAVY} />
-              </TouchableOpacity>
-            </Animated.View>
-
-            <Animated.View
-              style={[
-                styles.searchExpandWrap,
-                {
-                  width: searchWidthAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 200],
-                  }),
-                  opacity: searchWidthAnim,
-                },
-              ]}
-            >
-              <View style={styles.searchInputWrap}>
-                <TouchableOpacity onPress={searchExpanded ? handleClearSearch : undefined} hitSlop={8}>
-                  <Ionicons name={searchExpanded ? "close" : "search"} size={20} color={NAVY} />
-                </TouchableOpacity>
-                <TextInput
-                  ref={searchInputRef}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Search all messages"
-                  placeholderTextColor="#9CA3AF"
-                  style={styles.searchInput}
-                />
-              </View>
-            </Animated.View>
+            <TouchableOpacity hitSlop={8} style={styles.iconButton}>
+              <Ionicons name="search" size={22} color={NAVY} />
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
             style={styles.sortButton}
-            onPress={() => setShowSortDropdown(!showSortDropdown)}
+            onPress={() => {}}
             hitSlop={8}
           >
             <Text style={styles.sortButtonText}>Sort</Text>
-            <Ionicons name={showSortDropdown ? "chevron-up" : "chevron-down"} size={14} color={NAVY} />
+            <Ionicons name="chevron-down" size={14} color={NAVY} />
           </TouchableOpacity>
           <TouchableOpacity onPress={openSettings} hitSlop={8} style={styles.iconButton}>
             <Ionicons name="settings-outline" size={22} color={NAVY} />
@@ -213,32 +138,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-  },
-  searchExpandWrap: {
-    overflow: "hidden",
-    height: 40,
-    justifyContent: "center",
-  },
-  searchInputWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#F8F8F8",
-    borderRadius: 20,
-    paddingLeft: 8,
-    paddingRight: 14,
-    paddingVertical: 10,
-    height: 40,
-    borderWidth: 2,
-    borderColor: NAVY,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "500",
-    color: NAVY,
-    paddingVertical: 0,
-    textAlign: "left",
   },
   iconButton: {
     padding: 8,

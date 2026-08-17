@@ -168,6 +168,7 @@ export const createBooking = mutation({
     securityDeposit: v.number(),
     totalAmount: v.number(),
     currency: v.string(),
+    instantBook: v.optional(v.boolean()),
   },
   returns: v.id("bookings"),
   handler: async (ctx, args) => {
@@ -187,6 +188,7 @@ export const createBooking = mutation({
       securityDeposit: args.securityDeposit,
       totalAmount: args.totalAmount,
       currency: args.currency,
+      instantBook: args.instantBook ?? false,
       createdAt: now,
       updatedAt: now,
     });
@@ -200,8 +202,130 @@ export const updateBookingStatus = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.bookingId, {
+    const patch: Record<string, unknown> = {
       status: args.status,
+      updatedAt: Date.now(),
+    };
+    if (args.status === "completed") {
+      patch.reviewPrompted = true;
+    }
+    await ctx.db.patch(args.bookingId, patch);
+    return null;
+  },
+});
+
+export const createReview = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+    reviewerId: v.string(),
+    revieweeId: v.string(),
+    vehicleId: v.optional(v.id("vehicles")),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+    categories: v.optional(v.any()),
+  },
+  returns: v.id("reviews"),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return await ctx.db.insert("reviews", {
+      bookingId: args.bookingId,
+      reviewerId: args.reviewerId,
+      revieweeId: args.revieweeId,
+      vehicleId: args.vehicleId,
+      rating: args.rating,
+      comment: args.comment,
+      categories: args.categories,
+      isPublic: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
+export const getVehicleReviews = query({
+  args: { vehicleId: v.id("vehicles") },
+  returns: v.array(
+    v.object({
+      _id: v.id("reviews"),
+      _creationTime: v.number(),
+      bookingId: v.id("bookings"),
+      reviewerId: v.string(),
+      revieweeId: v.string(),
+      vehicleId: v.optional(v.id("vehicles")),
+      rating: v.number(),
+      comment: v.optional(v.string()),
+      categories: v.optional(v.any()),
+      isPublic: v.boolean(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("reviews")
+      .withIndex("by_vehicle", (q) => q.eq("vehicleId", args.vehicleId))
+      .collect();
+  },
+});
+
+export const getDriverReviews = query({
+  args: { driverId: v.string() },
+  returns: v.array(
+    v.object({
+      _id: v.id("reviews"),
+      _creationTime: v.number(),
+      bookingId: v.id("bookings"),
+      reviewerId: v.string(),
+      revieweeId: v.string(),
+      vehicleId: v.optional(v.id("vehicles")),
+      rating: v.number(),
+      comment: v.optional(v.string()),
+      categories: v.optional(v.any()),
+      isPublic: v.boolean(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("reviews")
+      .withIndex("by_reviewee", (q) => q.eq("revieweeId", args.driverId))
+      .collect();
+  },
+});
+
+export const getOwnerReviews = query({
+  args: { ownerId: v.string() },
+  returns: v.array(
+    v.object({
+      _id: v.id("reviews"),
+      _creationTime: v.number(),
+      bookingId: v.id("bookings"),
+      reviewerId: v.string(),
+      revieweeId: v.string(),
+      vehicleId: v.optional(v.id("vehicles")),
+      rating: v.number(),
+      comment: v.optional(v.string()),
+      categories: v.optional(v.any()),
+      isPublic: v.boolean(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("reviews")
+      .withIndex("by_reviewee", (q) => q.eq("revieweeId", args.ownerId))
+      .collect();
+  },
+});
+
+export const markReviewPrompted = mutation({
+  args: { bookingId: v.id("bookings") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.bookingId, {
+      reviewPrompted: true,
       updatedAt: Date.now(),
     });
     return null;
@@ -270,6 +394,9 @@ export const createVehicle = mutation({
     showPreciseLocation: v.optional(v.boolean()),
     deliveryAvailable: v.optional(v.boolean()),
     deliveryFee: v.optional(v.number()),
+    instantBook: v.optional(v.boolean()),
+    advanceNotice: v.optional(v.number()),
+    unlimitedDistance: v.optional(v.boolean()),
   },
   returns: v.id("vehicles"),
   handler: async (ctx, args) => {
@@ -327,6 +454,9 @@ export const createVehicle = mutation({
       rating: 0,
       reviewCount: 0,
       totalBookings: 0,
+      instantBook: args.instantBook ?? false,
+      advanceNotice: args.advanceNotice ?? 24,
+      unlimitedDistance: args.unlimitedDistance ?? false,
       createdAt: now,
       updatedAt: now,
     });
@@ -623,5 +753,366 @@ export const getOwnerBookings = query({
 
     const allBookings = await ctx.db.query("bookings").collect();
     return allBookings.filter((b) => vehicleIds.includes(b.vehicleId));
+  },
+});
+
+export const updateVehicleSettings = mutation({
+  args: {
+    vehicleId: v.id("vehicles"),
+    instantBook: v.optional(v.boolean()),
+    advanceNotice: v.optional(v.number()),
+    minTripDuration: v.optional(v.number()),
+    maxTripDuration: v.optional(v.number()),
+    distanceLimit: v.optional(v.number()),
+    unlimitedDistance: v.optional(v.boolean()),
+    pickupStartHour: v.optional(v.number()),
+    pickupEndHour: v.optional(v.number()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { vehicleId, ...updates } = args;
+    const patch: Record<string, unknown> = { updatedAt: Date.now() };
+    if (updates.instantBook !== undefined) patch.instantBook = updates.instantBook;
+    if (updates.advanceNotice !== undefined) patch.advanceNotice = updates.advanceNotice;
+    if (updates.minTripDuration !== undefined) patch.minTripDuration = updates.minTripDuration;
+    if (updates.maxTripDuration !== undefined) patch.maxTripDuration = updates.maxTripDuration;
+    if (updates.distanceLimit !== undefined) patch.distanceLimit = updates.distanceLimit;
+    if (updates.unlimitedDistance !== undefined) patch.unlimitedDistance = updates.unlimitedDistance;
+    if (updates.pickupStartHour !== undefined) patch.pickupStartHour = updates.pickupStartHour;
+    if (updates.pickupEndHour !== undefined) patch.pickupEndHour = updates.pickupEndHour;
+    await ctx.db.patch(vehicleId, patch);
+    return null;
+  },
+});
+
+export const createAvailabilityBlock = mutation({
+  args: {
+    vehicleId: v.id("vehicles"),
+    ownerId: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    reason: v.optional(v.string()),
+  },
+  returns: v.id("availabilityBlocks"),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return await ctx.db.insert("availabilityBlocks", {
+      vehicleId: args.vehicleId,
+      ownerId: args.ownerId,
+      startDate: args.startDate,
+      endDate: args.endDate,
+      reason: args.reason,
+      createdAt: now,
+    });
+  },
+});
+
+export const deleteAvailabilityBlock = mutation({
+  args: { blockId: v.id("availabilityBlocks") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.blockId);
+    return null;
+  },
+});
+
+export const getVehicleAvailabilityBlocks = query({
+  args: { vehicleId: v.id("vehicles") },
+  returns: v.array(
+    v.object({
+      _id: v.id("availabilityBlocks"),
+      _creationTime: v.number(),
+      vehicleId: v.id("vehicles"),
+      ownerId: v.string(),
+      startDate: v.string(),
+      endDate: v.string(),
+      reason: v.optional(v.string()),
+      createdAt: v.number(),
+    })
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("availabilityBlocks")
+      .withIndex("by_vehicle", (q) => q.eq("vehicleId", args.vehicleId))
+      .collect();
+  },
+});
+
+export const getOwnerAvailabilityBlocks = query({
+  args: { ownerId: v.string() },
+  returns: v.array(
+    v.object({
+      _id: v.id("availabilityBlocks"),
+      _creationTime: v.number(),
+      vehicleId: v.id("vehicles"),
+      ownerId: v.string(),
+      startDate: v.string(),
+      endDate: v.string(),
+      reason: v.optional(v.string()),
+      createdAt: v.number(),
+    })
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("availabilityBlocks")
+      .withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId))
+      .collect();
+  },
+});
+
+export const checkVehicleAvailability = query({
+  args: {
+    vehicleId: v.id("vehicles"),
+    startDate: v.string(),
+    endDate: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const { vehicleId, startDate, endDate } = args;
+
+    const blocks = await ctx.db
+      .query("availabilityBlocks")
+      .withIndex("by_vehicle", (q) => q.eq("vehicleId", vehicleId))
+      .collect();
+
+    const blocked = blocks.some(
+      (b) =>
+        b.startDate <= endDate && b.endDate >= startDate
+    );
+
+    if (blocked) return false;
+
+    const allBookings = await ctx.db.query("bookings").collect();
+
+    const overlappingBooking = allBookings.some(
+      (booking) =>
+        booking.vehicleId === vehicleId &&
+        (booking.status === "confirmed" || booking.status === "pending") &&
+        booking.startDate <= endDate &&
+        booking.endDate >= startDate
+    );
+
+    return !overlappingBooking;
+  },
+});
+
+export const getBooking = query({
+  args: { bookingId: v.id("bookings") },
+  returns: v.union(
+    v.object({
+      _id: v.id("bookings"),
+      _creationTime: v.number(),
+      vehicleId: v.id("vehicles"),
+      renterId: v.string(),
+      driverId: v.optional(v.string()),
+      startDate: v.string(),
+      endDate: v.string(),
+      pickupLocation: v.string(),
+      dropoffLocation: v.string(),
+      status: v.string(),
+      paymentStatus: v.string(),
+      subtotal: v.number(),
+      driverFee: v.number(),
+      serviceFee: v.number(),
+      securityDeposit: v.number(),
+      totalAmount: v.number(),
+      currency: v.string(),
+      specialRequests: v.optional(v.string()),
+      cancellationReason: v.optional(v.string()),
+      cancelledBy: v.optional(v.string()),
+      cancelledAt: v.optional(v.number()),
+      pickupTime: v.optional(v.string()),
+      returnTime: v.optional(v.string()),
+      actualPickupTime: v.optional(v.number()),
+      actualReturnTime: v.optional(v.number()),
+      instantBook: v.boolean(),
+      reviewPrompted: v.optional(v.boolean()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }),
+    v.null()
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.bookingId);
+  },
+});
+
+export const createTripChangeRequest = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+    requesterId: v.string(),
+    type: v.union(
+      v.literal("extend"),
+      v.literal("shorten"),
+      v.literal("change_pickup"),
+      v.literal("change_dropoff"),
+      v.literal("add_driver"),
+    ),
+    requestedStartDate: v.optional(v.string()),
+    requestedEndDate: v.optional(v.string()),
+    requestedPickupLocation: v.optional(v.string()),
+    requestedDropoffLocation: v.optional(v.string()),
+    additionalDriverId: v.optional(v.string()),
+  },
+  returns: v.id("tripChangeRequests"),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return await ctx.db.insert("tripChangeRequests", {
+      bookingId: args.bookingId,
+      requesterId: args.requesterId,
+      type: args.type,
+      requestedStartDate: args.requestedStartDate,
+      requestedEndDate: args.requestedEndDate,
+      requestedPickupLocation: args.requestedPickupLocation,
+      requestedDropoffLocation: args.requestedDropoffLocation,
+      additionalDriverId: args.additionalDriverId,
+      status: "pending",
+      createdAt: now,
+    });
+  },
+});
+
+export const approveTripChangeRequest = mutation({
+  args: {
+    requestId: v.id("tripChangeRequests"),
+    responseReason: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const request = await ctx.db.get(args.requestId);
+    if (!request) {
+      throw new Error("Change request not found");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(args.requestId, {
+      status: "approved",
+      responseReason: args.responseReason,
+      respondedAt: now,
+    });
+
+    const patch: Record<string, unknown> = { updatedAt: now };
+    if (request.requestedStartDate !== undefined) {
+      patch.startDate = request.requestedStartDate;
+    }
+    if (request.requestedEndDate !== undefined) {
+      patch.endDate = request.requestedEndDate;
+    }
+    if (request.requestedPickupLocation !== undefined) {
+      patch.pickupLocation = request.requestedPickupLocation;
+    }
+    if (request.requestedDropoffLocation !== undefined) {
+      patch.dropoffLocation = request.requestedDropoffLocation;
+    }
+    if (request.additionalDriverId !== undefined) {
+      patch.driverId = request.additionalDriverId;
+    }
+
+    await ctx.db.patch(request.bookingId, patch);
+    return null;
+  },
+});
+
+export const declineTripChangeRequest = mutation({
+  args: {
+    requestId: v.id("tripChangeRequests"),
+    responseReason: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    await ctx.db.patch(args.requestId, {
+      status: "declined",
+      responseReason: args.responseReason,
+      respondedAt: now,
+    });
+    return null;
+  },
+});
+
+export const getBookingChangeRequests = query({
+  args: { bookingId: v.id("bookings") },
+  returns: v.array(
+    v.object({
+      _id: v.id("tripChangeRequests"),
+      _creationTime: v.number(),
+      bookingId: v.id("bookings"),
+      requesterId: v.string(),
+      type: v.union(
+        v.literal("extend"),
+        v.literal("shorten"),
+        v.literal("change_pickup"),
+        v.literal("change_dropoff"),
+        v.literal("add_driver"),
+      ),
+      requestedStartDate: v.optional(v.string()),
+      requestedEndDate: v.optional(v.string()),
+      requestedPickupLocation: v.optional(v.string()),
+      requestedDropoffLocation: v.optional(v.string()),
+      additionalDriverId: v.optional(v.string()),
+      status: v.string(),
+      responseReason: v.optional(v.string()),
+      createdAt: v.number(),
+      respondedAt: v.optional(v.number()),
+    })
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("tripChangeRequests")
+      .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))
+      .collect();
+  },
+});
+
+export const getAvailableDrivers = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      clerkUserId: v.string(),
+      role: v.literal("driver"),
+      firstName: v.optional(v.string()),
+      email: v.optional(v.string()),
+      onboardingComplete: v.boolean(),
+      notificationsEnabled: v.optional(v.boolean()),
+      profileSetupComplete: v.optional(v.boolean()),
+      avatarUri: v.optional(v.string()),
+      availableForHire: v.optional(v.boolean()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
+  handler: async (ctx) => {
+    const drivers = await ctx.db
+      .query("users")
+      .withIndex("by_role", (q) => q.eq("role", "driver"))
+      .collect();
+
+    const driversWithAvailability = await Promise.all(
+      drivers.map(async (driver) => {
+        const profile = await ctx.db
+          .query("driverProfiles")
+          .withIndex("by_user", (q) => q.eq("userId", driver._id))
+          .unique();
+        return {
+          _id: driver._id,
+          _creationTime: driver._creationTime,
+          clerkUserId: driver.clerkUserId,
+          role: "driver" as const,
+          firstName: driver.firstName,
+          email: driver.email,
+          onboardingComplete: driver.onboardingComplete,
+          notificationsEnabled: driver.notificationsEnabled,
+          profileSetupComplete: driver.profileSetupComplete,
+          avatarUri: driver.avatarUri,
+          availableForHire: profile?.availableForHire ?? false,
+          createdAt: driver.createdAt,
+          updatedAt: driver.updatedAt,
+        };
+      })
+    );
+
+    return driversWithAvailability.filter((d) => d.availableForHire);
   },
 });

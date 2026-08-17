@@ -105,7 +105,7 @@ export default function ProfileScreen({
     setShowSwitchRole(true);
   };
 
-  const handleRoleSelected = (newRole: UserRole, formData: Record<string, string>) => {
+  const handleRoleSelected = (newRole: UserRole) => {
     setSwitchingFromRole(role);
     setRole(newRole);
     setSwitchingRole(newRole);

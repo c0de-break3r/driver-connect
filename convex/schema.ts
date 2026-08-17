@@ -157,6 +157,14 @@ export default defineSchema({
     rating: v.number(),
     reviewCount: v.number(),
     totalBookings: v.number(),
+    instantBook: v.boolean(),
+    advanceNotice: v.number(),
+    minTripDuration: v.optional(v.number()),
+    maxTripDuration: v.optional(v.number()),
+    distanceLimit: v.optional(v.number()),
+    unlimitedDistance: v.boolean(),
+    pickupStartHour: v.optional(v.number()),
+    pickupEndHour: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -166,6 +174,17 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_price", ["pricePerDay"])
     .index("by_location", ["latitude", "longitude"]),
+
+  availabilityBlocks: defineTable({
+    vehicleId: v.id("vehicles"),
+    ownerId: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    reason: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_vehicle", ["vehicleId"])
+    .index("by_owner", ["ownerId"]),
 
   bookings: defineTable({
     vehicleId: v.id("vehicles"),
@@ -191,6 +210,8 @@ export default defineSchema({
     returnTime: v.optional(v.string()),
     actualPickupTime: v.optional(v.number()),
     actualReturnTime: v.optional(v.number()),
+    instantBook: v.boolean(),
+    reviewPrompted: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -199,6 +220,45 @@ export default defineSchema({
     .index("by_driver", ["driverId"])
     .index("by_status", ["status"])
     .index("by_dates", ["startDate", "endDate"]),
+
+  tripChangeRequests: defineTable({
+    bookingId: v.id("bookings"),
+    requesterId: v.string(),
+    type: v.union(
+      v.literal("extend"),
+      v.literal("shorten"),
+      v.literal("change_pickup"),
+      v.literal("change_dropoff"),
+      v.literal("add_driver"),
+    ),
+    requestedStartDate: v.optional(v.string()),
+    requestedEndDate: v.optional(v.string()),
+    requestedPickupLocation: v.optional(v.string()),
+    requestedDropoffLocation: v.optional(v.string()),
+    additionalDriverId: v.optional(v.string()),
+    status: v.string(),
+    responseReason: v.optional(v.string()),
+    createdAt: v.number(),
+    respondedAt: v.optional(v.number()),
+  })
+    .index("by_booking", ["bookingId"])
+    .index("by_requester", ["requesterId"])
+    .index("by_status", ["status"]),
+
+  notificationPreferences: defineTable({
+    userId: v.string(),
+    channel: v.union(v.literal("push"), v.literal("sms"), v.literal("email")),
+    category: v.union(
+      v.literal("trip_account"),
+      v.literal("messages"),
+      v.literal("recommendations"),
+      v.literal("offers"),
+      v.literal("news"),
+    ),
+    enabled: v.boolean(),
+    updatedAt: v.number(),
+  }).index("by_user_category", ["userId", "category"])
+    .index("by_user", ["userId"]),
 
   reviews: defineTable({
     bookingId: v.id("bookings"),
@@ -241,11 +301,13 @@ export default defineSchema({
     maxAttempts: v.number(),
     nextAttemptAt: v.number(),
     error: v.optional(v.string()),
+    read: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_status_next", ["status", "nextAttemptAt"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_user_read", ["userId", "read"]),
 
   analyticsEvents: defineTable({
     event: v.string(),

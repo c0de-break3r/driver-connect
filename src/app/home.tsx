@@ -1,86 +1,50 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Animated, StyleSheet, Text, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 
 import { HomeScreenContent } from "./HomeScreenContent";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
-import { useAuth } from "@/contexts/AuthProvider";
 import { useTabBounce } from "@/hooks/useTabBounce";
-import { LoginPromptScreen } from "@/components/LoginPromptScreen";
+import { useDashboardShell } from "@/hooks/useDashboardShell";
 import MessagesScreen from "@/components/MessagesScreen";
 import ProfileScreen from "@/components/ProfileScreen";
-import { useHomeStore } from "@/store/useHomeStore";
 import { useAppStateStore } from "@/store/useAppStateStore";
-import { useRoleStore } from "@/store/useRoleStore";
-import { getPostAuthRoute } from "@/lib/routing";
 import FavoritesScreen from "@/components/FavoritesScreen";
 import EmptyState from "@/components/EmptyState";
-import messages3dIcon from "@/assets/images/illustrator-icons/3dicons-chat-text.png";
-import setting3dIcon from "@/assets/images/illustrator-icons/3dicons-setting.png";
-import travel3dIcon from "@/assets/images/illustrator-icons/3dicons-travel.png";
 import { images } from "@/constants/images";
+import RoleSwitchTransition from "@/components/RoleSwitchTransition";
 
 const NAVY = "#2C3E5B";
 
 export default function HomeScreen() {
-  const [welcomeVisible, setWelcomeVisible] = useState(false);
+  const { setHasSeenWelcome } = useAppStateStore();
+
+  const {
+    activeTab,
+    setActiveTab,
+    switchingRole,
+    welcomeVisible,
+    setWelcomeVisible,
+    openAuth,
+    fadeAnim,
+    scaleAnim,
+    signedIn,
+    isLoaded,
+  } = useDashboardShell({
+    tabs: ["explore", "trips", "favorites", "messages", "profile"],
+    defaultTab: "explore",
+    backTargetTab: "profile",
+  });
+
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
-  const activeTab = useHomeStore((state) => state.activeTab);
-  const setActiveTab = useHomeStore((state) => state.setActiveTab);
-  const { signedIn, isLoaded } = useAuth();
-  const { setHasSeenWelcome, hasSeenWelcome } = useAppStateStore();
-  const hasSeenWelcomeRef = useRef(hasSeenWelcome);
-  hasSeenWelcomeRef.current = hasSeenWelcome;
-  const prevTabRef = useRef(activeTab);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.97)).current;
-  const isFirstRender = useRef(true);
 
   useEffect(() => {
     if (!isLoaded) return;
-
     if (signedIn) {
       setWelcomeVisible(false);
-    } else {
-      setWelcomeVisible(!hasSeenWelcomeRef.current);
     }
-  }, [isLoaded, signedIn, setHasSeenWelcome]);
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      fadeAnim.setValue(1);
-      scaleAnim.setValue(1);
-      return;
-    }
-
-    fadeAnim.setValue(0);
-    scaleAnim.setValue(0.97);
-
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 280,
-        easing: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        damping: 18,
-        stiffness: 160,
-        mass: 0.8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    prevTabRef.current = activeTab;
-  }, [activeTab, isLoaded, signedIn, fadeAnim, scaleAnim]);
-
-  const openAuth = () => {
-    setWelcomeVisible(true);
-  };
+  }, [isLoaded, signedIn, setWelcomeVisible]);
 
   const handleAuthDismiss = () => {
     setHasSeenWelcome(true);
@@ -89,19 +53,12 @@ export default function HomeScreen() {
       setActiveTab("explore");
       return;
     }
-    const role = useRoleStore.getState().role;
-    if (role) {
-      router.replace(getPostAuthRoute(role) as any);
-    } else {
-      setActiveTab("explore");
-    }
+    setActiveTab("explore");
   };
 
   const renderContent = () => {
     if (!isLoaded) {
-      return (
-        <View style={styles.loadingContainer} />
-      );
+      return <View style={styles.loadingContainer} />;
     }
 
     if (welcomeVisible) {
@@ -125,35 +82,41 @@ export default function HomeScreen() {
       }
       if (activeTab === "trips") {
         return (
-          <EmptyState
-            image={travel3dIcon}
-            title="No trips"
-            subtitle="Log in to view and manage your upcoming trips."
-            ctaText="Log in"
-            onCtaPress={openAuth}
-          />
+          <View style={styles.centerContent}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="calendar-outline" size={48} color={NAVY} />
+            </View>
+            <Text style={styles.emptyTitle}>No trips yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Log in to view and manage your upcoming trips.
+            </Text>
+          </View>
         );
       }
       if (activeTab === "messages") {
         return (
-          <EmptyState
-            image={messages3dIcon}
-            title="No messages"
-             subtitle="Log in to view and send messages to hosts."
-            ctaText="Log in"
-            onCtaPress={openAuth}
-          />
+          <View style={styles.centerContent}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="chatbubble-ellipses-outline" size={48} color={NAVY} />
+            </View>
+            <Text style={styles.emptyTitle}>No messages</Text>
+            <Text style={styles.emptySubtitle}>
+              Log in to view and send messages to hosts and drivers.
+            </Text>
+          </View>
         );
       }
       if (activeTab === "profile") {
         return (
-          <EmptyState
-            image={setting3dIcon}
-            title="No menu"
-             subtitle="Log in to access your profile dashboard and manage your bookings."
-            ctaText="Log in"
-            onCtaPress={openAuth}
-          />
+          <View style={styles.centerContent}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="person-outline" size={48} color={NAVY} />
+            </View>
+            <Text style={styles.emptyTitle}>No profile</Text>
+            <Text style={styles.emptySubtitle}>
+              Log in to access your profile and manage your bookings.
+            </Text>
+          </View>
         );
       }
     }
@@ -166,8 +129,14 @@ export default function HomeScreen() {
     }
     if (activeTab === "trips") {
       return (
-        <View style={styles.comingSoon}>
-          <Text style={styles.comingSoonText}>Trips coming soon</Text>
+        <View style={styles.centerContent}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="calendar-outline" size={48} color={NAVY} />
+          </View>
+          <Text style={styles.emptyTitle}>No trips yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Your upcoming trips will appear here once you make a booking.
+          </Text>
         </View>
       );
     }
@@ -175,7 +144,9 @@ export default function HomeScreen() {
       return <MessagesScreen />;
     }
     if (activeTab === "profile") {
-      return <ProfileScreen onSwitchingRoleChange={setIsSwitchingRole} />;
+      return (
+        <ProfileScreen onSwitchingRoleChange={setIsSwitchingRole} />
+      );
     }
 
     return <HomeScreenContent onLoginPress={() => {}} />;
@@ -195,7 +166,7 @@ export default function HomeScreen() {
         </Animated.View>
       </View>
 
-      {!welcomeVisible && !isSwitchingRole ? (
+      {!welcomeVisible && !isSwitchingRole && !switchingRole ? (
         <View style={styles.bottomNav}>
           <NavItem
             icon="compass-outline"
@@ -210,7 +181,7 @@ export default function HomeScreen() {
             onPress={() => setActiveTab("favorites")}
           />
           <NavItem
-            icon="car-sport-outline"
+            icon="calendar-outline"
             label="Trips"
             active={activeTab === "trips"}
             onPress={() => setActiveTab("trips")}
@@ -228,6 +199,10 @@ export default function HomeScreen() {
             onPress={() => setActiveTab("profile")}
           />
         </View>
+      ) : null}
+
+      {switchingRole ? (
+        <RoleSwitchTransition role={switchingRole} fromRole="client" />
       ) : null}
     </SafeAreaView>
   );
@@ -309,20 +284,41 @@ const styles = StyleSheet.create({
   navLabelActive: {
     color: NAVY,
   },
-  comingSoon: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  comingSoonText: {
-    fontSize: 16,
-    color: "#6B7280",
-  },
   loadingContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
+  },
+  centerContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 60,
+    gap: 16,
+  },
+  iconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: NAVY,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 12,
   },
 });

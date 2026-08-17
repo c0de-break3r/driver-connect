@@ -1,17 +1,21 @@
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import type { UserRole } from "@/store/useRoleStore";
-import { images } from "@/constants/images";
-import { useHomeStore } from "@/store/useHomeStore";
 
 const NAVY = "#2C3E5B";
 
 type RoleSwitchTransitionProps = {
   role: UserRole;
   fromRole?: UserRole;
+};
+
+const ROLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  owner: "car-outline",
+  driver: "person-outline",
+  client: "person-outline",
+  corporate: "business-outline",
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -21,29 +25,19 @@ const ROLE_LABELS: Record<string, string> = {
   corporate: "Corporate",
 };
 
+const ROLE_ROUTES: Record<string, string> = {
+  owner: "/(owner)",
+  driver: "/(driver)",
+  corporate: "/(corporate)",
+  client: "/home",
+};
+
 export default function RoleSwitchTransition({
   role,
   fromRole,
 }: RoleSwitchTransitionProps) {
   const contentFade = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
-
-  const showTargetRoleImage = role === "owner" || role === "client";
-
-  const targetRoleImage =
-    role === "owner"
-      ? images.roleOwner
-      : role === "client"
-        ? images.roleGuest
-        : null;
-
-  const fallbackIcon = role === "owner"
-    ? "car-outline"
-    : role === "client"
-      ? "person-outline"
-      : role === "driver"
-        ? "person-outline"
-        : "business-outline";
 
   useEffect(() => {
     contentFade.setValue(0);
@@ -64,20 +58,15 @@ export default function RoleSwitchTransition({
           useNativeDriver: true,
         }),
       ]),
-      Animated.delay(2200),
+      Animated.delay(1200),
     ]).start(() => {
-      if (role === "owner") {
-        router.replace("/(owner)" as any);
-      } else if (role === "driver") {
-        router.replace("/(driver)" as any);
-      } else if (role === "corporate") {
-        router.replace("/(corporate)" as any);
-      } else {
-        useHomeStore.getState().setActiveTab("explore");
-        router.replace("/home" as any);
-      }
+      const target = ROLE_ROUTES[role] || "/home";
+      router.replace(target as any);
     });
-  }, [role, contentFade, scaleAnim]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
+
+  const iconName = ROLE_ICONS[role] || "person-outline";
 
   return (
     <View style={styles.container}>
@@ -88,35 +77,8 @@ export default function RoleSwitchTransition({
         ]}
       >
         <View style={styles.iconWrap}>
-          {showTargetRoleImage && targetRoleImage ? (
-            <Image
-              source={targetRoleImage}
-              style={styles.slideImage}
-              contentFit="contain"
-              onError={(e) => {
-                console.log("Role image load error:", e.error, role, targetRoleImage);
-              }}
-            />
-          ) : (
-            <Animated.View
-              style={[
-                styles.iconWrap,
-                {
-                  transform: [
-                    { perspective: 800 },
-                    { rotateY: contentFade.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ["0deg", "360deg"],
-                    })},
-                  ],
-                },
-              ]}
-            >
-              <Ionicons name={fallbackIcon as keyof typeof Ionicons.glyphMap} size={120} color={NAVY} />
-            </Animated.View>
-          )}
+          <Ionicons name={iconName} size={120} color={NAVY} />
         </View>
-
         <Text style={styles.label}>
           Switching to {ROLE_LABELS[role] || role}
         </Text>
@@ -144,10 +106,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-  },
-  slideImage: {
-    width: 320,
-    height: 320,
   },
   label: {
     fontSize: 20,

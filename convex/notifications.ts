@@ -315,3 +315,162 @@ export const getAllUsersWithPlayerId = query({
       }));
   },
 });
+
+export const getNotificationPreferences = query({
+  args: {},
+  returns: v.array(v.object({
+    _id: v.id("notificationPreferences"),
+    userId: v.string(),
+    channel: v.union(v.literal("push"), v.literal("sms"), v.literal("email")),
+    category: v.union(
+      v.literal("trip_account"),
+      v.literal("messages"),
+      v.literal("recommendations"),
+      v.literal("offers"),
+      v.literal("news"),
+    ),
+    enabled: v.boolean(),
+    updatedAt: v.number(),
+  })),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user_id", (q) => q.eq("clerkUserId", identity.subject))
+      .unique();
+
+    if (!user) {
+      return [];
+    }
+
+    return await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_user_category", (q) => q.eq("userId", user.clerkUserId))
+      .collect();
+  },
+});
+
+export const setNotificationPreference = mutation({
+  args: {
+    channel: v.union(v.literal("push"), v.literal("sms"), v.literal("email")),
+    category: v.union(
+      v.literal("trip_account"),
+      v.literal("messages"),
+      v.literal("recommendations"),
+      v.literal("offers"),
+      v.literal("news"),
+    ),
+    enabled: v.boolean(),
+  },
+  returns: v.id("notificationPreferences"),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user_id", (q) => q.eq("clerkUserId", identity.subject))
+      .unique();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const now = Date.now();
+
+    const allPrefs = await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", user.clerkUserId))
+      .collect();
+
+    const existing = allPrefs.find(
+      (p) => p.category === args.category && p.channel === args.channel
+    );
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        enabled: args.enabled,
+        updatedAt: now,
+      });
+      return existing._id;
+    }
+
+    return await ctx.db.insert("notificationPreferences", {
+      userId: user.clerkUserId,
+      channel: args.channel,
+      category: args.category,
+      enabled: args.enabled,
+      updatedAt: now,
+    });
+  },
+});
+
+export const getUserNotifications = query({
+  args: {},
+  returns: v.array(v.object({
+    _id: v.id("notificationQueue"),
+    userId: v.string(),
+    title: v.string(),
+    body: v.string(),
+    data: v.optional(v.any()),
+    status: v.union(v.literal("pending"), v.literal("processing"), v.literal("sent"), v.literal("failed")),
+    attempts: v.number(),
+    maxAttempts: v.number(),
+    nextAttemptAt: v.number(),
+    error: v.optional(v.string()),
+    read: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user_id", (q) => q.eq("clerkUserId", identity.subject))
+      .unique();
+
+    if (!user) {
+      return [];
+    }
+
+    return await ctx.db
+      .query("notificationQueue")
+      .withIndex("by_user", (q) => q.eq("userId", user.clerkUserId))
+      .order("desc")
+      .collect();
+  },
+});
+
+export const markNotificationRead = mutation({
+  args: { notificationId: v.id("notificationQueue") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
+    const notification = await ctx.db.get(args.notificationId);
+    if (!notification || notification.userId !== identity.subject) {
+      return null;
+    }
+
+    await ctx.db.patch(args.notificationId, {
+      read: true,
+      status: "sent",
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
