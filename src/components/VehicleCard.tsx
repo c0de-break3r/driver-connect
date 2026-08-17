@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, Pressable } from "react-native";
-import { useRef, useState, useCallback, memo } from "react";
+import { useRef, useCallback, memo } from "react";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
@@ -20,7 +20,8 @@ type VehicleCardProps = {
 
 export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style, verified = vehicle.isVerified }: VehicleCardProps) {
   const heartScale = useRef(new Animated.Value(1)).current;
-  const [isNavigating, setIsNavigating] = useState(false);
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const isNavigatingRef = useRef(false);
 
   const triggerHeartBeat = () => {
     heartScale.setValue(1);
@@ -38,15 +39,41 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
   };
 
   const handlePress = useCallback(() => {
-    if (isNavigating) return;
-    setIsNavigating(true);
-    setTimeout(() => setIsNavigating(false), 600);
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 600);
     onPress?.();
-  }, [isNavigating, onPress]);
+  }, [onPress]);
+
+  const handlePressIn = () => {
+    Animated.spring(slideAnim, {
+      toValue: -10,
+      useNativeDriver: true,
+      tension: 180,
+      friction: 8,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 180,
+      friction: 8,
+    }).start();
+  };
 
   return (
-    <Pressable style={[styles.card, list && styles.listCard, style]} onPress={handlePress}>
-      <View style={[styles.imageWrap, list && styles.listImageWrap]}>
+    <Pressable
+      style={[styles.card, list && styles.listCard, style]}
+      onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      <Animated.View style={[styles.cardInner, { transform: [{ translateX: slideAnim }] }]}>
+        <View style={[styles.imageWrap, list && styles.listImageWrap]}>
         <Image source={{ uri: vehicle.image }} style={styles.cardImage} contentFit="cover" />
         <View style={styles.topRightActions}>
           <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
@@ -64,8 +91,11 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
         <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
           {vehicle.title}
         </Text>
+        <Text style={styles.cardSubtitle} numberOfLines={1}>
+          {vehicle.category} • {vehicle.transmission} • {vehicle.condition}
+        </Text>
         <Text style={styles.cardMeta}>
-          {vehicle.condition} • <Ionicons name="star" size={14} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
+          <Ionicons name="star" size={14} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
         </Text>
         <View style={styles.priceRow}>
           <Text style={styles.price}>{vehicle.price}</Text>
@@ -78,6 +108,7 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
           )}
         </View>
       </View>
+      </Animated.View>
     </Pressable>
   );
 });
@@ -88,6 +119,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
+  },
+  cardInner: {
+    flex: 1,
   },
   listCard: {
     width: "100%",
@@ -136,6 +170,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: NAVY,
     flexShrink: 1,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#6B7280",
+    marginBottom: 2,
   },
   cardMeta: {
     fontSize: 12,

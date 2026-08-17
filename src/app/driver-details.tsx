@@ -1,74 +1,18 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable, Dimensions } from "react-native";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Animated } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 import Toast from "@/components/Toast";
+import { getPendingVehicleTripDates, clearPendingVehicleTripDates } from "@/lib/tripDateBridge";
+import { getDriverAssignments, acceptDriverAssignment, declineDriverAssignment } from "@/lib/driverAssignmentsBridge";
+import { DRIVERS } from "@/data/drivers";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
-
-const DRIVERS = [
-  {
-    id: "d1",
-    name: "Kwame Asante",
-    location: "Kumasi, Ashanti",
-    rating: 4.98,
-    trips: 342,
-    hourlyRate: "GH₵ 35",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-    isVerified: true,
-    yearsOnPlatform: "5+ years",
-    vehicleType: "Sedan, SUV",
-    languages: "English, Twi",
-    about: "Professional driver with 5+ years of experience. Specializes in Sedan and SUV trips across Ashanti and beyond. Known for punctuality, clean vehicles, and local route expertise.",
-  },
-  {
-    id: "d2",
-    name: "Ama Serwaa",
-    location: "Accra, Greater Accra",
-    rating: 4.95,
-    trips: 518,
-    hourlyRate: "GH₵ 45",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80",
-    isVerified: true,
-    yearsOnPlatform: "6+ years",
-    vehicleType: "Luxury, SUV",
-    languages: "English, Ga, Twi",
-    about: "Experienced luxury transport specialist with 6+ years on the road. Frequently hired for airport transfers, corporate events, and premium city travel across Greater Accra.",
-  },
-  {
-    id: "d3",
-    name: "Kofi Mensah",
-    location: "Tema, Greater Accra",
-    rating: 4.88,
-    trips: 215,
-    hourlyRate: "GH₵ 30",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
-    isVerified: true,
-    yearsOnPlatform: "4+ years",
-    vehicleType: "Van, Bus",
-    languages: "English, Twi",
-    about: "Group and fleet specialist with 4+ years of experience. Comfortable with vans, buses, and larger vehicles for family trips, tours, and scheduled transfers.",
-  },
-  {
-    id: "d4",
-    name: "Abena Osei",
-    location: "Cape Coast, Central",
-    rating: 4.92,
-    trips: 289,
-    hourlyRate: "GH₵ 40",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
-    isVerified: true,
-    yearsOnPlatform: "5+ years",
-    vehicleType: "Sedan, Truck",
-    languages: "English, Fante",
-    about: "Versatile driver with 5+ years of experience handling sedan and truck jobs across Central Region. Strong track record for long-distance trips and reliable return journeys.",
-  },
-];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -97,6 +41,26 @@ export default function DriverDetailsScreen() {
 
   const { signedIn } = useAuth();
 
+  const [pickupDate, setPickupDate] = useState("Sat, 26 Sep");
+  const [returnDate, setReturnDate] = useState("Tue, 29 Sep");
+  const [pickupTime, setPickupTime] = useState("10:00 am");
+  const [returnTime, setReturnTime] = useState("10:00 am");
+  const [assignedVehicle, setAssignedVehicle] = useState<{ id?: string; title?: string } | null>(null);
+  const [driverAssignments, setDriverAssignments] = useState<{
+    driverId: string;
+    driverName: string;
+    vehicleTitle: string;
+    pickupDate: string;
+    returnDate: string;
+    pickupTime: string;
+    returnTime: string;
+    status: "pending" | "accepted" | "declined";
+  }[]>([]);
+  const relatedNavRef = useRef(false);
+
+  const pendingAssignments = driverAssignments.filter((a) => a.status === "pending");
+  const acceptedAssignments = driverAssignments.filter((a) => a.status === "accepted");
+
   useEffect(() => {
     setCurrentImageIndex(0);
     scrollRef.current?.scrollTo({ x: 0, animated: false });
@@ -114,6 +78,35 @@ export default function DriverDetailsScreen() {
       fullscreenScrollRef.current?.scrollTo({ x: 0, animated: false });
     }
   }, [showFullscreenImage]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const pending = getPendingVehicleTripDates();
+      if (pending) {
+        setPickupDate(pending.pickupDate);
+        setReturnDate(pending.returnDate);
+        setPickupTime(pending.pickupTime);
+        setReturnTime(pending.returnTime);
+        setAssignedVehicle(pending.vehicleId ? { id: pending.vehicleId, title: pending.vehicleTitle } : null);
+        clearPendingVehicleTripDates();
+      }
+
+      setDriverAssignments(getDriverAssignments(driver.id));
+    }, [driver.id])
+  );
+
+  const handleAddTrips = () => {
+    router.push({
+      pathname: "/favorites/trip-dates",
+      params: {
+        source: "driver",
+        defaultPickupDate: pickupDate,
+        defaultReturnDate: returnDate,
+        defaultPickupTime: pickupTime,
+        defaultReturnTime: returnTime,
+      },
+    } as any);
+  };
 
   const triggerHeartBeat = () => {
     heartScale.setValue(1);
@@ -248,18 +241,129 @@ export default function DriverDetailsScreen() {
           {/* Quick Stats */}
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
+              <MaterialCommunityIcons name="car-sports" size={20} color={NAVY} />
               <Text style={styles.statValue}>{driver.yearsOnPlatform}</Text>
               <Text style={styles.statLabel}>Experience</Text>
             </View>
             <View style={styles.statItem}>
+              <MaterialCommunityIcons name="steering" size={20} color={NAVY} />
               <Text style={styles.statValue}>{driver.vehicleType}</Text>
               <Text style={styles.statLabel}>Vehicle types</Text>
             </View>
             <View style={styles.statItem}>
+              <MaterialCommunityIcons name="google-translate" size={20} color={NAVY} />
               <Text style={styles.statValue}>{driver.languages}</Text>
               <Text style={styles.statLabel}>Languages</Text>
             </View>
           </View>
+
+          {/* Trip Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Trip Details</Text>
+            <View style={styles.tripRow}>
+              <View style={styles.tripIcon}>
+                <Ionicons name="calendar-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.tripInfo}>
+                <Text style={styles.tripLabel}>Pick-up</Text>
+                <Text style={styles.tripValue}>{pickupDate} · {pickupTime}</Text>
+              </View>
+            </View>
+            <View style={[styles.tripRow, { marginTop: 16 }]}>
+              <View style={styles.tripIcon}>
+                <Ionicons name="location-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.tripInfo}>
+                <Text style={styles.tripLabel}>Return</Text>
+                <Text style={styles.tripValue}>{returnDate} · {returnTime}</Text>
+              </View>
+            </View>
+            {assignedVehicle?.title && (
+              <View style={styles.assignedVehicleBadge}>
+                <Ionicons name="car-outline" size={14} color={NAVY} />
+                <Text style={styles.assignedVehicleText}>{assignedVehicle.title}</Text>
+              </View>
+            )}
+            <Pressable style={styles.addTripsButton} onPress={handleAddTrips}>
+              <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.addTripsButtonText}>Add trips</Text>
+            </Pressable>
+          </View>
+
+          {pendingAssignments.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Booking Requests</Text>
+              {pendingAssignments.map((assignment, index) => {
+                const globalIndex = driverAssignments.indexOf(assignment);
+                return (
+                  <View key={globalIndex} style={styles.assignmentCard}>
+                    <View style={styles.assignmentIcon}>
+                      <MaterialCommunityIcons name="car-sports" size={18} color={NAVY} />
+                    </View>
+                    <View style={styles.assignmentInfo}>
+                      <Text style={styles.assignmentVehicle}>{assignment.vehicleTitle}</Text>
+                      <Text style={styles.assignmentDates}>
+                        {assignment.pickupDate} · {assignment.pickupTime}
+                      </Text>
+                      <Text style={styles.assignmentReturn}>
+                        Return: {assignment.returnDate} · {assignment.returnTime}
+                      </Text>
+                    </View>
+                    <View style={[styles.assignmentBadge, styles.assignmentBadgePending]}>
+                      <Text style={[styles.assignmentBadgeText, styles.assignmentBadgeTextPending]}>Pending</Text>
+                    </View>
+                    <View style={styles.assignmentActions}>
+                      <Pressable
+                        style={[styles.assignmentActionButton, styles.acceptButton]}
+                        onPress={() => {
+                          acceptDriverAssignment(globalIndex);
+                          showToast("Booking accepted", "success");
+                          setDriverAssignments([...driverAssignments]);
+                        }}
+                      >
+                        <Text style={styles.acceptButtonText}>Accept</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.assignmentActionButton, styles.declineButton]}
+                        onPress={() => {
+                          declineDriverAssignment(globalIndex);
+                          showToast("Booking declined", "warning");
+                          setDriverAssignments([...driverAssignments]);
+                        }}
+                      >
+                        <Text style={styles.declineButtonText}>Decline</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
+          {acceptedAssignments.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Confirmed Bookings</Text>
+              {acceptedAssignments.map((assignment, index) => (
+                <View key={index} style={styles.assignmentCard}>
+                  <View style={styles.assignmentIcon}>
+                    <MaterialCommunityIcons name="car-sports" size={18} color={NAVY} />
+                  </View>
+                  <View style={styles.assignmentInfo}>
+                    <Text style={styles.assignmentVehicle}>{assignment.vehicleTitle}</Text>
+                    <Text style={styles.assignmentDates}>
+                      {assignment.pickupDate} · {assignment.pickupTime}
+                    </Text>
+                    <Text style={styles.assignmentReturn}>
+                      Return: {assignment.returnDate} · {assignment.returnTime}
+                    </Text>
+                  </View>
+                  <View style={[styles.assignmentBadge, styles.assignmentBadgeAccepted]}>
+                    <Text style={[styles.assignmentBadgeText, styles.assignmentBadgeTextAccepted]}>Accepted</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* About */}
           <View style={styles.section}>
@@ -328,6 +432,31 @@ export default function DriverDetailsScreen() {
                 </Text>
               </View>
             </View>
+          </View>
+
+          {/* Other Drivers */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Other drivers you may like</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.relatedScroll}>
+              {DRIVERS.filter((d) => d.id !== driver.id).slice(0, 5).map((related) => (
+                <Pressable
+                  key={related.id}
+                  style={styles.relatedCard}
+                  onPress={() => {
+                    if (relatedNavRef.current) return;
+                    relatedNavRef.current = true;
+                    setTimeout(() => { relatedNavRef.current = false; }, 600);
+                    router.push(`/driver-details?id=${related.id}`);
+                  }}
+                >
+                  <Image source={{ uri: related.image }} style={styles.relatedImage} contentFit="cover" />
+                  <View style={styles.relatedBody}>
+                    <Text style={styles.relatedTitle} numberOfLines={1}>{related.name}</Text>
+                    <Text style={styles.relatedPrice}>{related.hourlyRate}/hr</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
 
           {/* Bottom spacing for hire button */}
@@ -706,6 +835,204 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#6B7280",
     lineHeight: 18,
+  },
+  tripRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  tripIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  tripInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  tripLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  tripValue: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  addTripsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: NAVY,
+    marginTop: 16,
+  },
+  addTripsButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  assignedVehicleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "#EEF2FF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  assignedVehicleText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  assignmentCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 12,
+  },
+  assignmentIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  assignmentInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  assignmentVehicle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  assignmentDates: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  assignmentReturn: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#9CA3AF",
+  },
+  assignmentBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  assignmentBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  assignmentBadgePending: {
+    backgroundColor: "#FEF3C7",
+    borderColor: "#FDE68A",
+  },
+  assignmentBadgeTextPending: {
+    color: "#D97706",
+  },
+  assignmentBadgeAccepted: {
+    backgroundColor: "#D1FAE5",
+    borderColor: "#A7F3D0",
+  },
+  assignmentBadgeTextAccepted: {
+    color: "#047857",
+  },
+  assignmentBadgeDeclined: {
+    backgroundColor: "#FEE2E2",
+    borderColor: "#FECACA",
+  },
+  assignmentBadgeTextDeclined: {
+    color: "#B91C1C",
+  },
+  assignmentActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+  },
+  assignmentActionButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  acceptButton: {
+    backgroundColor: NAVY,
+  },
+  acceptButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  declineButton: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  declineButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6B7280",
+  },
+  relatedScroll: {
+    marginHorizontal: -4,
+  },
+  relatedCard: {
+    width: 160,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+    marginHorizontal: 4,
+  },
+  relatedImage: {
+    width: "100%",
+    height: 110,
+  },
+  relatedBody: {
+    padding: 10,
+    gap: 4,
+  },
+  relatedTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  relatedPrice: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: GREEN,
   },
   bottomSpacer: {
     height: 20,

@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, Dimensions, PanResponder, Alert, Modal, TextInput } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, Dimensions, PanResponder } from "react-native";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Animated } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 import Toast from "@/components/Toast";
+import { getPendingVehicleTripDates, clearPendingVehicleTripDates } from "@/lib/tripDateBridge";
+import { useCallback } from "react";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -263,10 +265,12 @@ export default function VehicleDetailsScreen() {
   const [expandedReviews, setExpandedReviews] = useState<Record<number, boolean>>({});
   const reviewsScrollRef = useRef<ScrollView>(null);
   const swipeY = useRef(new Animated.Value(0)).current;
-  const [editTripVisible, setEditTripVisible] = useState(false);
-  const [editTripType, setEditTripType] = useState<"pickup" | "return">("pickup");
   const [pickupDate, setPickupDate] = useState("Sat, 26 Sep");
   const [returnDate, setReturnDate] = useState("Tue, 29 Sep");
+  const [pickupTime, setPickupTime] = useState("10:00 am");
+  const [returnTime, setReturnTime] = useState("10:00 am");
+  const [assignedDriver, setAssignedDriver] = useState<{ id?: string; name?: string } | null>(null);
+  const relatedNavRef = useRef(false);
 
   const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
     setToast({ visible: true, message, type });
@@ -298,6 +302,22 @@ export default function VehicleDetailsScreen() {
     }
   }, [showFullscreenImage]);
 
+  useFocusEffect(
+    useCallback(() => {
+      const pending = getPendingVehicleTripDates();
+      if (pending) {
+        setPickupDate(pending.pickupDate);
+        setReturnDate(pending.returnDate);
+        setPickupTime(pending.pickupTime);
+        setReturnTime(pending.returnTime);
+        if (pending.driverId) {
+          setAssignedDriver({ id: pending.driverId, name: pending.driverName });
+        }
+        clearPendingVehicleTripDates();
+      }
+    }, [])
+  );
+
   const triggerHeartBeat = () => {
     heartScale.setValue(1);
     Animated.sequence([
@@ -328,19 +348,18 @@ export default function VehicleDetailsScreen() {
     setAuthVisible(false);
   };
 
-  const handleEditTrip = (type: "pickup" | "return") => {
-    setEditTripType(type);
-    setEditTripVisible(true);
-  };
-
-  const handleSaveTripEdit = () => {
-    if (editTripType === "pickup") {
-      setPickupDate(pickupDate);
-    } else {
-      setReturnDate(returnDate);
-    }
-    setEditTripVisible(false);
-    showToast("Trip dates updated", "success");
+  const handleAddTrips = () => {
+    router.push({
+      pathname: "/favorites/trip-dates",
+      params: {
+        source: "vehicle",
+        defaultPickupDate: pickupDate,
+        defaultReturnDate: returnDate,
+        defaultPickupTime: pickupTime,
+        defaultReturnTime: returnTime,
+        vehicleTitle: vehicle.title,
+      },
+    } as any);
   };
 
   const panResponder = useRef(
@@ -400,60 +419,60 @@ export default function VehicleDetailsScreen() {
       ]}
       {...panResponder.panHandlers}
     >
-      {/* Hero Image Gallery */}
-      <View style={styles.imageWrap}>
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          ref={scrollRef}
-          onMomentumScrollEnd={(e) => {
-            const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-            setCurrentImageIndex(index);
-          }}
-        >
-          {vehicle.images.map((image: string, index: number) => (
-            <Pressable key={index} onPress={openFullscreenImage}>
-              <Image source={{ uri: image }} style={styles.heroImage} contentFit="cover" />
-            </Pressable>
-          ))}
-        </ScrollView>
+      <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
+        {/* Hero Image Gallery */}
+        <View style={styles.imageWrap}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            ref={scrollRef}
+            onMomentumScrollEnd={(e) => {
+              const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+              setCurrentImageIndex(index);
+            }}
+          >
+            {vehicle.images.map((image: string, index: number) => (
+              <Pressable key={index} onPress={openFullscreenImage}>
+                <Image source={{ uri: image }} style={styles.heroImage} contentFit="cover" />
+              </Pressable>
+            ))}
+          </ScrollView>
 
-        <View style={styles.imageCounter}>
-          <Text style={styles.imageCounterText}>
-            {currentImageIndex + 1} / {vehicle.images.length}
-          </Text>
-        </View>
+          <View style={styles.imageCounter}>
+            <Text style={styles.imageCounterText}>
+              {currentImageIndex + 1} / {vehicle.images.length}
+            </Text>
+          </View>
 
-        {/* Top actions */}
-        <View style={styles.topActions}>
-          <Pressable style={styles.iconButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-          </Pressable>
-          <View style={styles.topRightActions}>
-            <Pressable style={styles.iconButton}>
-              <Ionicons name="share-outline" size={22} color="#FFFFFF" />
+          {/* Top actions */}
+          <View style={styles.topActions}>
+            <Pressable style={styles.iconButton} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
             </Pressable>
-            <Pressable style={styles.iconButton} onPress={handleFavorite}>
-              <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                <Ionicons
-                  name={isFavorite ? "heart" : "heart-outline"}
-                  size={22}
-                  color={isFavorite ? "#E74C3C" : "#FFFFFF"}
-                />
-              </Animated.View>
-            </Pressable>
+            <View style={styles.topRightActions}>
+              <Pressable style={styles.iconButton}>
+                <Ionicons name="share-outline" size={22} color="#FFFFFF" />
+              </Pressable>
+              <Pressable style={styles.iconButton} onPress={handleFavorite}>
+                <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                  <Ionicons
+                    name={isFavorite ? "heart" : "heart-outline"}
+                    size={22}
+                    color={isFavorite ? "#E74C3C" : "#FFFFFF"}
+                  />
+                </Animated.View>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Expand hint */}
+          <View style={styles.expandHint}>
+            <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.expandHintText}>Tap to expand</Text>
           </View>
         </View>
 
-        {/* Expand hint */}
-        <View style={styles.expandHint}>
-          <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
-          <Text style={styles.expandHintText}>Tap to expand</Text>
-        </View>
-      </View>
-
-      <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
         {/* Title & Rating */}
         <View style={styles.content}>
           <View style={styles.titleRow}>
@@ -482,17 +501,17 @@ export default function VehicleDetailsScreen() {
           {/* Tags */}
           <View style={styles.tagsRow}>
             {vehicle.seats && (
-              <View style={styles.tag}>
-                <Ionicons name="people-outline" size={14} color={NAVY} />
-                <Text style={styles.tagText}>{vehicle.seats}</Text>
-              </View>
-            )}
-            {vehicle.fuel && (
-              <View style={styles.tag}>
-                <Ionicons name="car-sport-outline" size={14} color={NAVY} />
-                <Text style={styles.tagText}>{vehicle.fuel}</Text>
-              </View>
-            )}
+                <View style={styles.tag}>
+                  <MaterialCommunityIcons name="car-seat" size={14} color={NAVY} />
+                  <Text style={styles.tagText}>{vehicle.seats}</Text>
+                </View>
+              )}
+              {vehicle.fuel && (
+                <View style={styles.tag}>
+                  <MaterialCommunityIcons name="fuel" size={14} color={NAVY} />
+                  <Text style={styles.tagText}>{vehicle.fuel}</Text>
+                </View>
+              )}
             {vehicle.mpg && (
               <View style={styles.tag}>
                 <Ionicons name="speedometer-outline" size={14} color={NAVY} />
@@ -516,11 +535,8 @@ export default function VehicleDetailsScreen() {
               </View>
               <View style={styles.tripInfo}>
                 <Text style={styles.tripLabel}>Pick-up</Text>
-                <Text style={styles.tripValue}>{pickupDate} · 10:00 am</Text>
+                <Text style={styles.tripValue}>{pickupDate} · {pickupTime}</Text>
               </View>
-              <Pressable style={styles.editButton} onPress={() => handleEditTrip("pickup")}>
-                <Ionicons name="pencil-outline" size={18} color={NAVY} />
-              </Pressable>
             </View>
             <View style={[styles.tripRow, { marginTop: 16 }]}>
               <View style={styles.tripIcon}>
@@ -528,12 +544,19 @@ export default function VehicleDetailsScreen() {
               </View>
               <View style={styles.tripInfo}>
                 <Text style={styles.tripLabel}>Return</Text>
-                <Text style={styles.tripValue}>{returnDate} · 10:00 am</Text>
+                <Text style={styles.tripValue}>{returnDate} · {returnTime}</Text>
               </View>
-              <Pressable style={styles.editButton} onPress={() => handleEditTrip("return")}>
-                <Ionicons name="pencil-outline" size={18} color={NAVY} />
-              </Pressable>
             </View>
+            {assignedDriver?.name && (
+              <View style={styles.assignedDriverBadge}>
+                <Ionicons name="person-outline" size={14} color={NAVY} />
+                <Text style={styles.assignedDriverText}>{assignedDriver.name}</Text>
+              </View>
+            )}
+            <Pressable style={styles.addTripsButton} onPress={handleAddTrips}>
+              <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.addTripsButtonText}>Add trips</Text>
+            </Pressable>
           </View>
 
           {/* Vehicle Overview */}
@@ -666,6 +689,31 @@ export default function VehicleDetailsScreen() {
             </View>
           </View>
 
+          {/* Related Vehicles */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>You may also like</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.relatedScroll}>
+              {VEHICLES.filter((v) => v.id !== vehicle.id).slice(0, 5).map((related) => (
+                <Pressable
+                  key={related.id}
+                  style={styles.relatedCard}
+                  onPress={() => {
+                    if (relatedNavRef.current) return;
+                    relatedNavRef.current = true;
+                    setTimeout(() => { relatedNavRef.current = false; }, 600);
+                    router.push(`/vehicle-details?id=${related.id}`);
+                  }}
+                >
+                  <Image source={{ uri: related.images[0] }} style={styles.relatedImage} contentFit="cover" />
+                  <View style={styles.relatedBody}>
+                    <Text style={styles.relatedTitle} numberOfLines={1}>{related.title}</Text>
+                    <Text style={styles.relatedPrice}>{related.price}</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+
           {/* Bottom spacing for book button */}
           <View style={styles.bottomSpacer} />
         </View>
@@ -734,33 +782,6 @@ export default function VehicleDetailsScreen() {
         </Animated.View>
       )}
       {authVisible && <WelcomeAuthScreen onDismiss={handleAuthDismiss} />}
-
-      {/* Trip Edit Modal */}
-      <Modal visible={editTripVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{editTripType === "pickup" ? "Edit Pick-up" : "Edit Return"}</Text>
-              <Pressable onPress={() => setEditTripVisible(false)}>
-                <Ionicons name="close" size={24} color={NAVY} />
-              </Pressable>
-            </View>
-            <View style={styles.modalBody}>
-              <Text style={styles.modalLabel}>Date</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="e.g. Sat, 26 Sep"
-                placeholderTextColor="#9CA3AF"
-                value={editTripType === "pickup" ? pickupDate : returnDate}
-                onChangeText={editTripType === "pickup" ? setPickupDate : setReturnDate}
-              />
-              <Pressable style={styles.confirmButton} onPress={handleSaveTripEdit}>
-                <Text style={styles.confirmButtonText}>Save</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <Toast
         visible={toast.visible}
@@ -963,32 +984,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-  },
-  tripIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 14,
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
-  tripInfo: {
-    flex: 1,
-  },
-  tripLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: NAVY,
-    marginBottom: 2,
-  },
-  tripValue: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  editButton: {
+  tripIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -997,6 +999,84 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "#E5E7EB",
+  },
+  tripInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  tripLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  tripValue: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  addTripsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: NAVY,
+    marginTop: 16,
+  },
+  addTripsButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  assignedDriverBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "#EEF2FF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  assignedDriverText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  relatedScroll: {
+    marginHorizontal: -4,
+  },
+  relatedCard: {
+    width: 160,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+    marginHorizontal: 4,
+  },
+  relatedImage: {
+    width: "100%",
+    height: 110,
+  },
+  relatedBody: {
+    padding: 10,
+    gap: 4,
+  },
+  relatedTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  relatedPrice: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: GREEN,
   },
   overviewGrid: {
     flexDirection: "row",
@@ -1350,66 +1430,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 28,
-    flexDirection: "column",
-    gap: 14,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: NAVY,
-    letterSpacing: -0.3,
-  },
-  modalBody: {
-    flexDirection: "column",
-    gap: 12,
-  },
-  modalLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: NAVY,
-    marginBottom: 4,
-  },
-  modalInput: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: NAVY,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  confirmButton: {
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: NAVY,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  confirmButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
   },
 });

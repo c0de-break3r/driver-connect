@@ -1,9 +1,16 @@
-import { useState, useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
+import { useState, useMemo, useRef, useCallback } from "react";
+import { ScrollView, StyleSheet, Text, View, Pressable, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { useHomeStore } from "@/store/useHomeStore";
+import { useQuery } from "convex/react";
+import { api } from "@/lib/convexApi";
+import { setPendingVehicleTripDates } from "@/lib/tripDateBridge";
+import { addDriverAssignment } from "@/lib/driverAssignmentsBridge";
+import { useNotificationStore } from "@/store/useNotificationStore";
+import { DRIVERS } from "@/data/drivers";
 import Toast from "@/components/Toast";
 
 const NAVY = "#2C3E5B";
@@ -24,6 +31,7 @@ const MONTH_NAMES = [
 export default function TripDatesScreen() {
   const params = useLocalSearchParams();
   const collectionId = params.collectionId as string | undefined;
+  const source = params.source as string | undefined;
 
   const updateCollectionTripDates = useFavoritesStore((state) => state.updateCollectionTripDates);
   const setActiveTab = useHomeStore((state) => state.setActiveTab);
@@ -33,16 +41,33 @@ export default function TripDatesScreen() {
 
   const [viewYear, setViewYear] = useState(initialYear);
   const [viewMonthIndex, setViewMonthIndex] = useState(initialMonthIndex);
-  const [selectedStart, setSelectedStart] = useState<number | null>(null);
-  const [selectedEnd, setSelectedEnd] = useState<number | null>(null);
+  const [selectedStart, setSelectedStart] = useState<string | null>(null);
+  const [selectedEnd, setSelectedEnd] = useState<string | null>(null);
   const [pickupTime, setPickupTime] = useState("10:00 am");
   const [returnTime, setReturnTime] = useState("10:00 am");
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
 
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+  const defaultPickupDate = params.defaultPickupDate as string | undefined;
+  const defaultReturnDate = params.defaultReturnDate as string | undefined;
+  const defaultPickupTime = params.defaultPickupTime as string | undefined;
+  const defaultReturnTime = params.defaultReturnTime as string | undefined;
+  const vehicleTitle = params.vehicleTitle as string | undefined;
+
+  const convexVehicles = useQuery(api.jobs.listVehicles, {});
+  const vehicles = (convexVehicles ?? []).map((v: any) => ({
+    id: v._id,
+    title: v.title,
+    image: v.images?.[0] ?? "",
+  }));
+
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const notificationIdRef = useRef(0);
+
+  const showToast = useCallback((message: string, type: "success" | "error" | "info" | "warning" = "success") => {
     setToast({ visible: true, message, type });
     setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
-  };
+  }, []);
 
   const daysInMonth = useMemo(() => {
     const monthIndex = viewMonthIndex;
@@ -59,9 +84,14 @@ export default function TripDatesScreen() {
     return days;
   }, [viewYear, viewMonthIndex]);
 
-  const formatDate = (day: number) => {
-    const date = new Date(viewYear, viewMonthIndex, day);
+  const formatDate = (iso: string) => {
+    const date = new Date(iso + "T00:00:00");
     return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+
+  const toISODate = (day: number) => {
+    const date = new Date(viewYear, viewMonthIndex, day);
+    return date.toISOString().split("T")[0];
   };
 
   const handlePrevMonth = () => {
@@ -71,8 +101,6 @@ export default function TripDatesScreen() {
     } else {
       setViewMonthIndex(viewMonthIndex - 1);
     }
-    setSelectedStart(null);
-    setSelectedEnd(null);
   };
 
   const handleNextMonth = () => {
@@ -82,63 +110,128 @@ export default function TripDatesScreen() {
     } else {
       setViewMonthIndex(viewMonthIndex + 1);
     }
-    setSelectedStart(null);
-    setSelectedEnd(null);
   };
 
-  const handleAddTripDates = () => {
+  const handleAddTripDates = useCallback(() => {
+    if (source === "driver") {
+      const selectedVehicle = vehicles.find((v: any) => v.id === selectedVehicleId);
+
+      setPendingVehicleTripDates({
+        pickupDate: selectedStart ? formatDate(selectedStart) : defaultPickupDate || "Select date",
+        returnDate: selectedEnd ? formatDate(selectedEnd) : defaultReturnDate || "Select date",
+        pickupTime,
+        returnTime,
+        vehicleId: selectedVehicle?.id,
+        vehicleTitle: selectedVehicle?.title,
+      });
+
+      showToast("Trip dates confirmed", "success");
+      router.back();
+      return;
+    }
+
+    if (source === "vehicle") {
+      const selectedDriver = DRIVERS.find((d) => d.id === selectedDriverId);
+
+      const pickupDateStr = selectedStart ? formatDate(selectedStart) : defaultPickupDate || "Select date";
+      const returnDateStr = selectedEnd ? formatDate(selectedEnd) : defaultReturnDate || "Select date";
+
+      setPendingVehicleTripDates({
+        pickupDate: pickupDateStr,
+        returnDate: returnDateStr,
+        pickupTime,
+        returnTime,
+        driverId: selectedDriver?.id,
+        driverName: selectedDriver?.name,
+      });
+
+      if (selectedDriver) {
+        addDriverAssignment({
+          driverId: selectedDriver.id,
+          driverName: selectedDriver.name,
+          vehicleTitle: vehicleTitle || "Vehicle booking",
+          pickupDate: pickupDateStr,
+          returnDate: returnDateStr,
+          pickupTime,
+          returnTime,
+        });
+
+        notificationIdRef.current += 1;
+        const notificationId = `booking-${notificationIdRef.current}-${Date.now()}`;
+        const notificationReceivedAt = Date.now();
+        useNotificationStore.getState().addNotification({
+          id: notificationId,
+          title: "New Booking Request",
+          body: `${selectedDriver.name}, you have a new booking request for ${vehicleTitle || "a vehicle"} on ${pickupDateStr}.`,
+          receivedAt: notificationReceivedAt,
+        });
+      }
+
+      showToast("Trip dates confirmed", "success");
+      router.back();
+      return;
+    }
+
     if (!collectionId) {
       showToast("We couldn't find this list. Please try again.", "error");
       return;
     }
-    if (selectedStart === null || selectedEnd === null) {
+    if (!selectedStart || !selectedEnd) {
       showToast("Please choose both pickup and return dates to continue.", "warning");
       return;
     }
 
-    const formatDateISO = (day: number) => {
-      const date = new Date(viewYear, viewMonthIndex, day);
-      return date.toISOString().split("T")[0];
-    };
-
     updateCollectionTripDates(collectionId, {
-      startDate: formatDateISO(selectedStart),
-      endDate: formatDateISO(selectedEnd),
+      startDate: selectedStart,
+      endDate: selectedEnd,
       startTime: pickupTime,
       endTime: returnTime,
     });
 
+    showToast("Trip dates confirmed", "success");
     setActiveTab("favorites");
     router.replace(`/favorites/collection/${collectionId}`);
-  };
+  }, [source, vehicles, selectedVehicleId, selectedStart, selectedEnd, defaultPickupDate, defaultReturnDate, pickupTime, returnTime, selectedDriverId, vehicleTitle, collectionId, updateCollectionTripDates, showToast, setActiveTab]);
 
   const handleDayPress = (day: number | null) => {
     if (!day) return;
-    if (selectedStart === null || (selectedStart !== null && selectedEnd !== null)) {
-      setSelectedStart(day);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const clickedISO = toISODate(day);
+    if (!selectedStart || (selectedStart !== null && selectedEnd !== null)) {
+      setSelectedStart(clickedISO);
       setSelectedEnd(null);
-    } else if (day < selectedStart) {
+    } else if (clickedISO < selectedStart) {
       setSelectedEnd(selectedStart);
-      setSelectedStart(day);
-    } else if (day === selectedStart) {
-      setSelectedEnd(day);
+      setSelectedStart(clickedISO);
+    } else if (clickedISO === selectedStart) {
+      setSelectedEnd(clickedISO);
     } else {
-      setSelectedEnd(day);
+      setSelectedEnd(clickedISO);
     }
   };
 
   const isDaySelected = (day: number | null) => {
     if (!day) return false;
-    return day === selectedStart || day === selectedEnd;
+    const iso = toISODate(day);
+    return iso === selectedStart || iso === selectedEnd;
   };
 
   const isDayInRange = (day: number | null) => {
-    if (!day || selectedStart === null || selectedEnd === null) return false;
-    return day > selectedStart && day < selectedEnd;
+    if (!day || !selectedStart || !selectedEnd) return false;
+    const iso = toISODate(day);
+    return iso > selectedStart && iso < selectedEnd;
+  };
+
+  const isDayPast = (day: number | null) => {
+    if (!day) return false;
+    const iso = toISODate(day);
+    const today = new Date().toISOString().split("T")[0];
+    return iso < today;
   };
 
   const getDayStyle = (day: number | null) => {
     if (!day) return styles.dayEmpty;
+    if (isDayPast(day)) return styles.dayPast;
     if (isDaySelected(day)) return styles.daySelected;
     if (isDayInRange(day)) return styles.dayInRange;
     return styles.day;
@@ -146,6 +239,7 @@ export default function TripDatesScreen() {
 
   const getDayTextStyle = (day: number | null) => {
     if (!day) return styles.dayTextEmpty;
+    if (isDayPast(day)) return styles.dayTextPast;
     if (isDaySelected(day)) return styles.dayTextSelected;
     if (isDayInRange(day)) return styles.dayTextInRange;
     return styles.dayText;
@@ -178,12 +272,72 @@ export default function TripDatesScreen() {
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Return</Text>
               <Text style={styles.summaryValue}>
-                {selectedEnd ? formatDate(selectedEnd) : "Select date"}
+                {selectedEnd ? formatDate(selectedEnd) : (selectedStart ? "Tap to select return" : "Select date")}
               </Text>
               <Text style={styles.summaryTime}>{returnTime}</Text>
             </View>
           </View>
         </View>
+
+        {source === "driver" && (
+          <View style={styles.vehicleSelectorCard}>
+            <Text style={styles.vehicleSelectorLabel}>Assign to vehicle</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vehicleScroll}>
+              {vehicles.map((vehicle: any) => (
+                <Pressable
+                  key={vehicle.id}
+                  style={[
+                    styles.vehicleChip,
+                    selectedVehicleId === vehicle.id && styles.vehicleChipSelected,
+                  ]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedVehicleId(vehicle.id);
+                  }}
+                >
+                  <Image
+                    source={{ uri: vehicle.image || "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=200&q=80" }}
+                    style={styles.vehicleChipImage}
+                    resizeMode="cover"
+                  />
+                  <Text style={styles.vehicleChipText} numberOfLines={1}>
+                    {vehicle.title}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {source === "vehicle" && (
+          <View style={styles.vehicleSelectorCard}>
+            <Text style={styles.vehicleSelectorLabel}>Assign a driver</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vehicleScroll}>
+              {DRIVERS.map((driver) => (
+                <Pressable
+                  key={driver.id}
+                  style={[
+                    styles.vehicleChip,
+                    selectedDriverId === driver.id && styles.vehicleChipSelected,
+                  ]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedDriverId(driver.id);
+                  }}
+                >
+                  <Image
+                    source={{ uri: driver.image }}
+                    style={styles.vehicleChipImage}
+                    resizeMode="cover"
+                  />
+                  <Text style={styles.vehicleChipText} numberOfLines={1}>
+                    {driver.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Calendar */}
         <View style={styles.calendarCard}>
@@ -213,7 +367,7 @@ export default function TripDatesScreen() {
                 key={index}
                 style={[styles.dayCell, getDayStyle(day)]}
                 onPress={() => handleDayPress(day)}
-                disabled={!day}
+                disabled={!day || isDayPast(day)}
               >
                 {day && (
                   <Text style={getDayTextStyle(day)}>{day}</Text>
@@ -237,7 +391,10 @@ export default function TripDatesScreen() {
                 <Pressable
                   key={time}
                   style={[styles.timeChip, pickupTime === time && styles.timeChipSelected]}
-                  onPress={() => setPickupTime(time)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setPickupTime(time);
+                  }}
                 >
                   <Text style={[styles.timeChipText, pickupTime === time && styles.timeChipTextSelected]}>
                     {time}
@@ -257,7 +414,10 @@ export default function TripDatesScreen() {
                 <Pressable
                   key={time}
                   style={[styles.timeChip, returnTime === time && styles.timeChipSelected]}
-                  onPress={() => setReturnTime(time)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setReturnTime(time);
+                  }}
                 >
                   <Text style={[styles.timeChipText, returnTime === time && styles.timeChipTextSelected]}>
                     {time}
@@ -276,10 +436,11 @@ export default function TripDatesScreen() {
         <Pressable
           style={styles.resetButton}
           onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setSelectedStart(null);
             setSelectedEnd(null);
-            setPickupTime("10:00 am");
-            setReturnTime("10:00 am");
+            setPickupTime(defaultPickupTime || "10:00 am");
+            setReturnTime(defaultReturnTime || "10:00 am");
           }}
         >
           <Ionicons name="close-circle-outline" size={18} color="#6B7280" />
@@ -287,7 +448,10 @@ export default function TripDatesScreen() {
         </Pressable>
         <Pressable
           style={styles.primaryButton}
-          onPress={handleAddTripDates}
+          onPress={() => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            handleAddTripDates();
+          }}
         >
           <Text style={styles.primaryButtonText}>Confirm dates</Text>
           <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
@@ -379,6 +543,49 @@ const styles = StyleSheet.create({
   summaryArrow: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  vehicleSelectorCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 20,
+  },
+  vehicleSelectorLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6B7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  vehicleScroll: {
+    marginHorizontal: -4,
+  },
+  vehicleChip: {
+    width: 140,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+    marginHorizontal: 4,
+  },
+  vehicleChipSelected: {
+    backgroundColor: "#EEF2FF",
+    borderColor: NAVY,
+  },
+  vehicleChipImage: {
+    width: "100%",
+    height: 80,
+  },
+  vehicleChipText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: NAVY,
+    padding: 10,
+    textAlign: "center",
   },
   calendarCard: {
     backgroundColor: "#FFFFFF",
@@ -484,6 +691,18 @@ const styles = StyleSheet.create({
   dayTextEmpty: {
     fontSize: 14,
     color: "transparent",
+  },
+  dayPast: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dayTextPast: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#D1D5DB",
   },
   timeSection: {
     marginBottom: 24,

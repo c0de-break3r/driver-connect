@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Dimensions, Alert } from "react-native";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
 import VehicleCard from "@/components/VehicleCard";
+import Toast from "@/components/Toast";
+import { DRIVERS } from "@/data/drivers";
 
 const NAVY = "#2C3E5B";
 const ICON_SIZE_BASE = 20;
@@ -75,100 +77,6 @@ const FEATURED_VEHICLES = [
   },
 ];
 
-const DRIVERS = [
-  {
-    id: "d1",
-    name: "Kwame Asante",
-    role: "Driver",
-    location: "Kumasi, Ashanti",
-    rating: 4.98,
-    trips: 342,
-    hourlyRate: "GH₵ 35",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
-    isVerified: true,
-    yearsOnPlatform: "5+ years",
-    vehicleType: "Sedan, SUV",
-  },
-  {
-    id: "d2",
-    name: "Ama Serwaa",
-    role: "Driver",
-    location: "Accra, Greater Accra",
-    rating: 4.95,
-    trips: 518,
-    hourlyRate: "GH₵ 45",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
-    isVerified: true,
-    yearsOnPlatform: "6+ years",
-    vehicleType: "Luxury, SUV",
-  },
-  {
-    id: "d3",
-    name: "Kofi Mensah",
-    role: "Driver",
-    location: "Tema, Greater Accra",
-    rating: 4.88,
-    trips: 215,
-    hourlyRate: "GH₵ 30",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
-    isVerified: true,
-    yearsOnPlatform: "4+ years",
-    vehicleType: "Van, Bus",
-  },
-  {
-    id: "d4",
-    name: "Abena Osei",
-    role: "Driver",
-    location: "Cape Coast, Central",
-    rating: 4.92,
-    trips: 289,
-    hourlyRate: "GH₵ 40",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-    isVerified: true,
-    yearsOnPlatform: "5+ years",
-    vehicleType: "Sedan, Truck",
-  },
-  {
-    id: "d5",
-    name: "Yaw Boateng",
-    role: "Driver",
-    location: "Accra, Greater Accra",
-    rating: 4.85,
-    trips: 178,
-    hourlyRate: "GH₵ 32",
-    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80",
-    isVerified: true,
-    yearsOnPlatform: "3+ years",
-    vehicleType: "Sedan, Hatchback",
-  },
-  {
-    id: "d6",
-    name: "Fatima Ibrahim",
-    role: "Driver",
-    location: "Tamale, Northern",
-    rating: 4.97,
-    trips: 410,
-    hourlyRate: "GH₵ 38",
-    image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80",
-    isVerified: true,
-    yearsOnPlatform: "7+ years",
-    vehicleType: "SUV, Van",
-  },
-  {
-    id: "d7",
-    name: "Emmanuel Tetteh",
-    role: "Driver",
-    location: "Koforidua, Eastern",
-    rating: 4.91,
-    trips: 256,
-    hourlyRate: "GH₵ 36",
-    image: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&q=80",
-    isVerified: true,
-    yearsOnPlatform: "5+ years",
-    vehicleType: "Sedan, SUV",
-  },
-];
-
 type HomeScreenContentProps = {
   onLoginPress?: () => void;
 };
@@ -221,6 +129,14 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const savedItems = useFavoritesStore((state) => state.savedItems);
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
   const loadFavoritesForUser = useFavoritesStore((state) => state.loadForUser);
+  const navigatingRef = useRef(false);
+
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
+  };
 
   useEffect(() => {
     loadFavoritesForUser(email);
@@ -247,11 +163,17 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   };
 
   const handleVehiclePress = (id: string) => {
+    if (navigatingRef.current) return;
+    navigatingRef.current = true;
+    setTimeout(() => {
+      navigatingRef.current = false;
+    }, 600);
     router.push(`/vehicle-details?id=${id}` as any);
   };
 
   const handleFavoritePress = (id: string, title: string, image: string, price: string, location: string, rating: number) => {
     if (!signedIn) {
+      showToast("Please sign in to save favorites", "warning");
       onLoginPress?.();
       return;
     }
@@ -263,6 +185,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
       Animated.timing(anim, { toValue: 1.15, duration: 120, useNativeDriver: true }),
       Animated.spring(anim, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
     ]).start();
+    showToast(`Saved ${title} to favorites`, "success");
     router.push(`/favorites/save-to-favorites?vehicle=${encodeURIComponent(JSON.stringify({
       id, title, image, price, location, rating,
     }))}` as any);
@@ -383,8 +306,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const sortedDrivers = sortDrivers(DRIVERS);
 
   const chips = [
-    { id: "all", label: "All", icon: "people-outline", family: "ion" as const },
-    { id: "drivers", label: "Drivers", icon: "car-outline", family: "ion" as const },
+    { id: "all", label: "All", icon: "account-group", family: "material" as const },
+    { id: "drivers", label: "Drivers", icon: "steering", family: "material" as const },
     { id: "airports", label: "Airports", icon: "airplane-outline", family: "ion" as const },
     { id: "monthly", label: "Monthly", icon: "calendar-outline", family: "ion" as const },
     { id: "nearby", label: "Nearby", icon: "location-outline", family: "ion" as const },
@@ -595,7 +518,11 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               onPress={() => handleCategoryPress(chip.id)}
               onLayout={(e) => handleChipLayout(chip.id, e)}
             >
-              <Ionicons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
+              {chip.family === "material" ? (
+                <MaterialCommunityIcons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
+              ) : (
+                <Ionicons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
+              )}
               <Text style={[styles.categoryChipText, selectedCategory === chip.id && styles.categoryChipTextActive]}>{chip.label}</Text>
             </Pressable>
           )
@@ -608,7 +535,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#10B981" colors={["#10B981"]} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#2C3E5B" colors={["#2C3E5B"]} />
         }
       >
         {selectedResult ? (
@@ -721,7 +648,12 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   ]).start();
                 };
                 return (
-                <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => router.push(`/driver-details?id=${driver.id}` as any)}>
+                <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => {
+                  if (navigatingRef.current) return;
+                  navigatingRef.current = true;
+                  setTimeout(() => { navigatingRef.current = false; }, 600);
+                  router.push(`/driver-details?id=${driver.id}` as any);
+                }}>
                   <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
                     <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
                       <Pressable style={styles.favoriteBadge} onPress={() => {
@@ -840,6 +772,13 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           </>
         )}
       </ScrollView>
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+      />
     </View>
   );
 }
