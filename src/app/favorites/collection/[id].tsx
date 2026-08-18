@@ -7,6 +7,8 @@ import {
   View,
   Pressable,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,6 +17,7 @@ import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { useHomeStore } from "@/store/useHomeStore";
 import { Share } from "react-native";
 import Toast from "@/components/Toast";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -58,12 +61,7 @@ export default function CollectionDetailScreen() {
   const [renameVisible, setRenameVisible] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [deleteItemVisible, setDeleteItemVisible] = useState(false);
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
-
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
-  };
+  const { toast, showToast, hideToast } = useToast();
 
   const handleShare = async () => {
     if (!collection) return;
@@ -108,14 +106,14 @@ export default function CollectionDetailScreen() {
 
   const handleAddTripDates = (vehicleId: string) => {
     if (!collectionId) return;
-    router.push(`/favorites/trip-dates?collectionId=${collectionId}`);
+    router.push(`/favorites/trip-dates?collectionId=${collectionId}&vehicleId=${encodeURIComponent(vehicleId)}`);
   };
 
   if (!collection) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => { setActiveTab("favorites"); router.replace("/home"); }} style={styles.backButton}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </Pressable>
           <Text style={styles.headerTitle}>Collection</Text>
@@ -131,7 +129,7 @@ export default function CollectionDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => { setActiveTab("favorites"); router.replace("/home"); }} style={styles.backButton}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={22} color={NAVY} />
         </Pressable>
         <Text style={styles.headerTitle}>{collection.name}</Text>
@@ -160,11 +158,11 @@ export default function CollectionDetailScreen() {
               <Pressable
                 key={vehicle.id}
                 style={styles.vehicleCard}
-                onPress={() => router.push(`/vehicle-details?id=${vehicle.id}`)}
+                onPress={() => router.push({ pathname: '/vehicle-details', params: { id: vehicle.id, vehicle: JSON.stringify(vehicle) } })}
               >
                 <Image source={{ uri: vehicle.image }} style={styles.vehicleImage} contentFit="cover" />
                 <View style={styles.cardActions}>
-                  <Pressable style={styles.viewDetailsButton} onPress={() => router.push(`/vehicle-details?id=${vehicle.id}`)}>
+                  <Pressable style={styles.viewDetailsButton} onPress={() => router.push({ pathname: '/vehicle-details', params: { id: vehicle.id, vehicle: JSON.stringify(vehicle) } })}>
                     <Text style={styles.viewDetailsText}>View details</Text>
                   </Pressable>
                   <Pressable style={styles.addTripsButton} onPress={() => handleAddTripDates(vehicle.id)}>
@@ -182,7 +180,7 @@ export default function CollectionDetailScreen() {
         visible={toast.visible}
         message={toast.message}
         type={toast.type}
-        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+        onHide={hideToast}
       />
 
       <Modal visible={settingsVisible} animationType="none" transparent onRequestClose={() => setSettingsVisible(false)}>
@@ -226,23 +224,28 @@ export default function CollectionDetailScreen() {
 
       <Modal visible={renameVisible} animationType="none" transparent onRequestClose={() => setRenameVisible(false)}>
         <Pressable style={styles.sheetOverlay} onPress={() => setRenameVisible(false)}>
-          <View style={styles.renameContent}>
-            <Text style={styles.renameTitle}>Rename collection</Text>
-            <TextInput
-              style={styles.renameInput}
-              value={renameValue}
-              onChangeText={setRenameValue}
-              autoFocus
-            />
-            <View style={styles.renameActions}>
-              <Pressable style={styles.renameCancel} onPress={() => setRenameVisible(false)}>
-                <Text style={styles.renameCancelText}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.renameSave} onPress={confirmRename}>
-                <Text style={styles.renameSaveText}>Save</Text>
-              </Pressable>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ width: "100%" }}
+          >
+            <View style={styles.renameContent}>
+              <Text style={styles.renameTitle}>Rename collection</Text>
+              <TextInput
+                style={styles.renameInput}
+                value={renameValue}
+                onChangeText={setRenameValue}
+                autoFocus
+              />
+              <View style={styles.renameActions}>
+                <Pressable style={styles.renameCancel} onPress={() => setRenameVisible(false)}>
+                  <Text style={styles.renameCancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable style={styles.renameSave} onPress={confirmRename}>
+                  <Text style={styles.renameSaveText}>Save</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Pressable>
       </Modal>
     </View>

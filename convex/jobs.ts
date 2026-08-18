@@ -397,6 +397,7 @@ export const createVehicle = mutation({
     instantBook: v.optional(v.boolean()),
     advanceNotice: v.optional(v.number()),
     unlimitedDistance: v.optional(v.boolean()),
+    status: v.optional(v.string()),
   },
   returns: v.id("vehicles"),
   handler: async (ctx, args) => {
@@ -449,7 +450,7 @@ export const createVehicle = mutation({
       showPreciseLocation: args.showPreciseLocation,
       deliveryAvailable: args.deliveryAvailable,
       deliveryFee: args.deliveryFee,
-      status: "active",
+      status: args.status ?? "active",
       isFeatured: false,
       rating: 0,
       reviewCount: 0,

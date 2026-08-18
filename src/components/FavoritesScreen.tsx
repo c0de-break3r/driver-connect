@@ -18,7 +18,7 @@ import { router } from "expo-router";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
 import Toast from "@/components/Toast";
 import EmptyState from "@/components/EmptyState";
-import { images } from "@/constants/images";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 
@@ -38,17 +38,7 @@ export default function FavoritesScreen() {
   const [pressedCollectionId, setPressedCollectionId] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ visible: true, message, type });
-    toastTimerRef.current = setTimeout(() => {
-      setToast({ visible: false, message: "", type: "success" });
-      toastTimerRef.current = null;
-    }, 2500);
-  };
+  const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
     loadForUser(user?.primaryEmailAddress?.emailAddress ?? "");
@@ -140,7 +130,6 @@ export default function FavoritesScreen() {
         {/* Collections */}
         {collections.length === 0 ? (
           <EmptyState
-            image={images.favoritesHeart}
             title="No favorites yet"
             subtitle="Tap the heart icon on any vehicle or driver to save it here."
             ctaText="New Collection"
@@ -211,7 +200,7 @@ export default function FavoritesScreen() {
         visible={toast.visible}
         message={toast.message}
         type={toast.type}
-        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+        onHide={hideToast}
       />
 
       {/* Create Collection Modal */}
@@ -305,9 +294,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   collectionCard: {
-    flexBasis: "48%",
-    flexGrow: 0,
-    flexShrink: 0,
+    width: "47%",
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
@@ -333,13 +320,13 @@ const styles = StyleSheet.create({
   },
   collectionImageWrap: {
     width: "100%",
-    height: 140,
+    aspectRatio: 16 / 9,
   },
   collectionListImageWrap: {
     width: 140,
     height: 140,
     flexShrink: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "#F3F4F6",
   },

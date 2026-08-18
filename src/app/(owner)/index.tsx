@@ -24,6 +24,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
 import OwnerListingsContent from "./_components/OwnerListingsContent";
 import OwnerMessagesScreen from "./messages";
 import { createCardStyle, PressableCard, StatusBadge, Divider } from "@/components/DesignSystem";
@@ -110,6 +111,7 @@ export default function OwnerDashboard() {
     setAvatarUri,
     signedIn,
     handleMenuLogout,
+    handleSwitchToGuest,
   } = useDashboardShell({
     tabs: OWNER_TABS,
     defaultTab: "today",
@@ -123,6 +125,10 @@ export default function OwnerDashboard() {
   const handleClearSearch = () => {
     setSearchQuery("");
   };
+
+  const handleNotificationsPress = useDoubleTap(() => {
+    router.push("/notifications" as any);
+  });
 
   const tabIndicatorAnim = useRef(new Animated.Value(0)).current;
   const [tabBarWidth, setTabBarWidth] = useState(0);
@@ -223,7 +229,7 @@ export default function OwnerDashboard() {
                   <TouchableOpacity
                     hitSlop={8}
                     style={styles.notificationButton}
-                    onPress={() => router.push("/notifications" as any)}
+                    onPress={handleNotificationsPress}
                   >
                     <Ionicons
                       name="notifications-outline"
@@ -344,11 +350,7 @@ export default function OwnerDashboard() {
                       <IconEmptyState
                         icon="calendar-outline"
                         title="No reservations today"
-                        subtitle="To get booked, you'll need to complete and publish your listing."
-                        ctaText="Complete your listing"
-                        onCtaPress={() =>
-                          router.push("/create-listing" as any)
-                        }
+                        subtitle="Your future bookings will appear here once you have active listings."
                       />
                     ) : (
                       <View style={styles.bookingsList}>
@@ -412,15 +414,7 @@ export default function OwnerDashboard() {
                           </TouchableOpacity>
                         )}
                       </View>
-                      <TouchableOpacity
-                        style={styles.viewFullCalendarButton}
-                        onPress={() => router.push("/(owner)/calendar-dashboard" as any)}
-                      >
-                        <Ionicons name="calendar" size={18} color="#FFFFFF" />
-                        <Text style={styles.viewFullCalendarButtonText}>
-                          View Full Calendar
-                        </Text>
-                      </TouchableOpacity>
+
                       <IconEmptyState
                         icon="calendar-outline"
                         title="No calendar events"
@@ -620,6 +614,30 @@ export default function OwnerDashboard() {
                         </TouchableOpacity>
                       </View>
 
+                      <Divider />
+                      <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={handleSwitchToGuest}
+                      >
+                        <View style={styles.menuIconWrap}>
+                          <Ionicons
+                            name="person-outline"
+                            size={20}
+                            color={NAVY}
+                          />
+                        </View>
+                        <View style={styles.menuTextWrap}>
+                          <Text style={styles.menuLabel}>Switch to Guest</Text>
+                          <Text style={styles.menuSub}>Browse and book as a client</Text>
+                        </View>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={18}
+                          color="#9CA3AF"
+                        />
+                      </TouchableOpacity>
+                      <Divider />
+
                       <View style={styles.logoutContainer}>
                         <TouchableOpacity
                           style={styles.logoutButton}
@@ -661,7 +679,7 @@ export default function OwnerDashboard() {
           />
           <NavItem
             icon="cube-outline"
-            label="Listings"
+            label="Hostings"
             active={activeTab === "listings"}
             onPress={() => setActiveTab("listings")}
           />
@@ -805,7 +823,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   menuHeaderSpacer: {
-    paddingTop: Platform.select({ ios: 60, android: 40 }),
+    paddingTop: 16,
     paddingHorizontal: 24,
     paddingBottom: 16,
   },
@@ -906,7 +924,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 4,
     marginBottom: 24,
-    marginTop: 10,
+    marginTop: 0,
     position: "relative",
     overflow: "hidden",
   },
@@ -1000,8 +1018,11 @@ const styles = StyleSheet.create({
     height: 44,
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
+    marginHorizontal: 20,
     marginBottom: 24,
     marginTop: 10,
+    position: "relative",
+    zIndex: 20,
   },
   calendarSearchInput: {
     flex: 1,
@@ -1015,21 +1036,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: NAVY,
   },
-  viewFullCalendarButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: NAVY,
-    paddingVertical: 14,
-    borderRadius: 14,
-    marginBottom: 16,
-  },
-  viewFullCalendarButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
+
   bottomNav: {
     flexDirection: "row",
     alignItems: "center",

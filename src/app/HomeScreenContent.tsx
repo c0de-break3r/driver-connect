@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Dimensions, Alert } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -10,6 +10,8 @@ import { api } from "@/lib/convexApi";
 import VehicleCard from "@/components/VehicleCard";
 import Toast from "@/components/Toast";
 import { DRIVERS } from "@/data/drivers";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 const ICON_SIZE_BASE = 20;
@@ -116,27 +118,15 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     pricePerDay: v.pricePerDay,
   }));
 
-  const topRatedVehicles = vehicles.filter((v: any) => (v.rating ?? 0) >= 4.9);
-  const verifiedVehicles = vehicles.filter((v: any) => v.isVerified);
-  const topOwnersNearby = verifiedVehicles.slice(0, 4);
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const sectionAnims = useRef<Animated.Value[]>(
     Array.from({ length: 6 }, () => new Animated.Value(1))
   ).current;
   const { signedIn, email } = useAuth();
-  const favorites = useFavoritesStore((state) => state.favorites);
   const savedItems = useFavoritesStore((state) => state.savedItems);
-  const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
   const loadFavoritesForUser = useFavoritesStore((state) => state.loadForUser);
-  const navigatingRef = useRef(false);
-
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
-
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
-  };
+  const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
     loadFavoritesForUser(email);
@@ -162,14 +152,13 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     return heartAnims.get(id)!;
   };
 
-  const handleVehiclePress = (id: string) => {
-    if (navigatingRef.current) return;
-    navigatingRef.current = true;
-    setTimeout(() => {
-      navigatingRef.current = false;
-    }, 600);
+  const handleVehiclePress = useDoubleTap((id: string) => {
     router.push(`/vehicle-details?id=${id}` as any);
-  };
+  });
+
+  const handleDriverPress = useDoubleTap((driverId: string) => {
+    router.push(`/driver-details?id=${driverId}` as any);
+  });
 
   const handleFavoritePress = (id: string, title: string, image: string, price: string, location: string, rating: number) => {
     if (!signedIn) {
@@ -575,30 +564,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   (v.category ?? "").toLowerCase().includes(query)
                 );
               }).map((vehicle) => {
-                if (vehicle.id === "7") {
-                  return (
-                    <Pressable key={vehicle.id} style={styles.mosaicCard} onPress={() => handleVehiclePress(vehicle.id)}>
-                      <View style={styles.mosaicGrid}>
-                        <View style={styles.mosaicItem}>
-                          <Image source={{ uri: vehicle.images?.[0] }} style={styles.mosaicImage} contentFit="cover" />
-                        </View>
-                        <View style={styles.mosaicItem}>
-                          <Image source={{ uri: vehicle.images?.[1] }} style={styles.mosaicImage} contentFit="cover" />
-                        </View>
-                        <View style={styles.mosaicItem}>
-                          <Image source={{ uri: vehicle.images?.[2] }} style={styles.mosaicImage} contentFit="cover" />
-                        </View>
-                        <View style={styles.mosaicItem}>
-                          <Image source={{ uri: vehicle.images?.[3] }} style={styles.mosaicImage} contentFit="cover" />
-                        </View>
-                      </View>
-                      <View style={styles.mosaicOverlay}>
-                        <Text style={styles.mosaicTitle}>{vehicle.title}</Text>
-                        <Text style={styles.mosaicMessage}>{vehicle.message}</Text>
-                      </View>
-                    </Pressable>
-                  );
-                }
+
 
                 return (
                 <VehicleCard
@@ -648,12 +614,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   ]).start();
                 };
                 return (
-                <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => {
-                  if (navigatingRef.current) return;
-                  navigatingRef.current = true;
-                  setTimeout(() => { navigatingRef.current = false; }, 600);
-                  router.push(`/driver-details?id=${driver.id}` as any);
-                }}>
+                <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => handleDriverPress(driver.id)}>
                   <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
                     <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
                       <Pressable style={styles.favoriteBadge} onPress={() => {
@@ -773,12 +734,13 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
         )}
       </ScrollView>
 
-      <Toast
-        visible={toast.visible}
-        message={toast.message}
-        type={toast.type}
-        onHide={() => setToast({ visible: false, message: "", type: "success" })}
-      />
+        <Toast
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onHide={hideToast}
+        />
+
     </View>
   );
 }
@@ -1442,4 +1404,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreenContent;
+

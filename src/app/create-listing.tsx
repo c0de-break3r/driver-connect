@@ -19,8 +19,11 @@ import * as FileSystem from "expo-file-system/legacy";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
-import { useMutation, useAction } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/lib/convexApi";
+import PlateScanBottomSheet from "@/components/PlateScanBottomSheet";
+import Toast from "@/components/Toast";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 
@@ -73,6 +76,44 @@ const ADVANCE_NOTICE = [
   { label: "7 days", value: 7 },
 ];
 
+
+
+
+
+function getFeatureIcon(feature: string): string {
+  const lower = feature.toLowerCase();
+  const mapping: Record<string, string> = {
+    bluetooth: "bluetooth-outline",
+    camera: "camera-outline",
+    reverse: "camera-reverse-outline",
+    backup: "camera-reverse-outline",
+    usb: "usb-outline",
+    charging: "flash-outline",
+    heated: "thermometer-outline",
+    sunroof: "sunny-outline",
+    leather: "shirt-outline",
+    child: "people-outline",
+    pet: "paw-outline",
+    ski: "library-outline",
+    bike: "bicycle-outline",
+    snow: "snow-outline",
+    roof: "home-outline",
+    tow: "car-outline",
+    hitch: "car-outline",
+    gps: "navigate-outline",
+    navigation: "navigate-outline",
+    air: "snow-outline",
+    conditioner: "snow-outline",
+    ac: "snow-outline",
+  };
+  for (const [keyword, icon] of Object.entries(mapping)) {
+    if (lower.includes(keyword)) {
+      return icon;
+    }
+  }
+  return "pricetag-outline";
+}
+
 const IntroStep = () => {
   const illustrationSize = 220;
   return (
@@ -93,6 +134,7 @@ const IntroStep = () => {
 export default function CreateListingScreen() {
   const router = useRouter();
   const { userId } = useAuth();
+  const userProfile = useQuery(api.users.getByUserId, userId ? { userId } : "skip");
 
   let LocationModule: any;
   try {
@@ -110,6 +152,7 @@ export default function CreateListingScreen() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [published, setPublished] = useState(false);
+  const [listingStatus, setListingStatus] = useState<"active" | "draft">("active");
   const [publishedVehicleId, setPublishedVehicleId] = useState<string | null>(null);
   const screenWidth = Dimensions.get("window").width;
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -184,6 +227,24 @@ export default function CreateListingScreen() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [automationLoading, setAutomationLoading] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState("");
+  const [plateScanning, setPlateScanning] = useState(false);
+  const spinAnim = useRef(new Animated.Value(0)).current;
+  const { toast, showToast, hideToast } = useToast();
+
+  useEffect(() => {
+    if (automationLoading) {
+      Animated.loop(
+        Animated.timing(spinAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      spinAnim.setValue(0);
+    }
+  }, [automationLoading, spinAnim]);
 
   // Step 4 - Pricing
   const [pricePerDay, setPricePerDay] = useState("");
@@ -320,61 +381,76 @@ export default function CreateListingScreen() {
         setAnalysisProgress("Preparing image...");
         const base64 = await uriToBase64(newUris[0]);
         setAnalysisProgress("Analyzing vehicle...");
-        const suggestion = await suggestVehicleFromImage({ imageUri: base64 });
-        setAnalysisProgress("Applying suggestions...");
-        if (suggestion.category) setCategory(suggestion.category);
-        if (suggestion.make) setMake(suggestion.make);
-        if (suggestion.model) setModel(suggestion.model);
-        if (suggestion.year) setYear(String(suggestion.year));
-        if (suggestion.color) setColor(suggestion.color);
-        if (suggestion.serviceType) setServiceType(suggestion.serviceType);
-        if (suggestion.suggestedPricePerDay && !pricePerDay) {
-          setPricePerDay(String(suggestion.suggestedPricePerDay));
+        try {
+          const suggestion = await suggestVehicleFromImage({ imageUri: base64 });
+          setAnalysisProgress("Applying suggestions...");
+          if (suggestion.category) setCategory(suggestion.category);
+          if (suggestion.make) setMake(suggestion.make);
+          if (suggestion.model) setModel(suggestion.model);
+          if (suggestion.year) setYear(String(suggestion.year));
+          if (suggestion.color) setColor(suggestion.color);
+          if (suggestion.serviceType) setServiceType(suggestion.serviceType);
+          if (suggestion.suggestedPricePerDay && !pricePerDay) {
+            setPricePerDay(String(suggestion.suggestedPricePerDay));
+          }
+          if (suggestion.features?.length) {
+            const newFeatures = suggestion.features.filter((f: string) => !features.includes(f));
+            setFeatures([...features, ...newFeatures]);
+          }
+          if (suggestion.bodyStyle) setBodyStyle(suggestion.bodyStyle);
+          if (suggestion.driveType) setDriveType(suggestion.driveType);
+          if (suggestion.licensePlate) setLicensePlate(suggestion.licensePlate);
+          if (suggestion.seats && !seats) setSeats(String(suggestion.seats));
+          if (suggestion.doors && !doors) setDoors(String(suggestion.doors));
+          if (suggestion.make && suggestion.model && suggestion.year) {
+            const generatedTitle = `${suggestion.make} ${suggestion.model} ${suggestion.year}`.trim();
+            if (!title) setTitle(generatedTitle);
+          }
+          setAnalysisProgress("Complete");
+          showToast("Vehicle analysis complete", "success");
+          setTimeout(() => setAnalysisProgress(""), 1500);
+          logAnalytics({
+            event: "listing_image_uploaded",
+            userId: userId || undefined,
+            properties: { category: suggestion.category, confidence: suggestion.confidence },
+          }).catch(() => {});
+        } catch {
+          showToast("Network issue during analysis. You can continue filling the form manually.", "warning");
+          setAnalysisProgress("");
+        } finally {
+          setAutomationLoading(false);
         }
-        if (suggestion.features?.length) {
-          const newFeatures = suggestion.features.filter((f: string) => !features.includes(f));
-          setFeatures([...features, ...newFeatures]);
-        }
-        setAnalysisProgress("Complete");
-        setTimeout(() => setAnalysisProgress(""), 1500);
-        logAnalytics({
-          event: "listing_image_uploaded",
-          userId: userId || undefined,
-          properties: { category: suggestion.category, confidence: suggestion.confidence },
-        }).catch(() => {});
       }
     } catch {
       Alert.alert("Error", "Unable to process image. Please try again.");
       setAnalysisProgress("");
-    } finally {
       setAutomationLoading(false);
     }
   };
 
-  const handlePlateScan = async () => {
-    Alert.alert(
-      "Scan License Plate",
-      "Choose how you want to capture the plate",
-      [
-        { text: "Take Photo", onPress: async () => { await captureOrPickPlate("camera"); } },
-        { text: "Choose Photo", onPress: async () => { await captureOrPickPlate("library"); } },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
+
+  const [showPlateSheet, setShowPlateSheet] = useState(false);
+
+  const handlePlateScan = () => {
+    setShowPlateSheet(true);
   };
 
   const captureOrPickPlate = async (source: "camera" | "library") => {
+    setShowPlateSheet(false);
+    setPlateScanning(true);
     try {
       if (source === "camera") {
         const permission = await ImagePicker.requestCameraPermissionsAsync();
         if (!permission.granted) {
           Alert.alert("Permission needed", "Please allow camera access to scan the license plate.");
+          setPlateScanning(false);
           return;
         }
       } else {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permission.granted) {
           Alert.alert("Permission needed", "Please allow access to your photos to scan the license plate.");
+          setPlateScanning(false);
           return;
         }
       }
@@ -386,23 +462,35 @@ export default function CreateListingScreen() {
       if (!result.canceled && result.assets[0]?.uri) {
         setAutomationLoading(true);
         const base64 = await uriToBase64(result.assets[0].uri);
-        const data = await lookupVehicleByPlate({ imageUri: base64 });
-        if (data.licensePlate) setLicensePlate(data.licensePlate);
-        if (data.make) setMake(data.make);
-        if (data.model) setModel(data.model);
-        if (data.year) setYear(String(data.year));
-        if (data.color) setColor(data.color);
-        if (data.transmission) setTransmission(data.transmission as any);
-        if (data.fuelType) setFuelType(data.fuelType as any);
-        logAnalytics({
-          event: "listing_plate_scanned",
-          userId: userId || undefined,
-          properties: { make: data.make, model: data.model, confidence: data.confidence },
-        }).catch(() => {});
+        try {
+          const data = await lookupVehicleByPlate({ imageUri: base64 });
+          if (data.licensePlate) setLicensePlate(data.licensePlate);
+          if (data.make) setMake(data.make);
+          if (data.model) setModel(data.model);
+          if (data.year) setYear(String(data.year));
+          if (data.color) setColor(data.color);
+          if (data.transmission) setTransmission(data.transmission as any);
+          if (data.fuelType) setFuelType(data.fuelType as any);
+          if (data.mileage) setMileage(String(data.mileage));
+          if (data.vin) setVin(data.vin);
+          if (data.seats && !seats) setSeats(String(data.seats));
+          if (data.doors && !doors) setDoors(String(data.doors));
+          showToast("License plate scanned successfully", "success");
+          logAnalytics({
+            event: "listing_plate_scanned",
+            userId: userId || undefined,
+            properties: { make: data.make, model: data.model, confidence: data.confidence },
+          }).catch(() => {});
+        } catch {
+          showToast("Network issue during plate scan. Please enter details manually.", "warning");
+        } finally {
+          setAutomationLoading(false);
+        }
       }
+      setPlateScanning(false);
     } catch {
       Alert.alert("Error", "Unable to scan plate. Please try again.");
-    } finally {
+      setPlateScanning(false);
       setAutomationLoading(false);
     }
   };
@@ -588,6 +676,10 @@ export default function CreateListingScreen() {
     if (!userId) return;
     setSaving(true);
     try {
+      const isProfileComplete = userProfile?.profileSetupComplete === true;
+      setListingStatus(isProfileComplete ? "active" : "draft");
+      const listingStatus = isProfileComplete ? "active" : "draft";
+
       const vehicleId = await createVehicle({
         ownerId: userId,
         title: title || "Untitled Vehicle",
@@ -647,6 +739,7 @@ export default function CreateListingScreen() {
         showPreciseLocation,
         deliveryAvailable,
         deliveryFee: deliveryFee ? Number(deliveryFee) : undefined,
+        status: listingStatus,
       });
       logAnalytics({
         event: "listing_created",
@@ -674,7 +767,7 @@ export default function CreateListingScreen() {
       case 3:
         return title.trim().length > 0 && make.trim().length > 0 && model.trim().length > 0 && mileage.trim().length > 0;
       case 4:
-        return true;
+        return seats.trim().length > 0 && doors.trim().length > 0;
       case 5:
         if (serviceType === "sell") {
           return pricePerDay.trim().length > 0 && Number(pricePerDay) >= 10;
@@ -978,71 +1071,103 @@ export default function CreateListingScreen() {
   };
 
   if (published) {
+    const isDraft = listingStatus === "draft";
     return (
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.publishedScroll} showsVerticalScrollIndicator={false}>
           <View style={styles.publishedIconRow}>
-            <View style={styles.publishedIcon}>
-              <Ionicons name="checkmark" size={36} color="#FFFFFF" />
+            <View style={[styles.publishedIcon, isDraft ? styles.publishedIconDraft : styles.publishedIconActive]}>
+              <Ionicons name={isDraft ? "document-outline" : "checkmark"} size={36} color="#FFFFFF" />
             </View>
           </View>
-          <Text style={styles.publishedTitle}>Congratulations!</Text>
-          <Text style={styles.publishedSubtitle}>Your vehicle is now live. Here&apos;s what to do next.</Text>
+          <Text style={styles.publishedTitle}>{isDraft ? "Draft Saved!" : "Congratulations!"}</Text>
+          <Text style={styles.publishedSubtitle}>
+            {isDraft
+              ? "Your listing is saved as a draft. Complete your profile and verification to go live."
+              : "Your vehicle is now live. Here&apos;s what to do next."}
+          </Text>
 
           <View style={styles.checklistCard}>
-            <View style={styles.checklistItem}>
-              <View style={styles.checklistIconDone}>
-                <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-              </View>
-              <View style={styles.checklistTextWrap}>
-                <Text style={styles.checklistTitle}>Published</Text>
-                <Text style={styles.checklistDesc}>Your vehicle is now visible to clients.</Text>
-              </View>
-            </View>
-            <View style={styles.checklistItem}>
-              <View style={styles.checklistIconPending}>
-                <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
-              </View>
-              <View style={styles.checklistTextWrap}>
-                <Text style={styles.checklistTitle}>Set up your calendar</Text>
-                <Text style={styles.checklistDesc}>Block unavailable dates and set your availability.</Text>
-              </View>
-            </View>
-            <View style={styles.checklistItem}>
-              <View style={styles.checklistIconPending}>
-                <Ionicons name="shield-checkmark-outline" size={18} color="#FFFFFF" />
-              </View>
-              <View style={styles.checklistTextWrap}>
-                <Text style={styles.checklistTitle}>Verify your account</Text>
-                <Text style={styles.checklistDesc}>Upload ID, license, and police clearance.</Text>
-              </View>
-            </View>
-            <View style={styles.checklistItem}>
-              <View style={styles.checklistIconPending}>
-                <Ionicons name="camera-outline" size={18} color="#FFFFFF" />
-              </View>
-              <View style={styles.checklistTextWrap}>
-                <Text style={styles.checklistTitle}>Add profile photo</Text>
-                <Text style={styles.checklistDesc}>Complete your owner profile.</Text>
-              </View>
-            </View>
-            <View style={styles.checklistItem}>
-              <View style={styles.checklistIconPending}>
-                <Ionicons name="call-outline" size={18} color="#FFFFFF" />
-              </View>
-              <View style={styles.checklistTextWrap}>
-                <Text style={styles.checklistTitle}>Confirm phone number</Text>
-                <Text style={styles.checklistDesc}>Help clients reach you easily.</Text>
-              </View>
-            </View>
+            {isDraft ? (
+              <>
+                <View style={styles.checklistItem}>
+                  <View style={styles.checklistIconPending}>
+                    <Ionicons name="person-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.checklistTextWrap}>
+                    <Text style={styles.checklistTitle}>Complete your profile</Text>
+                    <Text style={styles.checklistDesc}>Add your ID, license, and profile photo.</Text>
+                  </View>
+                </View>
+                <View style={styles.checklistItem}>
+                  <View style={styles.checklistIconPending}>
+                    <Ionicons name="shield-checkmark-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.checklistTextWrap}>
+                    <Text style={styles.checklistTitle}>Get verified</Text>
+                    <Text style={styles.checklistDesc}>Upload police clearance and documents.</Text>
+                  </View>
+                </View>
+                <View style={styles.checklistItem}>
+                  <View style={styles.checklistIconPending}>
+                    <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.checklistTextWrap}>
+                    <Text style={styles.checklistTitle}>Set up your calendar</Text>
+                    <Text style={styles.checklistDesc}>Block unavailable dates and set your availability.</Text>
+                  </View>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.checklistItem}>
+                  <View style={styles.checklistIconDone}>
+                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.checklistTextWrap}>
+                    <Text style={styles.checklistTitle}>Published</Text>
+                    <Text style={styles.checklistDesc}>Your vehicle is now visible to clients.</Text>
+                  </View>
+                </View>
+                <View style={styles.checklistItem}>
+                  <View style={styles.checklistIconPending}>
+                    <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.checklistTextWrap}>
+                    <Text style={styles.checklistTitle}>Set up your calendar</Text>
+                    <Text style={styles.checklistDesc}>Block unavailable dates and set your availability.</Text>
+                  </View>
+                </View>
+                <View style={styles.checklistItem}>
+                  <View style={styles.checklistIconPending}>
+                    <Ionicons name="camera-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.checklistTextWrap}>
+                    <Text style={styles.checklistTitle}>Add profile photo</Text>
+                    <Text style={styles.checklistDesc}>Complete your owner profile.</Text>
+                  </View>
+                </View>
+                <View style={styles.checklistItem}>
+                  <View style={styles.checklistIconPending}>
+                    <Ionicons name="call-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.checklistTextWrap}>
+                    <Text style={styles.checklistTitle}>Confirm phone number</Text>
+                    <Text style={styles.checklistDesc}>Help clients reach you easily.</Text>
+                  </View>
+                </View>
+              </>
+            )}
           </View>
 
           <TouchableOpacity style={styles.primaryButton} onPress={() => router.replace("/(owner)/listings")}>
-            <Text style={styles.primaryButtonText}>Go to my listings</Text>
+            <Text style={styles.primaryButtonText}>{isDraft ? "Go to Drafts" : "Go to my listings"}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => router.replace("/(owner)/calendar")}>
-            <Text style={styles.secondaryButtonText}>Set up calendar</Text>
-          </TouchableOpacity>
+          {!isDraft && (
+            <TouchableOpacity style={styles.secondaryButton} onPress={() => router.replace("/(owner)/calendar")}>
+              <Text style={styles.secondaryButtonText}>Set up calendar</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </View>
     );
@@ -1272,8 +1397,26 @@ export default function CreateListingScreen() {
                     placeholderTextColor="#9CA3AF"
                     autoCapitalize="characters"
                   />
-                  <TouchableOpacity style={styles.scanButton} onPress={handlePlateScan} disabled={automationLoading}>
-                    <Ionicons name="camera-outline" size={20} color="#FFFFFF" />
+                  <TouchableOpacity style={styles.scanButton} onPress={handlePlateScan} disabled={automationLoading || plateScanning}>
+                    {plateScanning ? (
+                      <Animated.View
+                        style={[
+                          styles.scanButtonSpinner,
+                          {
+                            transform: [
+                              {
+                                rotate: spinAnim.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: ["0deg", "360deg"],
+                                }),
+                              },
+                            ],
+                          },
+                        ]}
+                      />
+                    ) : (
+                      <Ionicons name="camera-outline" size={20} color="#FFFFFF" />
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1340,96 +1483,34 @@ export default function CreateListingScreen() {
 
             <Text style={styles.sectionTitle}>Amenities</Text>
             <View style={styles.toggleGrid}>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasAc(!hasAc)}>
-                <View style={[styles.toggleBox, hasAc && styles.toggleBoxActive]}>
-                  {hasAc && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Air conditioning</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasGps(!hasGps)}>
-                <View style={[styles.toggleBox, hasGps && styles.toggleBoxActive]}>
-                  {hasGps && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>GPS navigation</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasBluetooth(!hasBluetooth)}>
-                <View style={[styles.toggleBox, hasBluetooth && styles.toggleBoxActive]}>
-                  {hasBluetooth && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Bluetooth</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasBackupCamera(!hasBackupCamera)}>
-                <View style={[styles.toggleBox, hasBackupCamera && styles.toggleBoxActive]}>
-                  {hasBackupCamera && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Backup camera</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasUsbPort(!hasUsbPort)}>
-                <View style={[styles.toggleBox, hasUsbPort && styles.toggleBoxActive]}>
-                  {hasUsbPort && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>USB charging</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasSunroof(!hasSunroof)}>
-                <View style={[styles.toggleBox, hasSunroof && styles.toggleBoxActive]}>
-                  {hasSunroof && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Sunroof</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasHeatedSeats(!hasHeatedSeats)}>
-                <View style={[styles.toggleBox, hasHeatedSeats && styles.toggleBoxActive]}>
-                  {hasHeatedSeats && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Heated seats</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasLeatherSeats(!hasLeatherSeats)}>
-                <View style={[styles.toggleBox, hasLeatherSeats && styles.toggleBoxActive]}>
-                  {hasLeatherSeats && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Leather seats</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasChildSeat(!hasChildSeat)}>
-                <View style={[styles.toggleBox, hasChildSeat && styles.toggleBoxActive]}>
-                  {hasChildSeat && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Child seat</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasPetFriendly(!hasPetFriendly)}>
-                <View style={[styles.toggleBox, hasPetFriendly && styles.toggleBoxActive]}>
-                  {hasPetFriendly && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Pet friendly</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasSkiRack(!hasSkiRack)}>
-                <View style={[styles.toggleBox, hasSkiRack && styles.toggleBoxActive]}>
-                  {hasSkiRack && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Ski rack</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasBikeRack(!hasBikeRack)}>
-                <View style={[styles.toggleBox, hasBikeRack && styles.toggleBoxActive]}>
-                  {hasBikeRack && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Bike rack</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasSnowTires(!hasSnowTires)}>
-                <View style={[styles.toggleBox, hasSnowTires && styles.toggleBoxActive]}>
-                  {hasSnowTires && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Snow tires</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasRoofBox(!hasRoofBox)}>
-                <View style={[styles.toggleBox, hasRoofBox && styles.toggleBoxActive]}>
-                  {hasRoofBox && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Roof box</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleCard} onPress={() => setHasTowHitch(!hasTowHitch)}>
-                <View style={[styles.toggleBox, hasTowHitch && styles.toggleBoxActive]}>
-                  {hasTowHitch && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
-                </View>
-                <Text style={styles.toggleLabel}>Tow hitch</Text>
-              </TouchableOpacity>
+              {[
+                { label: "Air conditioning", icon: "snow-outline", active: hasAc, setter: setHasAc },
+                { label: "GPS navigation", icon: "navigate-outline", active: hasGps, setter: setHasGps },
+                { label: "Bluetooth", icon: "bluetooth-outline", active: hasBluetooth, setter: setHasBluetooth },
+                { label: "Backup camera", icon: "camera-reverse-outline", active: hasBackupCamera, setter: setHasBackupCamera },
+                { label: "USB charging", icon: "usb-outline", active: hasUsbPort, setter: setHasUsbPort },
+                { label: "Sunroof", icon: "sunny-outline", active: hasSunroof, setter: setHasSunroof },
+                { label: "Heated seats", icon: "thermometer-outline", active: hasHeatedSeats, setter: setHasHeatedSeats },
+                { label: "Leather seats", icon: "shirt-outline", active: hasLeatherSeats, setter: setHasLeatherSeats },
+                { label: "Child seat", icon: "people-outline", active: hasChildSeat, setter: setHasChildSeat },
+                { label: "Pet friendly", icon: "paw-outline", active: hasPetFriendly, setter: setHasPetFriendly },
+                { label: "Ski rack", icon: "library-outline", active: hasSkiRack, setter: setHasSkiRack },
+                { label: "Bike rack", icon: "bicycle-outline", active: hasBikeRack, setter: setHasBikeRack },
+                { label: "Snow tires", icon: "snow-outline", active: hasSnowTires, setter: setHasSnowTires },
+                { label: "Roof box", icon: "cube-outline", active: hasRoofBox, setter: setHasRoofBox },
+                { label: "Tow hitch", icon: "car-outline", active: hasTowHitch, setter: setHasTowHitch },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={[styles.toggleCard, item.active && styles.toggleCardActive]}
+                  onPress={() => item.setter(!item.active)}
+                >
+                  <View style={[styles.amenityIconWrap, item.active && styles.amenityIconWrapActive]}>
+                    <Ionicons name={item.icon as any} size={20} color={item.active ? "#FFFFFF" : NAVY} />
+                  </View>
+                  <Text style={[styles.toggleLabel, item.active && styles.toggleLabelActive]} numberOfLines={1} ellipsizeMode="tail">{item.label}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
             <Text style={styles.sectionTitle}>Features</Text>
@@ -1446,21 +1527,6 @@ export default function CreateListingScreen() {
                   <Ionicons name="add" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
-              <View style={styles.featureSuggestions}>
-                {["Bluetooth", "Backup camera", "USB charging", "Heated seats", "Sunroof", "Roof rack", "Tow hitch", "Leather seats"].map((suggestion) => (
-                  <TouchableOpacity
-                    key={suggestion}
-                    style={styles.featureSuggestionChip}
-                    onPress={() => {
-                      if (!features.includes(suggestion)) {
-                        setFeatures([...features, suggestion]);
-                      }
-                    }}
-                  >
-                    <Text style={styles.featureSuggestionText}>{suggestion}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
               {features.length > 0 && (
                 <View style={styles.featureChips}>
                   {features.map((feature) => (
@@ -1469,6 +1535,9 @@ export default function CreateListingScreen() {
                       style={styles.featureChip}
                       onPress={() => removeFeature(feature)}
                     >
+                      <View style={styles.featureIconWrap}>
+                        <Ionicons name={getFeatureIcon(feature) as any} size={14} color={NAVY} />
+                      </View>
                       <Text style={styles.featureChipText}>{feature}</Text>
                       <Ionicons name="close" size={14} color="#6B7280" />
                     </TouchableOpacity>
@@ -1554,7 +1623,21 @@ export default function CreateListingScreen() {
             {automationLoading && analysisProgress ? (
               <View style={styles.analysisOverlay}>
                 <View style={styles.analysisContentInline}>
-                  <View style={styles.analysisSpinner} />
+                  <Animated.View
+                    style={[
+                      styles.analysisSpinner,
+                      {
+                        transform: [
+                          {
+                            rotate: spinAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ["0deg", "360deg"],
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  />
                   <Text style={styles.analysisText}>{analysisProgress || "Analyzing vehicle..."}</Text>
                 </View>
               </View>
@@ -1579,11 +1662,38 @@ export default function CreateListingScreen() {
                   placeholderTextColor="#9CA3AF"
                   keyboardType="number-pad"
                 />
-                <TouchableOpacity style={styles.suggestButton} onPress={handlePriceSuggestion} disabled={automationLoading}>
-                  <Ionicons name="bulb-outline" size={20} color="#FFFFFF" />
-                  <Text style={styles.suggestButtonText}>Suggest</Text>
+                <TouchableOpacity 
+                  style={[styles.suggestButton, automationLoading && styles.suggestButtonDisabled]} 
+                  onPress={handlePriceSuggestion} 
+                  disabled={automationLoading}
+                >
+                  {automationLoading ? (
+                    <Animated.View
+                      style={[
+                        styles.suggestButtonSpinner,
+                        {
+                          transform: [
+                            {
+                              rotate: spinAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ["0deg", "360deg"],
+                              }),
+                            },
+                          ],
+                        },
+                      ]}
+                    />
+                  ) : (
+                    <>
+                      <Ionicons name="bulb-outline" size={18} color="#FFFFFF" />
+                      <Text style={styles.suggestButtonText}>AI Suggest</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
               </View>
+              {automationLoading && analysisProgress ? (
+                <Text style={styles.analysisProgressText}>{analysisProgress}</Text>
+              ) : null}
             </View>
 
             {serviceType === "rent" && (
@@ -1875,25 +1985,27 @@ export default function CreateListingScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Booking Type</Text>
             <Text style={styles.sectionHelper}>Choose how guests can book your vehicle.</Text>
-            {BOOKING_MODES.map((mode) => (
-              <TouchableOpacity
-                key={mode.value}
-                style={[styles.bookingModeCard, bookingMode === mode.value && styles.bookingModeCardActive]}
-                onPress={() => setBookingMode(mode.value as "request" | "instant")}
-              >
-                <View style={styles.bookingModeLeft}>
-                  <View style={[styles.radioOuter, bookingMode === mode.value && styles.radioOuterActive]}>
-                    {bookingMode === mode.value && <View style={styles.radioInner} />}
+            <View style={styles.bookingModeGrid}>
+              {BOOKING_MODES.map((mode) => (
+                <TouchableOpacity
+                  key={mode.value}
+                  style={[styles.bookingModeCard, bookingMode === mode.value && styles.bookingModeCardActive]}
+                  onPress={() => setBookingMode(mode.value as "request" | "instant")}
+                >
+                  <View style={styles.bookingModeLeft}>
+                    <View style={[styles.radioOuter, bookingMode === mode.value && styles.radioOuterActive]}>
+                      {bookingMode === mode.value && <View style={styles.radioInner} />}
+                    </View>
+                    <View>
+                      <Text style={[styles.bookingModeLabel, bookingMode === mode.value && styles.bookingModeLabelActive]}>
+                        {mode.label}
+                      </Text>
+                      <Text style={styles.bookingModeDesc}>{mode.desc}</Text>
+                    </View>
                   </View>
-                  <View>
-                    <Text style={[styles.bookingModeLabel, bookingMode === mode.value && styles.bookingModeLabelActive]}>
-                      {mode.label}
-                    </Text>
-                    <Text style={styles.bookingModeDesc}>{mode.desc}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              ))}
+            </View>
 
             <Text style={styles.sectionTitle}>Advance Notice</Text>
             <Text style={styles.sectionHelper}>How much notice do you need before a booking starts?</Text>
@@ -2122,17 +2234,29 @@ export default function CreateListingScreen() {
             style={[
               styles.primaryButton,
               !canProceed() && styles.primaryButtonDisabled,
-              step === 8 && styles.primaryButtonPublish,
+              automationLoading && styles.primaryButtonDisabled,
             ]}
             onPress={step === 8 ? handleSubmit : nextStep}
-            disabled={!canProceed() || saving}
+            disabled={!canProceed() || saving || automationLoading}
           >
             <Text style={styles.primaryButtonText}>
-              {saving ? "Publishing..." : step === 8 ? "Publish listing" : "Continue"}
+              {saving ? "Publishing..." : step === 8 ? "Publish" : "Continue"}
             </Text>
           </TouchableOpacity>
         )}
       </View>
+      <PlateScanBottomSheet
+        visible={showPlateSheet}
+        onClose={() => setShowPlateSheet(false)}
+        onTakePhoto={() => captureOrPickPlate("camera")}
+        onChoosePhoto={() => captureOrPickPlate("library")}
+      />
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </View>
       )}
     </View>
@@ -2319,18 +2443,37 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 4,
   },
+  amenityIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginRight: 8,
+  },
+  amenityIconWrapActive: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderColor: "rgba(255,255,255,0.3)",
+  },
   toggleCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFFFF",
     flex: 1,
     minWidth: "45%",
+  },
+  toggleCardActive: {
+    backgroundColor: NAVY,
+    borderColor: NAVY,
   },
   toggleRow: {
     flexDirection: "row",
@@ -2353,8 +2496,11 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "NAVY,",
+    fontWeight: "600",
+    color: NAVY,
+  },
+  toggleLabelActive: {
+    color: "#FFFFFF",
   },
   toggleLabelHelper: {
     fontSize: 12,
@@ -2394,6 +2540,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#374151",
+  },
+  featureIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   featureSuggestions: {
     flexDirection: "row",
@@ -2629,10 +2785,30 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: NAVY,
   },
+  suggestButtonDisabled: {
+    backgroundColor: "#9CA3AF",
+  },
+  suggestButtonSpinner: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderTopColor: "#FFFFFF",
+  },
   suggestButtonText: {
     fontSize: 13,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  analysisProgressText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginTop: 6,
+  },
+  bookingModeGrid: {
+    gap: 12,
   },
   licensePlateRow: {
     flexDirection: "row",
@@ -2646,6 +2822,14 @@ const styles = StyleSheet.create({
     backgroundColor: NAVY,
     alignItems: "center",
     justifyContent: "center",
+  },
+  scanButtonSpinner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2.5,
+    borderColor: "#E5E7EB",
+    borderTopColor: "#FFFFFF",
   },
   locationSearchContainer: {
     position: "relative",
@@ -2903,9 +3087,6 @@ const styles = StyleSheet.create({
   primaryButtonDisabled: {
     backgroundColor: "#D1D5DB",
   },
-  primaryButtonPublish: {
-    backgroundColor: "#E11D48",
-  },
   primaryButtonText: {
     fontSize: 15,
     fontWeight: "700",
@@ -2936,9 +3117,14 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#F97316",
     alignItems: "center",
     justifyContent: "center",
+  },
+  publishedIconActive: {
+    backgroundColor: "#F97316",
+  },
+  publishedIconDraft: {
+    backgroundColor: "#6B7280",
   },
   publishedTitle: {
     fontSize: 24,

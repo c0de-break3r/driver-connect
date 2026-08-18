@@ -11,7 +11,6 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import messages3dIcon from "@/assets/images/illustrator-icons/3dicons-chat-text.png";
 import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
@@ -138,7 +137,6 @@ export default function MessagesScreen() {
           </TouchableOpacity>
         </View>
         <EmptyState
-          image={messages3dIcon}
           title="You don't have any messages"
           subtitle="When you receive a new message, it will appear here."
         />

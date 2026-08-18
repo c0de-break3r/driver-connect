@@ -5,12 +5,15 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Animated } from "react-native";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 import Toast from "@/components/Toast";
 import { getPendingVehicleTripDates, clearPendingVehicleTripDates } from "@/lib/tripDateBridge";
 import { useCallback } from "react";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -233,7 +236,9 @@ export default function VehicleDetailsScreen() {
     api.jobs.getVehicle,
     staticVehicle || !looksLikeConvexId ? "skip" : { id: vehicleId as any }
   );
-  const rawVehicle = (convexVehicle ?? staticVehicle) || VEHICLES[0];
+  const rawVehicleParam = params.vehicle;
+  const vehicleParam = typeof rawVehicleParam === "string" ? JSON.parse(rawVehicleParam) : Array.isArray(rawVehicleParam) ? JSON.parse(rawVehicleParam[0]) : null;
+  const rawVehicle = (vehicleParam || (convexVehicle ?? staticVehicle)) || VEHICLES[0];
   const anyVehicle = rawVehicle as any;
   const vehicle = (anyVehicle
     ? {
@@ -243,6 +248,7 @@ export default function VehicleDetailsScreen() {
         originalPrice: anyVehicle.pricePerWeek ? `GH₵ ${anyVehicle.pricePerWeek}` : anyVehicle.originalPrice,
         location: anyVehicle.location ?? anyVehicle.city,
         image: anyVehicle.image || anyVehicle.images?.[0] || "",
+        images: Array.isArray(anyVehicle.images) ? anyVehicle.images : anyVehicle.images ? [anyVehicle.images] : [],
         subtitle: anyVehicle.subtitle || `${anyVehicle.make} ${anyVehicle.model}`,
         trips: anyVehicle.trips ?? anyVehicle.reviewCount ?? 0,
         fuel: anyVehicle.fuel || anyVehicle.fuelType || "",
@@ -256,10 +262,10 @@ export default function VehicleDetailsScreen() {
     : VEHICLES[0]) as any;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
+
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
   const [authVisible, setAuthVisible] = useState(false);
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
+  const { toast, showToast, hideToast } = useToast();
   const heartScale = useRef(new Animated.Value(1)).current;
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [expandedReviews, setExpandedReviews] = useState<Record<number, boolean>>({});
@@ -270,12 +276,10 @@ export default function VehicleDetailsScreen() {
   const [pickupTime, setPickupTime] = useState("10:00 am");
   const [returnTime, setReturnTime] = useState("10:00 am");
   const [assignedDriver, setAssignedDriver] = useState<{ id?: string; name?: string } | null>(null);
-  const relatedNavRef = useRef(false);
 
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
-  };
+  const handleRelatedVehiclePress = useDoubleTap((relatedId: string) => {
+    router.push(`/vehicle-details?id=${relatedId}`);
+  });
 
   // Fullscreen gallery state
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
@@ -283,6 +287,8 @@ export default function VehicleDetailsScreen() {
   const fullscreenAnim = useRef(new Animated.Value(0)).current;
 
   const { signedIn } = useAuth();
+  const isFavorited = useFavoritesStore((state) => state.isFavorite(vehicle.id));
+  const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
 
   useEffect(() => {
     setCurrentImageIndex(0);
@@ -334,14 +340,8 @@ export default function VehicleDetailsScreen() {
       setAuthVisible(true);
       return;
     }
-    router.push(`/favorites/save-to-favorites?vehicle=${encodeURIComponent(JSON.stringify({
-      id: vehicle.id,
-      title: vehicle.title,
-      image: vehicle.images?.[0] || "",
-      price: vehicle.price,
-      location: vehicle.location,
-      rating: vehicle.rating,
-    }))}` as any);
+    toggleFavorite(vehicle.id);
+    showToast(isFavorited ? "Removed from favorites" : "Added to favorites", "success");
   };
 
   const handleAuthDismiss = () => {
@@ -360,6 +360,14 @@ export default function VehicleDetailsScreen() {
         vehicleTitle: vehicle.title,
       },
     } as any);
+  };
+
+  const handleContactHost = () => {
+    showToast("Opening chat with host...", "info");
+  };
+
+  const handlePayHost = () => {
+    showToast("Payment options: Online (Mobile Money/Card) or Cash on pickup", "info");
   };
 
   const panResponder = useRef(
@@ -457,9 +465,9 @@ export default function VehicleDetailsScreen() {
               <Pressable style={styles.iconButton} onPress={handleFavorite}>
                 <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                   <Ionicons
-                    name={isFavorite ? "heart" : "heart-outline"}
+                    name={isFavorited ? "heart" : "heart-outline"}
                     size={22}
-                    color={isFavorite ? "#E74C3C" : "#FFFFFF"}
+                    color={isFavorited ? "#E74C3C" : "#FFFFFF"}
                   />
                 </Animated.View>
               </Pressable>
@@ -697,12 +705,7 @@ export default function VehicleDetailsScreen() {
                 <Pressable
                   key={related.id}
                   style={styles.relatedCard}
-                  onPress={() => {
-                    if (relatedNavRef.current) return;
-                    relatedNavRef.current = true;
-                    setTimeout(() => { relatedNavRef.current = false; }, 600);
-                    router.push(`/vehicle-details?id=${related.id}`);
-                  }}
+                  onPress={() => handleRelatedVehiclePress(related.id)}
                 >
                   <Image source={{ uri: related.images[0] }} style={styles.relatedImage} contentFit="cover" />
                   <View style={styles.relatedBody}>
@@ -721,6 +724,16 @@ export default function VehicleDetailsScreen() {
 
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
+        <View style={styles.bottomLeft}>
+          <Pressable style={styles.iconActionButton} onPress={handleContactHost}>
+            <Ionicons name="chatbubble-outline" size={20} color={NAVY} />
+            <Text style={styles.iconActionText}>Contact</Text>
+          </Pressable>
+          <Pressable style={styles.iconActionButton} onPress={handlePayHost}>
+            <Ionicons name="card-outline" size={20} color={NAVY} />
+            <Text style={styles.iconActionText}>Pay</Text>
+          </Pressable>
+        </View>
         <View style={styles.priceInfo}>
           <Text style={styles.originalPrice}>{vehicle.originalPrice || vehicle.price}</Text>
           <Text style={styles.totalPrice}>{vehicle.price}</Text>
@@ -787,7 +800,7 @@ export default function VehicleDetailsScreen() {
         visible={toast.visible}
         message={toast.message}
         type={toast.type}
-        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+        onHide={hideToast}
       />
     </Animated.View>
   );
@@ -1310,6 +1323,28 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 20,
+  },
+  bottomLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginRight: 12,
+  },
+  iconActionButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  iconActionText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: NAVY,
   },
   bottomBar: {
     position: "absolute",

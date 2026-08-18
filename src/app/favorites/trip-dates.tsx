@@ -12,6 +12,7 @@ import { addDriverAssignment } from "@/lib/driverAssignmentsBridge";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { DRIVERS } from "@/data/drivers";
 import Toast from "@/components/Toast";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 const ORANGE = "#F97316";
@@ -32,6 +33,7 @@ export default function TripDatesScreen() {
   const params = useLocalSearchParams();
   const collectionId = params.collectionId as string | undefined;
   const source = params.source as string | undefined;
+  const vehicleId = params.vehicleId as string | undefined;
 
   const updateCollectionTripDates = useFavoritesStore((state) => state.updateCollectionTripDates);
   const setActiveTab = useHomeStore((state) => state.setActiveTab);
@@ -45,7 +47,7 @@ export default function TripDatesScreen() {
   const [selectedEnd, setSelectedEnd] = useState<string | null>(null);
   const [pickupTime, setPickupTime] = useState("10:00 am");
   const [returnTime, setReturnTime] = useState("10:00 am");
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
+  const { toast, showToast, hideToast } = useToast();
 
   const defaultPickupDate = params.defaultPickupDate as string | undefined;
   const defaultReturnDate = params.defaultReturnDate as string | undefined;
@@ -63,11 +65,6 @@ export default function TripDatesScreen() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const notificationIdRef = useRef(0);
-
-  const showToast = useCallback((message: string, type: "success" | "error" | "info" | "warning" = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
-  }, []);
 
   const daysInMonth = useMemo(() => {
     const monthIndex = viewMonthIndex;
@@ -188,10 +185,27 @@ export default function TripDatesScreen() {
       endTime: returnTime,
     });
 
+    const pickupDateStr = selectedStart ? formatDate(selectedStart) : defaultPickupDate || "Select date";
+    const returnDateStr = selectedEnd ? formatDate(selectedEnd) : defaultReturnDate || "Select date";
+
+    if (vehicleId) {
+      setPendingVehicleTripDates({
+        pickupDate: pickupDateStr,
+        returnDate: returnDateStr,
+        pickupTime,
+        returnTime,
+        vehicleId,
+        vehicleTitle: vehicleTitle || "Vehicle booking",
+      });
+      showToast("Trip dates confirmed", "success");
+      router.push(`/vehicle-details?id=${vehicleId}`);
+      return;
+    }
+
     showToast("Trip dates confirmed", "success");
     setActiveTab("favorites");
     router.replace(`/favorites/collection/${collectionId}`);
-  }, [source, vehicles, selectedVehicleId, selectedStart, selectedEnd, defaultPickupDate, defaultReturnDate, pickupTime, returnTime, selectedDriverId, vehicleTitle, collectionId, updateCollectionTripDates, showToast, setActiveTab]);
+  }, [source, vehicles, selectedVehicleId, selectedStart, selectedEnd, defaultPickupDate, defaultReturnDate, pickupTime, returnTime, selectedDriverId, vehicleTitle, collectionId, vehicleId, updateCollectionTripDates, showToast, setActiveTab]);
 
   const handleDayPress = (day: number | null) => {
     if (!day) return;
@@ -462,7 +476,7 @@ export default function TripDatesScreen() {
         visible={toast.visible}
         message={toast.message}
         type={toast.type}
-        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+        onHide={hideToast}
       />
     </View>
   );

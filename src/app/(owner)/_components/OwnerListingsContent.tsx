@@ -16,6 +16,9 @@ import {
 } from "react-native";
 import { images } from "@/constants/images";
 import EmptyState from "@/components/EmptyState";
+import Toast from "@/components/Toast";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 
@@ -28,6 +31,8 @@ function getStatusColor(status: string) {
     case "active":
       return "#F97316";
     case "inactive":
+      return "#6B7280";
+    case "draft":
       return "#6B7280";
     default:
       return "#F59E0B";
@@ -45,30 +50,60 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
 
   const deleteVehicle = useMutation(api.jobs.deleteVehicle);
   const toggleStatus = useMutation(api.jobs.toggleVehicleStatus);
+  const updateVehicle = useMutation(api.jobs.updateVehicle);
 
-  const handleDelete = async (vehicleId: any) => {
-    await deleteVehicle({ vehicleId });
+  const { toast, showToast, hideToast } = useToast();
+
+  const handlePublishDraft = async (vehicleId: any) => {
+    try {
+      await updateVehicle({ vehicleId, status: "active" });
+      showToast("Listing published successfully", "success");
+    } catch {
+      showToast("Failed to publish listing", "error");
+    }
   };
 
-  const handleToggleStatus = async (vehicleId: any, currentStatus: string) => {
+  const handleDelete = useDoubleTap(async (vehicleId: any) => {
+    await deleteVehicle({ vehicleId });
+  });
+
+  const handleToggleStatus = useDoubleTap(async (vehicleId: any, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     await toggleStatus({ vehicleId, status: newStatus });
-  };
+  });
 
-  const handleOpenSettings = (vehicleId: any) => {
+  const handleOpenSettings = useDoubleTap((vehicleId: any) => {
     router.push({ pathname: "/(owner)/listing-settings", params: { vehicleId } } as any);
-  };
+  });
 
-  const handleOpenCalendar = (vehicleId: any) => {
+  const handleOpenCalendar = useDoubleTap((vehicleId: any) => {
     router.push({ pathname: "/(owner)/availability-calendar", params: { vehicleId } } as any);
-  };
+  });
+
+  const handleEditPress = useDoubleTap((vehicleId: any) => {
+    router.push({ pathname: "/create-listing", params: { vehicleId } } as any);
+  });
+
+  const handleAddListing = useDoubleTap(() => {
+    router.push("/create-listing" as any);
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchWidthAnim = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef<TextInput>(null);
 
-  const toggleSearch = () => {
+  const handleClearSearch = useDoubleTap(() => {
+    setSearchQuery("");
+    setSearchExpanded(false);
+    Animated.timing(searchWidthAnim, {
+      toValue: 0,
+      duration: 240,
+      useNativeDriver: false,
+    }).start();
+  });
+
+  const handleToggleSearch = useDoubleTap(() => {
     if (searchExpanded) {
       setSearchExpanded(false);
       Animated.timing(searchWidthAnim, {
@@ -87,17 +122,7 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
         searchInputRef.current?.focus();
       });
     }
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchExpanded(false);
-    Animated.timing(searchWidthAnim, {
-      toValue: 0,
-      duration: 240,
-      useNativeDriver: false,
-    }).start();
-  };
+  });
 
   return (
     <View>
@@ -112,9 +137,12 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
                 }),
                 position: "absolute",
                 left: 0,
+                top: 0,
+                bottom: 0,
+                justifyContent: "center",
               }}
             >
-              <TouchableOpacity onPress={toggleSearch} hitSlop={8}>
+              <TouchableOpacity onPress={handleToggleSearch} hitSlop={8}>
                 <Ionicons name="search" size={22} color={NAVY} />
               </TouchableOpacity>
             </Animated.View>
@@ -151,7 +179,7 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
             <TouchableOpacity hitSlop={8} style={styles.iconButton}>
               <Ionicons name="pencil-outline" size={22} color="#374151" />
             </TouchableOpacity>
-            <TouchableOpacity hitSlop={8} style={styles.addButton} onPress={() => router.push("/create-listing" as any)}>
+            <TouchableOpacity hitSlop={8} style={styles.addButton} onPress={handleAddListing}>
               <Ionicons name="add" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -159,13 +187,16 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
       )}
 
       {!vehicles || vehicles.length === 0 ? (
-        <EmptyState
-          image={images.benz}
-          title="No listings yet"
-          subtitle="Create your first vehicle listing to start receiving bookings."
-          ctaText="Add a vehicle"
-          onCtaPress={() => router.push("/create-listing" as any)}
-        />
+        <View style={styles.emptyStateNoScroll}>
+          <EmptyState
+            image={images.benz}
+            title="No listings yet"
+            subtitle="Create your first vehicle listing to start receiving bookings."
+            ctaText="Add a vehicle"
+            onCtaPress={handleAddListing}
+            compact
+          />
+        </View>
       ) : (
         <ScrollView
           contentContainerStyle={styles.listingsList}
@@ -218,14 +249,18 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
                 </Text>
 
                 <View style={styles.listingActions}>
+                  {vehicle.status === "draft" && (
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.publishActionButton]}
+                      onPress={() => handlePublishDraft(vehicle._id)}
+                    >
+                      <Ionicons name="rocket-outline" size={16} color="#FFFFFF" />
+                      <Text style={styles.publishActionButtonText}>Publish</Text>
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/create-listing",
-                        params: { vehicleId: vehicle._id },
-                      } as any)
-                    }
+                    onPress={() => handleEditPress(vehicle._id)}
                   >
                     <Ionicons name="pencil-outline" size={16} color={NAVY} />
                     <Text style={styles.actionButtonText}>Edit</Text>
@@ -272,6 +307,12 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
           ))}
         </ScrollView>
       )}
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </View>
   );
 }
@@ -281,7 +322,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginHorizontal: 20,
+    marginTop: 0,
+    marginBottom: 16,
   },
   headerLeft: {
     flexDirection: "row",
@@ -292,24 +335,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    flexShrink: 1,
   },
   searchExpandWrap: {
     overflow: "hidden",
-    height: 40,
+    height: 44,
     justifyContent: "center",
+    flex: 1,
+    marginRight: 12,
   },
   searchInputWrap: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#F8F8F8",
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
-    paddingLeft: 8,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    height: 40,
-    borderWidth: 2,
-    borderColor: NAVY,
+    height: 44,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
   },
   searchInput: {
     flex: 1,
@@ -377,6 +422,9 @@ const styles = StyleSheet.create({
   },
   listingsList: {
     gap: 16,
+  },
+  emptyStateNoScroll: {
+    flex: 1,
   },
   listingCard: {
     backgroundColor: "#F9FAFB",
@@ -483,5 +531,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: NAVY,
+  },
+  publishActionButton: {
+    backgroundColor: NAVY,
+  },
+  publishActionButtonText: {
+    color: "#FFFFFF",
   },
 });

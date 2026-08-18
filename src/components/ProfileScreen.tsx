@@ -49,8 +49,12 @@ const menuItems: MenuItem[] = [
 
 export default function ProfileScreen({
   onSwitchingRoleChange,
+  signedIn,
+  openAuth,
 }: {
   onSwitchingRoleChange?: (isSwitching: boolean) => void;
+  signedIn?: boolean;
+  openAuth?: () => void;
 }) {
   const { firstName, email, signOut } = useAuth();
   const role = useRoleStore((state) => state.role);
@@ -134,21 +138,69 @@ export default function ProfileScreen({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerSpacer} />
-          <TouchableOpacity onPress={handleNotificationPress} hitSlop={8} style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={22} color={NAVY} />
-            {unreadNotificationCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
+        {!signedIn ? (
+          <View style={styles.gatewaySection}>
+            <View style={styles.gatewayHeaderRow}>
+              <View style={styles.headerSpacer} />
+              <TouchableOpacity onPress={handleNotificationPress} hitSlop={8} style={styles.notificationButton}>
+                <Ionicons name="notifications-outline" size={22} color={NAVY} />
+                {unreadNotificationCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
 
-        <View style={styles.profileSection}>
+            <View style={styles.gatewayProfileSection}>
+              <View style={styles.avatarRing}>
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarInitial}>?</Text>
+                </View>
+              </View>
+              <Text style={styles.profileName}>Guest</Text>
+              <View style={styles.roleBadge}>
+                <Text style={styles.roleBadgeText}>Not signed in</Text>
+              </View>
+            </View>
+
+            <Text style={styles.gatewayTitle}>Create an account or log in</Text>
+            <Text style={styles.gatewaySubtitle}>
+              Sign in to manage bookings, save favorites, and access your profile across devices.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                openAuth?.();
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.primaryButtonText}>Log In / Sign Up</Text>
+            </TouchableOpacity>
+
+
+          </View>
+        ) : (
+          <>
+            <View style={styles.headerRow}>
+              <View style={styles.headerSpacer} />
+              <TouchableOpacity onPress={handleNotificationPress} hitSlop={8} style={styles.notificationButton}>
+                <Ionicons name="notifications-outline" size={22} color={NAVY} />
+                {unreadNotificationCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.profileSection}>
           <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.85} style={styles.avatarContainer}>
             <View style={styles.avatarRing}>
               {avatarUri ? (
@@ -210,6 +262,8 @@ export default function ProfileScreen({
           </View>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
+            </>
+          )}
       </ScrollView>
 
       <SwitchRoleBottomSheet
@@ -407,5 +461,60 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#E74C3C",
+  },
+  gatewaySection: {
+    paddingHorizontal: 4,
+    paddingTop: 4,
+  },
+  gatewayHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  gatewayProfileSection: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  gatewayTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: NAVY,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  gatewaySubtitle: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 24,
+    paddingHorizontal: 8,
+    lineHeight: 22,
+  },
+  primaryButton: {
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  primaryButtonText: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  gatewayDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#E5E7EB",
+    marginVertical: 12,
+  },
+  gatewayDividerText: {
+    textAlign: "center",
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#9CA3AF",
+    marginVertical: 4,
   },
 });

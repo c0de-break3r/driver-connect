@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
 import DriverMessagesScreen from "./messages";
 import { createCardStyle, createBadgeStyle, PressableCard, SectionHeader, StatusBadge, Divider } from "@/components/DesignSystem";
 
@@ -29,6 +30,14 @@ const DRIVER_TABS = [
 
 export default function DriverDashboard() {
   const router = useRouter();
+
+  const handleNotificationsPress = useDoubleTap(() => {
+    router.push("/notifications" as any);
+  });
+
+  const handleProfilePress = useDoubleTap(() => {
+    router.push("/(driver)/profile" as any);
+  });
 
   const {
     activeTab,
@@ -381,12 +390,12 @@ export default function DriverDashboard() {
             <TouchableOpacity
               hitSlop={8}
               style={styles.notificationButton}
-              onPress={() => router.push("/notifications" as any)}
+              onPress={handleNotificationsPress}
             >
               <Ionicons name="notifications-outline" size={22} color={NAVY} />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {}}
+              onPress={handleProfilePress}
               activeOpacity={0.85}
               style={styles.headerAvatarButton}
             >
@@ -402,7 +411,7 @@ export default function DriverDashboard() {
         <View style={createCardStyle()}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => router.push("/(driver)/profile" as any)}
+            onPress={handleProfilePress}
           >
             <View style={styles.menuIconWrap}>
               <Ionicons name="person-outline" size={20} color={NAVY} />

@@ -10,6 +10,7 @@ import Toast from "@/components/Toast";
 import { getPendingVehicleTripDates, clearPendingVehicleTripDates } from "@/lib/tripDateBridge";
 import { getDriverAssignments, acceptDriverAssignment, declineDriverAssignment } from "@/lib/driverAssignmentsBridge";
 import { DRIVERS } from "@/data/drivers";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -27,13 +28,8 @@ export default function DriverDetailsScreen() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
   const [authVisible, setAuthVisible] = useState(false);
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
+  const { toast, showToast, hideToast } = useToast();
   const heartScale = useRef(new Animated.Value(1)).current;
-
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
-  };
 
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const fullscreenScrollRef = useRef<ScrollView>(null);
@@ -526,7 +522,7 @@ export default function DriverDetailsScreen() {
         visible={toast.visible}
         message={toast.message}
         type={toast.type}
-        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+        onHide={hideToast}
       />
     </View>
   );

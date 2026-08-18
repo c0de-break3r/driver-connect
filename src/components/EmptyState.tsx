@@ -11,6 +11,7 @@ type EmptyStateProps = {
   subtitle?: string;
   ctaText?: string;
   onCtaPress?: () => void;
+  compact?: boolean;
 };
 
 export default function EmptyState({
@@ -19,12 +20,13 @@ export default function EmptyState({
   subtitle,
   ctaText,
   onCtaPress,
+  compact = false,
 }: EmptyStateProps) {
   return (
     <View style={styles.emptyState}>
       {image && (
-        <View style={styles.illustrationWrap}>
-          <Image source={image} style={styles.emptyImage} contentFit="contain" />
+        <View style={[styles.illustrationWrap, compact && styles.illustrationWrapCompact]}>
+          <Image source={image} style={[styles.emptyImage, compact && styles.emptyImageCompact]} contentFit="contain" />
         </View>
       )}
       <Text style={styles.emptyTitle}>{title}</Text>
@@ -47,10 +49,16 @@ const styles = StyleSheet.create({
   illustrationWrap: {
     marginBottom: 24,
   },
+  illustrationWrapCompact: {
+    marginBottom: 8,
+  },
   emptyImage: {
     width: 240,
     height: 240,
     marginBottom: 24,
+  },
+  emptyImageCompact: {
+    marginBottom: 8,
   },
   emptyTitle: {
     fontSize: 22,

@@ -11,8 +11,6 @@ import MessagesScreen from "@/components/MessagesScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import { useAppStateStore } from "@/store/useAppStateStore";
 import FavoritesScreen from "@/components/FavoritesScreen";
-import EmptyState from "@/components/EmptyState";
-import { images } from "@/constants/images";
 import RoleSwitchTransition from "@/components/RoleSwitchTransition";
 
 const NAVY = "#2C3E5B";
@@ -71,13 +69,23 @@ export default function HomeScreen() {
       }
       if (activeTab === "favorites") {
         return (
-          <EmptyState
-            image={images.favoritesHeart}
-            title="No favorites"
-            subtitle="Log in to view your favorites. You can save, view, or edit favorites once you've logged in."
-            ctaText="Log in"
-            onCtaPress={openAuth}
-          />
+          <View style={styles.centerContent}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="heart-outline" size={48} color={NAVY} />
+            </View>
+            <Text style={styles.emptyTitle}>No favorites</Text>
+            <Text style={styles.emptySubtitle}>
+              Log in to view your favorites. You can save, view, or edit favorites once you&apos;ve logged in.
+            </Text>
+            <Pressable
+              style={styles.emptyCta}
+              onPress={() => {
+                openAuth();
+              }}
+            >
+              <Text style={styles.emptyCtaText}>Log in</Text>
+            </Pressable>
+          </View>
         );
       }
       if (activeTab === "trips") {
@@ -88,8 +96,16 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.emptyTitle}>No trips yet</Text>
             <Text style={styles.emptySubtitle}>
-              Log in to view and manage your upcoming trips.
+              Your upcoming vehicle bookings and driver hires will appear here once you confirm a booking.
             </Text>
+            <Pressable
+              style={styles.emptyCta}
+              onPress={() => {
+                openAuth();
+              }}
+            >
+              <Text style={styles.emptyCtaText}>Log in</Text>
+            </Pressable>
           </View>
         );
       }
@@ -103,20 +119,24 @@ export default function HomeScreen() {
             <Text style={styles.emptySubtitle}>
               Log in to view and send messages to hosts and drivers.
             </Text>
+            <Pressable
+              style={styles.emptyCta}
+              onPress={() => {
+                openAuth();
+              }}
+            >
+              <Text style={styles.emptyCtaText}>Log in</Text>
+            </Pressable>
           </View>
         );
       }
       if (activeTab === "profile") {
         return (
-          <View style={styles.centerContent}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="person-outline" size={48} color={NAVY} />
-            </View>
-            <Text style={styles.emptyTitle}>No profile</Text>
-            <Text style={styles.emptySubtitle}>
-              Log in to access your profile and manage your bookings.
-            </Text>
-          </View>
+          <ProfileScreen
+            onSwitchingRoleChange={setIsSwitchingRole}
+            signedIn={false}
+            openAuth={openAuth}
+          />
         );
       }
     }
@@ -145,7 +165,11 @@ export default function HomeScreen() {
     }
     if (activeTab === "profile") {
       return (
-        <ProfileScreen onSwitchingRoleChange={setIsSwitchingRole} />
+        <ProfileScreen
+          onSwitchingRoleChange={setIsSwitchingRole}
+          signedIn={signedIn}
+          openAuth={openAuth}
+        />
       );
     }
 
@@ -320,5 +344,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
     paddingHorizontal: 12,
+  },
+  emptyCta: {
+    marginTop: 16,
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 14,
+  },
+  emptyCtaText: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

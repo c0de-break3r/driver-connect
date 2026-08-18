@@ -6,6 +6,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { useHomeStore } from "@/store/useHomeStore";
 import Toast from "@/components/Toast";
+import { useToast } from "@/hooks/useToast";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -24,12 +25,7 @@ export default function NameListScreen() {
 
   const [listName, setListName] = useState("");
   const [vehicle, setVehicle] = useState<any>(null);
-  const [toast, setToast] = useState<{ visible: boolean; message: string; type: "success" | "error" | "info" | "warning" }>({ visible: false, message: "", type: "success" });
-
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => setToast({ visible: false, message: "", type: "success" }), 2500);
-  };
+  const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
     if (vehicleParam) {
@@ -120,7 +116,7 @@ export default function NameListScreen() {
         visible={toast.visible}
         message={toast.message}
         type={toast.type}
-        onHide={() => setToast({ visible: false, message: "", type: "success" })}
+        onHide={hideToast}
       />
     </KeyboardAvoidingView>
   );
