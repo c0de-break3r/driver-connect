@@ -135,3 +135,67 @@ export const getByReceiverInternal = query({
     return await ctx.db.get(args.messageId);
   },
 });
+
+export const getBookingMessages = query({
+  args: { bookingId: v.id("bookings") },
+  returns: v.array(
+    v.object({
+      _id: v.id("messages"),
+      _creationTime: v.number(),
+      bookingId: v.optional(v.id("bookings")),
+      senderId: v.string(),
+      receiverId: v.string(),
+      content: v.string(),
+      attachmentUrl: v.optional(v.string()),
+      isRead: v.boolean(),
+      readAt: v.optional(v.number()),
+      createdAt: v.number(),
+    })
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("messages")
+      .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))
+      .collect();
+  },
+});
+
+export const sendMessage = mutation({
+  args: {
+    bookingId: v.optional(v.id("bookings")),
+    senderId: v.string(),
+    receiverId: v.string(),
+    content: v.string(),
+  },
+  returns: v.id("messages"),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return await ctx.db.insert("messages", {
+      bookingId: args.bookingId,
+      senderId: args.senderId,
+      receiverId: args.receiverId,
+      content: args.content,
+      isRead: false,
+      createdAt: now,
+    });
+  },
+});
+
+export const markMessagesAsRead = mutation({
+  args: { bookingId: v.id("bookings"), receiverId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))
+      .collect();
+
+    const now = Date.now();
+    for (const msg of messages) {
+      if (msg.receiverId === args.receiverId && !msg.isRead) {
+        await ctx.db.patch(msg._id, { isRead: true, readAt: now });
+      }
+    }
+    return null;
+  },
+});

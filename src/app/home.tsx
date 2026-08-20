@@ -12,6 +12,7 @@ import ProfileScreen from "@/components/ProfileScreen";
 import { useAppStateStore } from "@/store/useAppStateStore";
 import FavoritesScreen from "@/components/FavoritesScreen";
 import RoleSwitchTransition from "@/components/RoleSwitchTransition";
+import TripsScreen from "@/components/TripsScreen";
 
 const NAVY = "#2C3E5B";
 
@@ -89,25 +90,7 @@ export default function HomeScreen() {
         );
       }
       if (activeTab === "trips") {
-        return (
-          <View style={styles.centerContent}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="calendar-outline" size={48} color={NAVY} />
-            </View>
-            <Text style={styles.emptyTitle}>No trips yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Your upcoming vehicle bookings and driver hires will appear here once you confirm a booking.
-            </Text>
-            <Pressable
-              style={styles.emptyCta}
-              onPress={() => {
-                openAuth();
-              }}
-            >
-              <Text style={styles.emptyCtaText}>Log in</Text>
-            </Pressable>
-          </View>
-        );
+        return <TripsScreen signedIn={signedIn} openAuth={openAuth} />;
       }
       if (activeTab === "messages") {
         return (
@@ -148,17 +131,7 @@ export default function HomeScreen() {
       return <FavoritesScreen />;
     }
     if (activeTab === "trips") {
-      return (
-        <View style={styles.centerContent}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="calendar-outline" size={48} color={NAVY} />
-          </View>
-          <Text style={styles.emptyTitle}>No trips yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Your upcoming trips will appear here once you make a booking.
-          </Text>
-        </View>
-      );
+      return <TripsScreen signedIn={signedIn} openAuth={openAuth} />;
     }
     if (activeTab === "messages") {
       return <MessagesScreen />;

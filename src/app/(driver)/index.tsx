@@ -16,6 +16,9 @@ import {
 import { useRouter } from "expo-router";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
 import DriverMessagesScreen from "./messages";
+import { useAuth } from "@/contexts/AuthProvider";
+import { useQuery } from "convex/react";
+import { api } from "@/lib/convexApi";
 import { createCardStyle, createBadgeStyle, PressableCard, SectionHeader, StatusBadge, Divider } from "@/components/DesignSystem";
 
 const NAVY = "#2C3E5B";
@@ -58,6 +61,17 @@ export default function DriverDashboard() {
     backTargetTab: "menu",
   });
 
+  const { userId } = useAuth();
+  const convexUser = useQuery(
+    api.users.getByUserId,
+    userId ? { userId } : "skip"
+  );
+
+  const driverBookings = useQuery(
+    api.jobs.getDriverBookings,
+    convexUser?._id ? { driverId: convexUser._id } : "skip"
+  );
+
   const renderJobsContent = () => {
     if (!signedIn) {
       return (
@@ -76,91 +90,94 @@ export default function DriverDashboard() {
       );
     }
 
-    const jobRequests = [
-      {
-        id: "1",
-        client: "Sarah Mwangi",
-        type: "Airport Transfer",
-        date: "Today, 3:00 PM",
-        pickup: "JKIA Terminal 1B",
-        dropoff: "Westlands, Nairobi",
-        vehicle: "Sedan",
-        fare: "KES 2,500",
-        status: "pending",
-      },
-      {
-        id: "2",
-        client: "James Ochieng",
-        type: "Corporate Ride",
-        date: "Tomorrow, 8:00 AM",
-        pickup: "CBD, Nairobi",
-        dropoff: "KICC",
-        vehicle: "SUV",
-        fare: "KES 4,200",
-        status: "pending",
-      },
-    ];
+    const jobCount = driverBookings?.length ?? 0;
 
     return (
       <View>
         <SectionHeader
           title="Job Requests"
-          subtitle={`${jobRequests.length} new request${jobRequests.length !== 1 && "s"} waiting for your response`}
+          subtitle={`${jobCount} new request${jobCount !== 1 && "s"} waiting for your response`}
         />
         <View style={styles.cardStack}>
-          {jobRequests.map((job) => (
-            <View key={job.id} style={createCardStyle()}>
-              <View style={styles.jobCardHeader}>
-                <View style={createBadgeStyle()}>
-                  <Ionicons name="car-outline" size={14} color={NAVY} />
-                  <Text style={styles.jobTypeText}>{job.type}</Text>
-                </View>
-                <StatusBadge label="Pending" tone="warning" />
-              </View>
-
-              <View style={styles.jobDetailRow}>
-                <View style={styles.jobDetailIcon}>
-                  <Ionicons name="person-outline" size={16} color="#6B7280" />
-                </View>
-                <Text style={styles.jobDetailText}>{job.client}</Text>
-              </View>
-
-              <View style={styles.jobDetailRow}>
-                <View style={styles.jobDetailIcon}>
-                  <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-                </View>
-                <Text style={styles.jobDetailText}>{job.date}</Text>
-              </View>
-
-              <View style={styles.jobDetailRow}>
-                <View style={styles.jobDetailIcon}>
-                  <Ionicons name="location-outline" size={16} color="#6B7280" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.jobDetailText} numberOfLines={1}>
-                    From: {job.pickup}
-                  </Text>
-                  <Text style={[styles.jobDetailText, { color: "#9CA3AF", fontSize: 13 }]} numberOfLines={1}>
-                    To: {job.dropoff}
-                  </Text>
-                </View>
-              </View>
-
-              <Divider />
-              <View style={styles.fareRow}>
-                <Text style={styles.fareLabel}>Estimated fare</Text>
-                <Text style={styles.fareValue}>{job.fare}</Text>
-              </View>
-              <View style={styles.jobActionRow}>
-                <PressableCard style={styles.declineButton}>
-                  <Text style={styles.declineButtonText}>Decline</Text>
-                </PressableCard>
-                <PressableCard style={styles.acceptButton}>
-                  <Text style={styles.acceptButtonText}>Accept</Text>
-                </PressableCard>
-              </View>
+          {!driverBookings ? (
+            <Text style={styles.loadingText}>Loading jobs...</Text>
+          ) : driverBookings.length === 0 ? (
+            <View style={styles.emptyStateWrap}>
+              <Text style={styles.emptyTitle}>No jobs yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Job requests will appear here when clients book you.
+              </Text>
             </View>
-          ))}
+          ) : (
+            driverBookings.map((booking) => {
+              const vehicle = booking.vehicle;
+              const statusTone = booking.status === "confirmed" ? "success" : booking.status === "pending" ? "warning" : booking.status === "in_progress" ? "info" : "neutral";
+              return (
+                <View key={booking._id} style={createCardStyle()}>
+                  <View style={styles.jobCardHeader}>
+                    <View style={createBadgeStyle()}>
+                      <Ionicons name="car-outline" size={14} color={NAVY} />
+                      <Text style={styles.jobTypeText}>{vehicle.category}</Text>
+                    </View>
+                    <StatusBadge label={booking.status.replace(/_/g, " ")} tone={statusTone as any} />
+                  </View>
+
+                  <View style={styles.jobDetailRow}>
+                    <View style={styles.jobDetailIcon}>
+                      <Ionicons name="person-outline" size={16} color="#6B7280" />
+                    </View>
+                    <Text style={styles.jobDetailText}>{vehicle.title}</Text>
+                  </View>
+
+                  <View style={styles.jobDetailRow}>
+                    <View style={styles.jobDetailIcon}>
+                      <Ionicons name="calendar-outline" size={16} color="#6B7280" />
+                    </View>
+                    <Text style={styles.jobDetailText}>
+                      {new Date(booking.startDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} — {new Date(booking.endDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </Text>
+                  </View>
+
+                  <View style={styles.jobDetailRow}>
+                    <View style={styles.jobDetailIcon}>
+                      <Ionicons name="location-outline" size={16} color="#6B7280" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.jobDetailText} numberOfLines={1}>
+                        From: {booking.pickupLocation}
+                      </Text>
+                      <Text style={[styles.jobDetailText, { color: "#9CA3AF", fontSize: 13 }]} numberOfLines={1}>
+                        To: {booking.dropoffLocation}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Divider />
+                  <View style={styles.fareRow}>
+                    <Text style={styles.fareLabel}>Total fare</Text>
+                    <Text style={styles.fareValue}>{booking.currency} {booking.totalAmount.toLocaleString()}</Text>
+                  </View>
+                  <View style={styles.jobActionRow}>
+                    {(booking.status === "pending" || booking.status === "confirmed") && (
+                      <>
+                        <PressableCard style={styles.declineButton}>
+                          <Text style={styles.declineButtonText}>Decline</Text>
+                        </PressableCard>
+                        <PressableCard style={styles.acceptButton}>
+                          <Text style={styles.acceptButtonText}>Accept</Text>
+                        </PressableCard>
+                      </>
+                    )}
+                    {booking.status === "in_progress" && (
+                      <PressableCard style={styles.acceptButton}>
+                        <Text style={styles.acceptButtonText}>Complete</Text>
+                      </PressableCard>
+                    )}
+                  </View>
+                </View>
+              );
+            })
+          )}
         </View>
       </View>
     );
@@ -728,6 +745,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
+  loadingText: { fontSize: 15, fontWeight: "600", color: "#6B7280", textAlign: "center", marginTop: 60 },
   primaryButtonText: {
     fontSize: 15,
     fontWeight: "700",

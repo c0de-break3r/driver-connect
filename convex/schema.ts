@@ -158,7 +158,7 @@ export default defineSchema({
     reviewCount: v.number(),
     totalBookings: v.number(),
     instantBook: v.boolean(),
-    advanceNotice: v.number(),
+    advanceNotice: v.optional(v.number()),
     minTripDuration: v.optional(v.number()),
     maxTripDuration: v.optional(v.number()),
     distanceLimit: v.optional(v.number()),

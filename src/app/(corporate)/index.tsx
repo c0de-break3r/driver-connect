@@ -13,6 +13,9 @@ import RoleSwitchTransition from "@/components/RoleSwitchTransition";
 import { useTabBounce } from "@/hooks/useTabBounce";
 import { useDashboardShell } from "@/hooks/useDashboardShell";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthProvider";
+import { useQuery } from "convex/react";
+import { api } from "@/lib/convexApi";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 import CorporateMessagesScreen from "./messages";
 
@@ -49,6 +52,27 @@ export default function CorporateDashboard() {
     defaultTab: "fleet",
     backTargetTab: "menu",
   });
+
+  const { userId } = useAuth();
+  const convexUser = useQuery(
+    api.users.getByUserId,
+    userId ? { userId } : "skip"
+  );
+
+  const corporateVehicles = useQuery(
+    api.jobs.getOwnerVehicles,
+    convexUser?._id ? { ownerId: convexUser._id } : "skip"
+  );
+
+  const corporateBookings = useQuery(
+    api.jobs.getOwnerBookings,
+    convexUser?._id ? { ownerId: convexUser._id } : "skip"
+  );
+
+  const availableDrivers = useQuery(
+    api.jobs.getAvailableDrivers,
+    signedIn ? {} : "skip"
+  );
 
   return (
     <View style={styles.container}>
@@ -137,33 +161,54 @@ export default function CorporateDashboard() {
                         <Text style={styles.primaryButtonText}>Log in</Text>
                       </TouchableOpacity>
                     </View>
+                  ) : !corporateVehicles || corporateVehicles.length === 0 ? (
+                    <View style={styles.emptyWrap}>
+                      <View style={styles.emptyIconCircle}>
+                        <Ionicons name="car-outline" size={40} color="#9CA3AF" />
+                      </View>
+                      <Text style={styles.emptyTitle}>No fleet vehicles</Text>
+                      <Text style={styles.emptySubtitle}>
+                        Add your first vehicle to start managing your corporate fleet.
+                      </Text>
+                      <TouchableOpacity style={styles.primaryButton} onPress={() => router.push("/create-listing" as any)}>
+                        <Text style={styles.primaryButtonText}>Add vehicle</Text>
+                      </TouchableOpacity>
+                    </View>
                   ) : (
                     <View>
                       <View style={styles.sectionRow}>
                         <Text style={styles.sectionTitle}>Fleet Vehicles</Text>
-                        <TouchableOpacity style={styles.addButton}>
+                        <TouchableOpacity style={styles.addButton} onPress={() => router.push("/create-listing" as any)}>
                           <Ionicons name="add" size={18} color="#FFFFFF" />
                           <Text style={styles.addButtonText}>Add vehicle</Text>
                         </TouchableOpacity>
                       </View>
-                      <FleetVehicleCard
-                        plate="KCD 4821X"
-                        type="Toyota Hiace"
-                        seats={14}
-                        status="active"
-                      />
-                      <FleetVehicleCard
-                        plate="KBZ 1103A"
-                        type="Suzuki Ertiga"
-                        seats={7}
-                        status="maintenance"
-                      />
-                      <FleetVehicleCard
-                        plate="KCJ 5599K"
-                        type="Toyota Prado"
-                        seats={5}
-                        status="active"
-                      />
+                      {corporateVehicles.map((vehicle) => (
+                        <View key={vehicle._id} style={styles.card}>
+                          <View style={styles.cardTop}>
+                            <View style={styles.cardTitleWrap}>
+                              <Text style={styles.cardTitle}>{vehicle.title}</Text>
+                              <Text style={styles.cardSub}>{vehicle.licensePlate || "No plate"} • {vehicle.seats ?? 0} seats</Text>
+                            </View>
+                            <View style={[styles.statusBadge, vehicle.status === "active" ? styles.statusActive : styles.statusMaintenance]}>
+                              <Text style={[styles.statusText, vehicle.status === "active" ? styles.statusTextActive : styles.statusTextMaintenance]}>
+                                {vehicle.status === "active" ? "Active" : "Inactive"}
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={styles.cardDivider} />
+                          <View style={styles.cardActionsRow}>
+                            <View style={styles.cardMetaItem}>
+                              <Ionicons name="calendar-outline" size={18} color="#6B7280" />
+                              <Text style={styles.cardMetaText}>GHS {vehicle.pricePerDay.toLocaleString()}/day</Text>
+                            </View>
+                            <View style={styles.cardMetaItem}>
+                              <Ionicons name="location-outline" size={18} color="#6B7280" />
+                              <Text style={styles.cardMetaText}>{vehicle.city}</Text>
+                            </View>
+                          </View>
+                        </View>
+                      ))}
                     </View>
                   )}
                 </View>
@@ -184,30 +229,50 @@ export default function CorporateDashboard() {
                         <Text style={styles.primaryButtonText}>Log in</Text>
                       </TouchableOpacity>
                     </View>
+                  ) : !corporateBookings || corporateBookings.length === 0 ? (
+                    <View style={styles.emptyWrap}>
+                      <View style={styles.emptyIconCircle}>
+                        <Ionicons name="calendar-outline" size={40} color="#9CA3AF" />
+                      </View>
+                      <Text style={styles.emptyTitle}>No bookings yet</Text>
+                      <Text style={styles.emptySubtitle}>
+                        Bookings for your fleet vehicles will appear here.
+                      </Text>
+                    </View>
                   ) : (
                     <View>
                       <Text style={styles.sectionTitle}>Bookings</Text>
-                      <BookingCard
-                        id="BK-1042"
-                        route="Nairobi — Mombasa"
-                        date="Mon, 18 Aug 2026"
-                        amount="Ksh 64,000"
-                        status="confirmed"
-                      />
-                      <BookingCard
-                        id="BK-1043"
-                        route="Nairobi — Naivasha"
-                        date="Fri, 21 Aug 2026"
-                        amount="Ksh 38,500"
-                        status="pending"
-                      />
-                      <BookingCard
-                        id="BK-1044"
-                        route="Nairobi — Kisumu"
-                        date="Thu, 27 Aug 2026"
-                        amount="Ksh 78,200"
-                        status="in_progress"
-                      />
+                      {corporateBookings.map((booking) => {
+                        const colors = booking.status === "confirmed" ? { bg: "#E8F5E9", text: "#1B5E20" } : booking.status === "pending" ? { bg: "#FFF3E0", text: "#E65100" } : { bg: "#E3F2FD", text: "#1565C0" };
+                        return (
+                          <View key={booking._id} style={styles.card}>
+                            <View style={styles.cardTop}>
+                              <View style={styles.cardTitleWrap}>
+                                <Text style={styles.cardTitle}>BK-{booking._id.slice(-4)}</Text>
+                                <Text style={styles.cardSub}>Vehicle {booking.vehicleId.slice(-4)}</Text>
+                              </View>
+                              <View style={[styles.statusBadge, { backgroundColor: colors.bg }]}>
+                                <Text style={[styles.statusText, { color: colors.text }]}>
+                                  {booking.status === "in_progress" ? "In progress" : booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                </Text>
+                              </View>
+                            </View>
+                            <View style={styles.cardDivider} />
+                            <View style={styles.cardActionsRow}>
+                              <View style={styles.cardMetaItem}>
+                                <Ionicons name="calendar-outline" size={18} color="#6B7280" />
+                                <Text style={styles.cardMetaText}>
+                                  {new Date(booking.startDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                </Text>
+                              </View>
+                              <View style={styles.cardMetaItem}>
+                                <Ionicons name="cash-outline" size={18} color="#6B7280" />
+                                <Text style={styles.cardMetaText}>{booking.currency} {booking.totalAmount.toLocaleString()}</Text>
+                              </View>
+                            </View>
+                          </View>
+                        );
+                      })}
                     </View>
                   )}
                 </View>
@@ -228,12 +293,43 @@ export default function CorporateDashboard() {
                         <Text style={styles.primaryButtonText}>Log in</Text>
                       </TouchableOpacity>
                     </View>
+                  ) : !availableDrivers || availableDrivers.length === 0 ? (
+                    <View style={styles.emptyWrap}>
+                      <View style={styles.emptyIconCircle}>
+                        <Ionicons name="people-outline" size={40} color="#9CA3AF" />
+                      </View>
+                      <Text style={styles.emptyTitle}>No available drivers</Text>
+                      <Text style={styles.emptySubtitle}>
+                        Available drivers will appear here when they opt in for hire.
+                      </Text>
+                    </View>
                   ) : (
                     <View>
-                      <Text style={styles.sectionTitle}>Assigned Drivers</Text>
-                      <DriverCard name="James Mwangi" rating={4.9} trips={312} available />
-                      <DriverCard name="Susan Wanjiku" rating={4.8} trips={198} available={false} />
-                      <DriverCard name="David Kipchoge" rating={4.7} trips={156} available />
+                      <Text style={styles.sectionTitle}>Available Drivers</Text>
+                      {availableDrivers.map((driver) => (
+                        <View key={driver._id} style={styles.card}>
+                          <View style={styles.cardTop}>
+                            <View style={styles.cardTitleWrap}>
+                              <Text style={styles.cardTitle}>{driver.firstName || "Driver"}</Text>
+                              <Text style={styles.cardSub}>Available for hire</Text>
+                            </View>
+                            <View style={[styles.statusBadge, styles.statusActive]}>
+                              <Text style={[styles.statusText, styles.statusTextActive]}>Available</Text>
+                            </View>
+                          </View>
+                          <View style={styles.cardDivider} />
+                          <View style={styles.cardActionsRow}>
+                            <TouchableOpacity style={styles.cardActionButton}>
+                              <Ionicons name="call-outline" size={18} color={NAVY} />
+                              <Text style={styles.cardActionText}>Contact</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.cardActionButton}>
+                              <Ionicons name="document-text-outline" size={18} color={NAVY} />
+                              <Text style={styles.cardActionText}>Profile</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ))}
                     </View>
                   )}
                 </View>
@@ -381,144 +477,6 @@ function MenuRow({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label:
       <Text style={styles.menuLabel}>{label}</Text>
       <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
     </TouchableOpacity>
-  );
-}
-
-function FleetVehicleCard({
-  plate,
-  type,
-  seats,
-  status,
-}: {
-  plate: string;
-  type: string;
-  seats: number;
-  status: "active" | "maintenance";
-}) {
-  const isActive = status === "active";
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardTop}>
-        <View style={styles.cardTitleWrap}>
-          <Text style={styles.cardTitle}>{type}</Text>
-          <Text style={styles.cardSub}>{plate} • {seats} seats</Text>
-        </View>
-        <View style={[styles.statusBadge, isActive ? styles.statusActive : styles.statusMaintenance]}>
-          <Text style={[styles.statusText, isActive ? styles.statusTextActive : styles.statusTextMaintenance]}>
-            {isActive ? "Active" : "Maintenance"}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.cardDivider} />
-      <View style={styles.cardActionsRow}>
-        <TouchableOpacity style={styles.cardActionButton}>
-          <Ionicons name="calendar-outline" size={18} color={NAVY} />
-          <Text style={styles.cardActionText}>Schedule</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cardActionButton}>
-          <Ionicons name="create-outline" size={18} color={NAVY} />
-          <Text style={styles.cardActionText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cardActionButton}>
-          <Ionicons name="map-outline" size={18} color={NAVY} />
-          <Text style={styles.cardActionText}>Track</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-function BookingCard({
-  id,
-  route,
-  date,
-  amount,
-  status,
-}: {
-  id: string;
-  route: string;
-  date: string;
-  amount: string;
-  status: "confirmed" | "pending" | "in_progress";
-}) {
-  const palette: Record<string, { bg: string; text: string }> = {
-    confirmed: { bg: "#E8F5E9", text: "#1B5E20" },
-    pending: { bg: "#FFF3E0", text: "#E65100" },
-    in_progress: { bg: "#E3F2FD", text: "#1565C0" },
-  };
-  const colors = palette[status] ?? palette.pending;
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardTop}>
-        <View style={styles.cardTitleWrap}>
-          <Text style={styles.cardTitle}>{id}</Text>
-          <Text style={styles.cardSub}>{route}</Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: colors.bg }]}>
-          <Text style={[styles.statusText, { color: colors.text }]}>
-            {status === "in_progress" ? "In progress" : status.charAt(0).toUpperCase() + status.slice(1)}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.cardDivider} />
-      <View style={styles.cardActionsRow}>
-        <View style={styles.cardMetaItem}>
-          <Ionicons name="calendar-outline" size={18} color="#6B7280" />
-          <Text style={styles.cardMetaText}>{date}</Text>
-        </View>
-        <View style={styles.cardMetaItem}>
-          <Ionicons name="cash-outline" size={18} color="#6B7280" />
-          <Text style={styles.cardMetaText}>{amount}</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function DriverCard({
-  name,
-  rating,
-  trips,
-  available,
-}: {
-  name: string;
-  rating: number;
-  trips: number;
-  available: boolean;
-}) {
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardTop}>
-        <View style={styles.cardTitleWrap}>
-          <Text style={styles.cardTitle}>{name}</Text>
-          <Text style={styles.cardSub}>{trips} trips</Text>
-        </View>
-        {available ? (
-          <View style={[styles.statusBadge, styles.statusActive]}>
-            <Text style={[styles.statusText, styles.statusTextActive]}>Available</Text>
-          </View>
-        ) : (
-          <View style={[styles.statusBadge, styles.statusMaintenance]}>
-            <Text style={[styles.statusText, styles.statusTextMaintenance]}>Busy</Text>
-          </View>
-        )}
-      </View>
-      <View style={styles.cardDivider} />
-      <View style={styles.cardActionsRow}>
-        <View style={styles.cardMetaItem}>
-          <Ionicons name="star" size={18} color="#F59E0B" />
-          <Text style={styles.cardMetaText}>{rating}</Text>
-        </View>
-        <TouchableOpacity style={styles.cardActionButton}>
-          <Ionicons name="call-outline" size={18} color={NAVY} />
-          <Text style={styles.cardActionText}>Contact</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cardActionButton}>
-          <Ionicons name="document-text-outline" size={18} color={NAVY} />
-          <Text style={styles.cardActionText}>Profile</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
   );
 }
 

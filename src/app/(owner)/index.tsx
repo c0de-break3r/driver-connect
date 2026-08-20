@@ -1,11 +1,11 @@
 import RoleSwitchTransition from "@/components/RoleSwitchTransition";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
 import { useAuth } from "@/contexts/AuthProvider";
+import { useQuery } from "convex/react";
 import { useTabBounce } from "@/hooks/useTabBounce";
 import { useDashboardShell } from "@/hooks/useDashboardShell";
 import { api } from "@/lib/convexApi";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "convex/react";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -25,7 +25,6 @@ import {
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
-import OwnerListingsContent from "./_components/OwnerListingsContent";
 import OwnerMessagesScreen from "./messages";
 import { createCardStyle, PressableCard, StatusBadge, Divider } from "@/components/DesignSystem";
 
@@ -94,6 +93,16 @@ export default function OwnerDashboard() {
 
   const ownerBookings = useQuery(
     api.jobs.getOwnerBookings,
+    convexUser?._id ? { ownerId: convexUser._id } : "skip",
+  );
+
+  const ownerVehicles = useQuery(
+    api.jobs.getOwnerVehicles,
+    convexUser?._id ? { ownerId: convexUser._id } : "skip",
+  );
+
+  const availabilityBlocks = useQuery(
+    api.jobs.getOwnerAvailabilityBlocks,
     convexUser?._id ? { ownerId: convexUser._id } : "skip",
   );
 
@@ -415,11 +424,29 @@ export default function OwnerDashboard() {
                         )}
                       </View>
 
-                      <IconEmptyState
-                        icon="calendar-outline"
-                        title="No calendar events"
-                        subtitle="When you publish a listing you'll be able to see and edit your calendar here."
-                      />
+                      {!availabilityBlocks || availabilityBlocks.length === 0 ? (
+                        <IconEmptyState
+                          icon="calendar-outline"
+                          title="No calendar events"
+                          subtitle="When you publish a listing you'll be able to see and edit your calendar here."
+                        />
+                      ) : (
+                        <View style={styles.bookingsList}>
+                          {availabilityBlocks.map((block) => (
+                            <View key={block._id} style={createCardStyle()}>
+                              <View style={styles.bookingHeader}>
+                                <StatusBadge label="Blocked" tone="danger" />
+                                <Text style={styles.bookingDates}>
+                                  {new Date(block.startDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} — {new Date(block.endDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                </Text>
+                              </View>
+                              {block.reason ? (
+                                <Text style={styles.bookingLocation}>{block.reason}</Text>
+                              ) : null}
+                            </View>
+                          ))}
+                        </View>
+                      )}
                     </>
                   )}
                 </View>
@@ -436,7 +463,52 @@ export default function OwnerDashboard() {
                       onCtaPress={openAuth}
                     />
                   ) : (
-                    <OwnerListingsContent />
+                    <View>
+                      <View style={styles.sectionRow}>
+                        <Text style={styles.sectionTitle}>Your Vehicles</Text>
+                        <Text style={styles.sectionSubtitle}>
+                          {ownerVehicles?.length ?? 0} listed
+                        </Text>
+                      </View>
+                      {!ownerVehicles || ownerVehicles.length === 0 ? (
+                        <IconEmptyState
+                          icon="car-outline"
+                          title="No listings yet"
+                          subtitle="Create your first vehicle listing to start accepting bookings."
+                          ctaText="Create listing"
+                          onCtaPress={() => router.push("/create-listing" as any)}
+                        />
+                      ) : (
+                        <View style={styles.bookingsList}>
+                          {ownerVehicles.map((vehicle) => (
+                            <PressableCard
+                              key={vehicle._id}
+                              style={createCardStyle()}
+                              onPress={() => router.push(`/vehicle-details?id=${vehicle._id}` as any)}
+                            >
+                              <View style={styles.bookingHeader}>
+                                <StatusBadge label={vehicle.status} tone={vehicle.status === "active" ? "success" : "neutral"} />
+                                <Text style={styles.bookingDates}>{vehicle.category}</Text>
+                              </View>
+                              <Text style={styles.bookingLocation} numberOfLines={1}>
+                                {vehicle.title}
+                              </Text>
+                              <Divider />
+                              <View style={styles.bookingFooter}>
+                                <View>
+                                  <Text style={styles.bookingAmount}>
+                                    GHS {vehicle.pricePerDay.toLocaleString()}/day
+                                  </Text>
+                                  <Text style={styles.bookingPayment}>
+                                    {vehicle.city} • {vehicle.region}
+                                  </Text>
+                                </View>
+                              </View>
+                            </PressableCard>
+                          ))}
+                        </View>
+                      )}
+                    </View>
                   )}
                 </View>
               )}
@@ -1035,6 +1107,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: NAVY,
+  },
+
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 16,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
   },
 
   bottomNav: {

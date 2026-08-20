@@ -19,6 +19,14 @@ export const listFeatured = query({
       images: v.array(v.string()),
       status: v.string(),
       isFeatured: v.boolean(),
+      instantBook: v.boolean(),
+      advanceNotice: v.optional(v.number()),
+      minTripDuration: v.optional(v.number()),
+      maxTripDuration: v.optional(v.number()),
+      distanceLimit: v.optional(v.number()),
+      unlimitedDistance: v.boolean(),
+      pickupStartHour: v.optional(v.number()),
+      pickupEndHour: v.optional(v.number()),
     })
   ),
   handler: async (ctx) => {

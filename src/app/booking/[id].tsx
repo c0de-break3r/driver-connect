@@ -56,6 +56,8 @@ export default function BookingDetailScreen() {
     bookingId ? { bookingId: bookingId as any } : "skip"
   );
 
+
+
   const approveChange = useMutation(api.jobs.approveTripChangeRequest);
   const declineChange = useMutation(api.jobs.declineTripChangeRequest);
 
@@ -204,18 +206,48 @@ export default function BookingDetailScreen() {
         </View>
       )}
 
-      <TouchableOpacity
-        style={styles.requestChangeButton}
-        onPress={() =>
-          router.push({
-            pathname: "/trip-change-request",
-            params: { bookingId: booking._id },
-          } as any)
-        }
-      >
-        <Ionicons name="create-outline" size={18} color="#FFFFFF" />
-        <Text style={styles.requestChangeButtonText}>Request Change</Text>
-      </TouchableOpacity>
+      <View style={styles.actionButtonsRow}>
+        <TouchableOpacity
+          style={styles.messageButton}
+          onPress={() =>
+            router.push({
+              pathname: "/(client)/booking-chat",
+              params: { bookingId: booking._id },
+            } as any)
+          }
+        >
+          <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" />
+          <Text style={styles.messageButtonText}>Message</Text>
+        </TouchableOpacity>
+        {booking.status === "completed" && !booking.reviewPrompted && (
+          <TouchableOpacity
+            style={styles.reviewButton}
+            onPress={() =>
+              router.push({
+                pathname: "/(client)/rate-review",
+                params: { bookingId: booking._id },
+              } as any)
+            }
+          >
+            <Ionicons name="star-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.reviewButtonText}>Rate & Review</Text>
+          </TouchableOpacity>
+        )}
+        {(booking.status === "pending" || booking.status === "confirmed") && (
+          <TouchableOpacity
+            style={styles.requestChangeButton}
+            onPress={() =>
+              router.push({
+                pathname: "/trip-change-request",
+                params: { bookingId: booking._id },
+              } as any)
+            }
+          >
+            <Ionicons name="create-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.requestChangeButtonText}>Request Change</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -365,6 +397,42 @@ const styles = StyleSheet.create({
   },
   requestChangeButtonText: {
     fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  actionButtonsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 8,
+  },
+  messageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: NAVY,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+  },
+  messageButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  reviewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#F59E0B",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+  },
+  reviewButtonText: {
+    fontSize: 15,
     fontWeight: "700",
     color: "#FFFFFF",
   },

@@ -74,6 +74,14 @@ export const listVehicles = query({
       showPreciseLocation: v.optional(v.boolean()),
       deliveryAvailable: v.optional(v.boolean()),
       deliveryFee: v.optional(v.number()),
+      instantBook: v.boolean(),
+      advanceNotice: v.optional(v.number()),
+      minTripDuration: v.optional(v.number()),
+      maxTripDuration: v.optional(v.number()),
+      distanceLimit: v.optional(v.number()),
+      unlimitedDistance: v.boolean(),
+      pickupStartHour: v.optional(v.number()),
+      pickupEndHour: v.optional(v.number()),
     })
   ),
   handler: async (ctx) => {
@@ -146,6 +154,14 @@ export const getVehicle = query({
       showPreciseLocation: v.optional(v.boolean()),
       deliveryAvailable: v.optional(v.boolean()),
       deliveryFee: v.optional(v.number()),
+      instantBook: v.boolean(),
+      advanceNotice: v.optional(v.number()),
+      minTripDuration: v.optional(v.number()),
+      maxTripDuration: v.optional(v.number()),
+      distanceLimit: v.optional(v.number()),
+      unlimitedDistance: v.boolean(),
+      pickupStartHour: v.optional(v.number()),
+      pickupEndHour: v.optional(v.number()),
     }),
     v.null()
   ),
@@ -698,6 +714,14 @@ export const getOwnerVehicles = query({
       showPreciseLocation: v.optional(v.boolean()),
       deliveryAvailable: v.optional(v.boolean()),
       deliveryFee: v.optional(v.number()),
+      instantBook: v.boolean(),
+      advanceNotice: v.optional(v.number()),
+      minTripDuration: v.optional(v.number()),
+      maxTripDuration: v.optional(v.number()),
+      distanceLimit: v.optional(v.number()),
+      unlimitedDistance: v.boolean(),
+      pickupStartHour: v.optional(v.number()),
+      pickupEndHour: v.optional(v.number()),
     })
   ),
   handler: async (ctx, args) => {
@@ -754,6 +778,87 @@ export const getOwnerBookings = query({
 
     const allBookings = await ctx.db.query("bookings").collect();
     return allBookings.filter((b) => vehicleIds.includes(b.vehicleId));
+  },
+});
+
+export const getDriverBookings = query({
+  args: { driverId: v.string() },
+  returns: v.array(
+    v.object({
+      _id: v.id("bookings"),
+      _creationTime: v.number(),
+      vehicleId: v.id("vehicles"),
+      renterId: v.string(),
+      driverId: v.optional(v.string()),
+      startDate: v.string(),
+      endDate: v.string(),
+      pickupLocation: v.string(),
+      dropoffLocation: v.string(),
+      status: v.string(),
+      paymentStatus: v.string(),
+      subtotal: v.number(),
+      driverFee: v.number(),
+      serviceFee: v.number(),
+      securityDeposit: v.number(),
+      totalAmount: v.number(),
+      currency: v.string(),
+      specialRequests: v.optional(v.string()),
+      cancellationReason: v.optional(v.string()),
+      cancelledBy: v.optional(v.string()),
+      cancelledAt: v.optional(v.number()),
+      pickupTime: v.optional(v.string()),
+      returnTime: v.optional(v.string()),
+      actualPickupTime: v.optional(v.number()),
+      actualReturnTime: v.optional(v.number()),
+      instantBook: v.boolean(),
+      reviewPrompted: v.optional(v.boolean()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+      vehicle: v.object({
+        _id: v.id("vehicles"),
+        title: v.string(),
+        images: v.array(v.string()),
+        category: v.string(),
+        city: v.string(),
+        region: v.string(),
+        pricePerDay: v.number(),
+        rating: v.number(),
+        reviewCount: v.number(),
+        ownerId: v.string(),
+      }),
+    })
+  ),
+  handler: async (ctx, args) => {
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_driver", (q) => q.eq("driverId", args.driverId))
+      .collect();
+
+    const bookingsWithVehicle = await Promise.all(
+      bookings.map(async (booking) => {
+        const vehicle = await ctx.db.get(booking.vehicleId);
+        if (!vehicle) return null;
+        return {
+          ...booking,
+          vehicle: {
+            _id: vehicle._id,
+            title: vehicle.title,
+            images: vehicle.images,
+            category: vehicle.category,
+            city: vehicle.city,
+            region: vehicle.region,
+            pricePerDay: vehicle.pricePerDay,
+            rating: vehicle.rating,
+            reviewCount: vehicle.reviewCount,
+            ownerId: vehicle.ownerId,
+          },
+        };
+      })
+    );
+
+    return bookingsWithVehicle.filter(
+      (b): b is NonNullable<typeof b> => b !== null
+    );
   },
 });
 
@@ -894,6 +999,87 @@ export const checkVehicleAvailability = query({
     );
 
     return !overlappingBooking;
+  },
+});
+
+export const getRenterBookings = query({
+  args: { renterId: v.string() },
+  returns: v.array(
+    v.object({
+      _id: v.id("bookings"),
+      _creationTime: v.number(),
+      vehicleId: v.id("vehicles"),
+      renterId: v.string(),
+      driverId: v.optional(v.string()),
+      startDate: v.string(),
+      endDate: v.string(),
+      pickupLocation: v.string(),
+      dropoffLocation: v.string(),
+      status: v.string(),
+      paymentStatus: v.string(),
+      subtotal: v.number(),
+      driverFee: v.number(),
+      serviceFee: v.number(),
+      securityDeposit: v.number(),
+      totalAmount: v.number(),
+      currency: v.string(),
+      specialRequests: v.optional(v.string()),
+      cancellationReason: v.optional(v.string()),
+      cancelledBy: v.optional(v.string()),
+      cancelledAt: v.optional(v.number()),
+      pickupTime: v.optional(v.string()),
+      returnTime: v.optional(v.string()),
+      actualPickupTime: v.optional(v.number()),
+      actualReturnTime: v.optional(v.number()),
+      instantBook: v.boolean(),
+      reviewPrompted: v.optional(v.boolean()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+      vehicle: v.object({
+        _id: v.id("vehicles"),
+        title: v.string(),
+        images: v.array(v.string()),
+        category: v.string(),
+        city: v.string(),
+        region: v.string(),
+        pricePerDay: v.number(),
+        rating: v.number(),
+        reviewCount: v.number(),
+        ownerId: v.string(),
+      }),
+    })
+  ),
+  handler: async (ctx, args) => {
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_renter", (q) => q.eq("renterId", args.renterId))
+      .collect();
+
+    const bookingsWithVehicle = await Promise.all(
+      bookings.map(async (booking) => {
+        const vehicle = await ctx.db.get(booking.vehicleId);
+        if (!vehicle) return null;
+        return {
+          ...booking,
+          vehicle: {
+            _id: vehicle._id,
+            title: vehicle.title,
+            images: vehicle.images,
+            category: vehicle.category,
+            city: vehicle.city,
+            region: vehicle.region,
+            pricePerDay: vehicle.pricePerDay,
+            rating: vehicle.rating,
+            reviewCount: vehicle.reviewCount,
+            ownerId: vehicle.ownerId,
+          },
+        };
+      })
+    );
+
+    return bookingsWithVehicle.filter(
+      (b): b is NonNullable<typeof b> => b !== null
+    );
   },
 });
 
