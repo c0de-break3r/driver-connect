@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, Dimensions, PanResponder } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, Dimensions, PanResponder, Linking } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Animated } from "react-native";
@@ -14,6 +14,7 @@ import { getPendingVehicleTripDates, clearPendingVehicleTripDates } from "@/lib/
 import { useCallback } from "react";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
 import { useToast } from "@/hooks/useToast";
+import { useAvailabilityStore, DEFAULT_TIME_SLOTS, SlotStatus } from "@/store/useAvailabilityStore";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -270,6 +271,7 @@ export default function VehicleDetailsScreen() {
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [expandedReviews, setExpandedReviews] = useState<Record<number, boolean>>({});
   const reviewsScrollRef = useRef<ScrollView>(null);
+const reviewsAutoSwipeRef = useRef<NodeJS.Timeout | null>(null);
   const swipeY = useRef(new Animated.Value(0)).current;
   const [pickupDate, setPickupDate] = useState("Sat, 26 Sep");
   const [returnDate, setReturnDate] = useState("Tue, 29 Sep");
@@ -286,13 +288,118 @@ export default function VehicleDetailsScreen() {
   const fullscreenScrollRef = useRef<ScrollView>(null);
   const fullscreenAnim = useRef(new Animated.Value(0)).current;
 
-  const { signedIn } = useAuth();
+  const { signedIn, userId } = useAuth();
   const isFavorited = useFavoritesStore((state) => state.isFavorite(vehicle.id));
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
+
+  const availability = useAvailabilityStore();
+  const today = new Date().toISOString().split("T")[0];
+  const currentUserId = userId || "guest";
+
+  useEffect(() => {
+    availability.load();
+    if (availability.bookings.length === 0) {
+      availability.seedDemo();
+    }
+  }, [availability]);
+
+  const getVehicleSlotStatus = (slotStart: string, slotEnd: string) =>
+    availability.getSlotStatus(today, slotStart, slotEnd, vehicle.id, "vehicle");
+
+  const handleBookVehicleSlot = (slotStart: string, slotEnd: string) => {
+    if (!signedIn) {
+      setAuthVisible(true);
+      return;
+    }
+    const status = getVehicleSlotStatus(slotStart, slotEnd);
+    if (status === "booked") {
+      showToast("This slot is already booked. Join the waitlist?", "warning");
+      return;
+    }
+    if (status === "partial") {
+      showToast("This slot partially overlaps with an existing booking.", "warning");
+      return;
+    }
+    availability.addBooking({
+      vehicleId: vehicle.id,
+      date: today,
+      slotStart,
+      slotEnd,
+      status: "pending",
+      userId: currentUserId,
+      renterName: "You",
+    });
+    showToast("Booking requested! Waiting for confirmation.", "success");
+  };
+
+  const handleJoinVehicleWaitlist = (slotStart: string, slotEnd: string) => {
+    if (!signedIn) {
+      setAuthVisible(true);
+      return;
+    }
+    const alreadyOnWaitlist = availability.isOnWaitlist(
+      today,
+      slotStart,
+      currentUserId,
+      vehicle.id,
+      "vehicle"
+    );
+    if (alreadyOnWaitlist) {
+      showToast("You are already on the waitlist for this slot.", "info");
+      return;
+    }
+    availability.joinWaitlist({
+      vehicleId: vehicle.id,
+      date: today,
+      slotStart,
+      slotEnd,
+      userId: currentUserId,
+    });
+    const position = availability.getWaitlistPosition(
+      today,
+      slotStart,
+      currentUserId,
+      vehicle.id,
+      "vehicle"
+    );
+    showToast(`Joined waitlist. Position: #${position}`, "success");
+  };
+
+  const handleLeaveVehicleWaitlist = (slotStart: string, slotEnd: string) => {
+    const entry = availability.waitlist.find(
+      (w) =>
+        w.date === today &&
+        w.slotStart === slotStart &&
+        w.userId === currentUserId &&
+        w.vehicleId === vehicle.id
+    );
+    if (entry) {
+      availability.leaveWaitlist(entry.id);
+      showToast("Left waitlist.", "info");
+    }
+  };
 
   useEffect(() => {
     setCurrentImageIndex(0);
     scrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [vehicleId]);
+
+  useEffect(() => {
+    const reviewCards = 2;
+    if (reviewCards <= 1) return;
+    
+    reviewsAutoSwipeRef.current = setInterval(() => {
+      reviewsScrollRef.current?.scrollTo({ x: 0, animated: true });
+      setTimeout(() => {
+        reviewsScrollRef.current?.scrollTo({ x: SCREEN_WIDTH - 40, animated: true });
+      }, 300);
+    }, 4000);
+
+    return () => {
+      if (reviewsAutoSwipeRef.current) {
+        clearInterval(reviewsAutoSwipeRef.current);
+      }
+    };
   }, [vehicleId]);
 
   useEffect(() => {
@@ -399,9 +506,21 @@ export default function VehicleDetailsScreen() {
     })
   ).current;
 
-  const handleBook = () => {
-    showToast(`Booking ${vehicle.title}...`, "success");
+    const handleBook = () => {
+    router.push(`/(client)/book-now?vehicleId=${vehicle.id}` as any);
   };
+
+  const handleCall = () => {
+    Linking.openURL("tel:+233241234567");
+  };
+
+  const handleMessage = () => {
+    Linking.openURL("sms:+233241234567");
+  };
+
+  const protectedBook = useDoubleTap(handleBook, { cooldownMs: 800 });
+  const protectedCall = useDoubleTap(handleCall, { cooldownMs: 800 });
+  const protectedMessage = useDoubleTap(handleMessage, { cooldownMs: 800 });
 
   const openFullscreenImage = () => {
     setShowFullscreenImage(true);
@@ -534,37 +653,81 @@ export default function VehicleDetailsScreen() {
             )}
           </View>
 
-          {/* Trip Details */}
+          {/* Details */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Trip Details</Text>
-            <View style={styles.tripRow}>
-              <View style={styles.tripIcon}>
-                <Ionicons name="calendar-outline" size={20} color={NAVY} />
+            <Text style={styles.sectionTitle}>Details</Text>
+            <View style={styles.detailsCard}>
+              <View style={styles.detailsRow}>
+                <View style={styles.detailsIcon}>
+                  <Ionicons name="location-outline" size={20} color={NAVY} />
+                </View>
+                <Text style={styles.detailsValue}>{vehicle.location || "Accra, Ghana"}</Text>
               </View>
-              <View style={styles.tripInfo}>
-                <Text style={styles.tripLabel}>Pick-up</Text>
-                <Text style={styles.tripValue}>{pickupDate} · {pickupTime}</Text>
+              <View style={[styles.detailsRow, { marginTop: 16 }]}>
+                <View style={styles.detailsIcon}>
+                  <Ionicons name="time-outline" size={20} color={NAVY} />
+                </View>
+                <Text style={styles.detailsValue}>Morning · 7:00 am - 12:30 pm</Text>
+              </View>
+              <View style={[styles.detailsRow, { marginTop: 16 }]}>
+                <Pressable style={styles.detailsIcon} onPress={protectedCall}>
+                  <Ionicons name="call-outline" size={20} color={NAVY} />
+                </Pressable>
+                <Text style={styles.contactNumber}>+233 24 123 4567</Text>
+                <Pressable style={styles.detailsIcon} onPress={protectedMessage}>
+                  <Ionicons name="chatbubble-outline" size={20} color={NAVY} />
+                </Pressable>
               </View>
             </View>
-            <View style={[styles.tripRow, { marginTop: 16 }]}>
-              <View style={styles.tripIcon}>
-                <Ionicons name="location-outline" size={20} color={NAVY} />
-              </View>
-              <View style={styles.tripInfo}>
-                <Text style={styles.tripLabel}>Return</Text>
-                <Text style={styles.tripValue}>{returnDate} · {returnTime}</Text>
-              </View>
-            </View>
-            {assignedDriver?.name && (
-              <View style={styles.assignedDriverBadge}>
-                <Ionicons name="person-outline" size={14} color={NAVY} />
-                <Text style={styles.assignedDriverText}>{assignedDriver.name}</Text>
-              </View>
-            )}
-            <Pressable style={styles.addTripsButton} onPress={handleAddTrips}>
-              <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
-              <Text style={styles.addTripsButtonText}>Add trips</Text>
-            </Pressable>
+          </View>
+
+          {/* Available Today */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Available today</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.availableScroll}>
+              {DEFAULT_TIME_SLOTS.map((slot) => {
+                const status = getVehicleSlotStatus(slot.start, slot.end);
+                const waitlistPosition = availability.getWaitlistPosition(
+                  today,
+                  slot.start,
+                  currentUserId,
+                  vehicle.id,
+                  "vehicle"
+                );
+                const onWaitlist = waitlistPosition > 0;
+                const isBooked = status === "booked";
+                const isPartial = status === "partial";
+
+                let slotStyle = styles.timeSlot;
+                let textStyle = styles.timeSlotText;
+                let buttonText = "Book";
+                let onPress = () => handleBookVehicleSlot(slot.start, slot.end);
+
+                if (isBooked) {
+                  slotStyle = styles.timeSlotBooked;
+                  textStyle = styles.timeSlotTextBooked;
+                  buttonText = onWaitlist ? `Waitlist #${waitlistPosition}` : "Waitlist";
+                  onPress = onWaitlist
+                    ? () => handleLeaveVehicleWaitlist(slot.start, slot.end)
+                    : () => handleJoinVehicleWaitlist(slot.start, slot.end);
+                } else if (isPartial) {
+                  slotStyle = styles.timeSlotPartial;
+                  textStyle = styles.timeSlotTextPartial;
+                  buttonText = "Partial";
+                  onPress = () => {};
+                }
+
+                return (
+                  <Pressable key={slot.label} style={slotStyle} onPress={onPress}>
+                    <Text style={textStyle}>{slot.label}</Text>
+                    <Text style={styles.timeSlotRange}>{slot.start} - {slot.end}</Text>
+                    <Text style={[styles.timeSlotButton, isBooked && styles.timeSlotButtonBooked]}>
+                      {buttonText}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </View>
 
           {/* Vehicle Overview */}
@@ -631,55 +794,63 @@ export default function VehicleDetailsScreen() {
             </Pressable>
           </View>
 
-          {/* Reviews */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Reviews</Text>
-            <View style={styles.reviewsHeader}>
-              <Text style={styles.reviewsOverall}>5.0</Text>
-              <Ionicons name="star" size={16} color="#FFB800" />
-              <Text style={styles.reviewsCount}>({vehicle.trips} ratings)</Text>
-            </View>
+           {/* Reviews */}
+           <View style={styles.section}>
+             <View style={styles.reviewsHeader}>
+               <Text style={styles.sectionTitle}>Reviews</Text>
+               <Pressable
+                 style={styles.reviewsAllLink}
+                 onPress={() => router.push(`/(driver)/reviews?vehicleId=${vehicle.id}` as any)}
+               >
+                 <Text style={styles.reviewsAllText}>All</Text>
+               </Pressable>
+             </View>
+              <View style={styles.reviewsOverallContainer}>
+                <Text style={styles.reviewsOverall}>5.0</Text>
+                <Ionicons name="star" size={16} color="#FFB800" />
+                <Text style={styles.reviewsCount}>({vehicle.trips} ratings)</Text>
+              </View>
 
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              ref={reviewsScrollRef}
-            >
-              {REVIEWS.map((review) => {
-                const isExpanded = !!expandedReviews[review.id];
-                const displayText = isExpanded ? review.text : `${review.text.slice(0, 120)}...`;
-                return (
-                  <View key={review.id} style={styles.reviewCard}>
-                    <Image source={{ uri: review.avatar }} style={styles.reviewAvatar} contentFit="cover" />
-                    <View style={styles.reviewContent}>
-                      <View style={styles.reviewHeader}>
-                        <Text style={styles.reviewName}>{review.name}</Text>
-                        <View style={styles.reviewStars}>
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Ionicons key={star} name="star" size={14} color="#FFB800" />
-                          ))}
-                        </View>
-                        <Text style={styles.reviewDate}>{review.date}</Text>
-                      </View>
-                      <Text style={styles.reviewText}>{displayText}</Text>
-                      {review.text.length > 120 && (
-                        <Pressable onPress={() => setExpandedReviews((prev) => ({ ...prev, [review.id]: !prev[review.id] }))}>
-                          <Text style={styles.readMore}>{isExpanded ? "Show less" : "Read more"}</Text>
-                        </Pressable>
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-            </ScrollView>
+             <ScrollView
+               horizontal
+               pagingEnabled
+               showsHorizontalScrollIndicator={false}
+               ref={reviewsScrollRef}
+             >
+               {REVIEWS.map((review) => {
+                 const isExpanded = !!expandedReviews[review.id];
+                 const displayText = isExpanded ? review.text : `${review.text.slice(0, 120)}...`;
+                 return (
+                   <View key={review.id} style={styles.reviewCard}>
+                     <Image source={{ uri: review.avatar }} style={styles.reviewAvatar} contentFit="cover" />
+                     <View style={styles.reviewContent}>
+                       <View style={styles.reviewHeader}>
+                         <Text style={styles.reviewName}>{review.name}</Text>
+                         <View style={styles.reviewStars}>
+                           {[1, 2, 3, 4, 5].map((star) => (
+                             <Ionicons key={star} name="star" size={14} color="#FFB800" />
+                           ))}
+                         </View>
+                         <Text style={styles.reviewDate}>{review.date}</Text>
+                       </View>
+                       <Text style={styles.reviewText}>{displayText}</Text>
+                       {review.text.length > 120 && (
+                         <Pressable onPress={() => setExpandedReviews((prev) => ({ ...prev, [review.id]: !prev[review.id] }))}>
+                           <Text style={styles.readMore}>{isExpanded ? "Show less" : "Read more"}</Text>
+                         </Pressable>
+                       )}
+                     </View>
+                   </View>
+                 );
+               })}
+             </ScrollView>
 
-            <View style={styles.reviewDots}>
-              {REVIEWS.map((_, index) => (
-                <View key={index} style={[styles.reviewDot, index === 0 && styles.reviewDotActive]} />
-              ))}
-            </View>
-          </View>
+             <View style={styles.reviewDots}>
+               {REVIEWS.map((_, index) => (
+                 <View key={index} style={[styles.reviewDot, index === 0 && styles.reviewDotActive]} />
+               ))}
+             </View>
+           </View>
 
           {/* Cancellation Policy */}
           <View style={styles.section}>
@@ -724,23 +895,13 @@ export default function VehicleDetailsScreen() {
 
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
-        <View style={styles.bottomLeft}>
-          <Pressable style={styles.iconActionButton} onPress={handleContactHost}>
-            <Ionicons name="chatbubble-outline" size={20} color={NAVY} />
-            <Text style={styles.iconActionText}>Contact</Text>
-          </Pressable>
-          <Pressable style={styles.iconActionButton} onPress={handlePayHost}>
-            <Ionicons name="card-outline" size={20} color={NAVY} />
-            <Text style={styles.iconActionText}>Pay</Text>
-          </Pressable>
+        <View style={styles.bottomRating}>
+          <Ionicons name="star" size={16} color="#FFB800" />
+          <Text style={styles.bottomRatingValue}>{vehicle.rating}</Text>
+          <Text style={styles.bottomRatingLabel}>Avg rating</Text>
         </View>
-        <View style={styles.priceInfo}>
-          <Text style={styles.originalPrice}>{vehicle.originalPrice || vehicle.price}</Text>
-          <Text style={styles.totalPrice}>{vehicle.price}</Text>
-          <Text style={styles.priceNote}>Total before taxes</Text>
-        </View>
-        <Pressable style={styles.bookButton} onPress={handleBook}>
-          <Text style={styles.bookButtonText}>Reserve</Text>
+        <Pressable style={styles.bookButton} onPress={protectedBook}>
+          <Text style={styles.bookButtonText}>Book</Text>
         </Pressable>
       </View>
 
@@ -1206,7 +1367,22 @@ const styles = StyleSheet.create({
   reviewsHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  reviewsAllLink: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  reviewsAllText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#EF4444",
+  },
+  reviewsOverallContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginBottom: 16,
   },
   reviewsOverall: {
@@ -1448,6 +1624,122 @@ const styles = StyleSheet.create({
   fullscreenDotActive: {
     backgroundColor: NAVY,
     width: 24,
+  },
+  detailsCard: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    gap: 4,
+  },
+  detailsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  detailsIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  detailsValue: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  contactNumber: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    color: NAVY,
+    textAlign: "center",
+  },
+  availableScroll: {
+    gap: 10,
+    paddingRight: 20,
+  },
+  timeSlot: {
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    gap: 4,
+  },
+  timeSlotText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  timeSlotRange: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  timeSlotButton: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#10B981",
+    marginTop: 4,
+  },
+  timeSlotBooked: {
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    gap: 4,
+  },
+  timeSlotTextBooked: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#B91C1C",
+  },
+  timeSlotPartial: {
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    gap: 4,
+  },
+  timeSlotTextPartial: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#D97706",
+  },
+  timeSlotButtonBooked: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#B91C1C",
+    marginTop: 4,
+  },
+  bottomRating: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  bottomRatingValue: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: NAVY,
+  },
+  bottomRatingLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
   },
   toast: {
     position: "absolute",
