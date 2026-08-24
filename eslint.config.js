@@ -4,6 +4,9 @@ const expoConfig = require("eslint-config-expo/flat");
 const path = require("path");
 
 module.exports = defineConfig([
+  {
+    ignores: ["dist/*", "convex/_generated/*", "src/components/ui/*"],
+  },
   expoConfig,
   {
     languageOptions: {
@@ -17,9 +20,11 @@ module.exports = defineConfig([
           extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
           moduleDirectory: ['node_modules', path.resolve(__dirname, '')],
         },
+        typescript: {
+          project: './tsconfig.json',
+        },
       },
     },
-    ignores: ["dist/*", "convex/_generated/*"],
     rules: {
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/refs': 'off',

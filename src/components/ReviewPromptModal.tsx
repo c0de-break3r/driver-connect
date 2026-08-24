@@ -9,6 +9,8 @@ import {
   View,
 } from "react-native";
 import * as Haptics from "expo-haptics";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const NAVY = "#2C3E5B";
 const GOLD = "#F59E0B";
@@ -63,12 +65,12 @@ export default function ReviewPromptModal({
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
-      <View style={styles.overlay}>
+      <View className="flex-1 bg-black/50 items-center justify-center px-6">
         <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-          <Text style={styles.heading}>How was your experience?</Text>
-          <Text style={styles.subtitle}>Rate your experience with {revieweeName}</Text>
+          <Text className="text-xl font-extrabold text-[#2C3E5B] text-center">How was your experience?</Text>
+          <Text className="text-sm font-medium text-[#6B7280] text-center">Rate your experience with {revieweeName}</Text>
 
-          <View style={styles.starsRow}>
+          <View className="flex-row justify-center gap-3">
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
                 key={star}
@@ -83,7 +85,7 @@ export default function ReviewPromptModal({
           </View>
 
           <TextInput
-            style={styles.textInput}
+            className="bg-[#F3F4F6] rounded-xl px-4 py-3.5 text-base font-medium text-[#2C3E5B] min-h-[100px] text-top"
             placeholder="Share your experience (optional)"
             placeholderTextColor="#9CA3AF"
             value={comment}
@@ -93,17 +95,13 @@ export default function ReviewPromptModal({
             maxLength={500}
           />
 
-          <View style={styles.buttonsRow}>
+          <View className="flex-row gap-3">
             <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.submitButton, rating === 0 && styles.submitButtonDisabled]}
-              onPress={handleSubmit}
-              disabled={rating === 0}
-            >
-              <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
+            <Button onPress={handleSubmit} disabled={rating === 0} className="flex-1">
+              Submit
+            </Button>
           </View>
         </Animated.View>
       </View>
@@ -112,13 +110,6 @@ export default function ReviewPromptModal({
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
   container: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
@@ -127,43 +118,12 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     gap: 16,
   },
-  heading: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: NAVY,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#6B7280",
-    textAlign: "center",
-  },
-  starsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 12,
-  },
   star: {
     fontSize: 40,
     color: "#D1D5DB",
   },
   starActive: {
     color: GOLD,
-  },
-  textInput: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    padding: 14,
-    fontSize: 15,
-    fontWeight: "500",
-    color: NAVY,
-    textAlignVertical: "top",
-    minHeight: 100,
-  },
-  buttonsRow: {
-    flexDirection: "row",
-    gap: 12,
   },
   cancelButton: {
     flex: 1,
@@ -176,20 +136,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: NAVY,
-  },
-  submitButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: NAVY,
-    alignItems: "center",
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#D1D5DB",
-  },
-  submitButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
   },
 });

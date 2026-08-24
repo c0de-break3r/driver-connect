@@ -4,8 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
-  TouchableOpacity,
   View,
   Alert,
 } from "react-native";
@@ -15,6 +13,11 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/lib/convexApi";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ChatBubble } from "@/components/ui/chat-bubble";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const NAVY = "#2C3E5B";
 
@@ -26,43 +29,26 @@ export default function BookingChatScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
 
   const bookingId = params.bookingId as string | undefined;
-
-  const messages = useQuery(
-    api.messages.getBookingMessages,
-    bookingId ? { bookingId: bookingId as any } : "skip"
-  );
-
+  const messages = useQuery(api.messages.getBookingMessages, bookingId ? { bookingId: bookingId as any } : "skip");
   const sendMsg = useMutation(api.messages.sendMessage);
   const markAsRead = useMutation(api.messages.markMessagesAsRead);
 
   useEffect(() => {
-    if (bookingId && userId) {
-      markAsRead({ bookingId: bookingId as any, receiverId: userId });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (bookingId && userId) markAsRead({ bookingId: bookingId as any, receiverId: userId });
   }, [bookingId, userId]);
 
   useEffect(() => {
     if (messages && messages.length > 0) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
     }
   }, [messages]);
 
   const handleSend = async () => {
     if (!message.trim() || !bookingId || !userId) return;
-
     const receiverId = messages?.find((m) => m.senderId !== userId)?.senderId || "";
-
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      await sendMsg({
-        bookingId: bookingId as any,
-        senderId: userId,
-        receiverId,
-        content: message.trim(),
-      });
+      await sendMsg({ bookingId: bookingId as any, senderId: userId, receiverId, content: message.trim() });
       setMessage("");
     } catch {
       Alert.alert("Error", "Unable to send message. Please try again.");
@@ -87,51 +73,46 @@ export default function BookingChatScreen() {
         {!messages ? (
           <Text style={styles.loadingText}>Loading messages...</Text>
         ) : messages.length === 0 ? (
-          <View style={styles.emptyWrap}>
-            <Text style={styles.emptyTitle}>No messages yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Start a conversation about this booking.
-            </Text>
-          </View>
+          <EmptyState
+            icon="chatbubble-outline"
+            title="No messages yet"
+            description="Start a conversation about this booking."
+            className="py-20"
+          />
         ) : (
           messages.map((msg) => {
             const isSelf = msg.senderId === userId;
             return (
-              <View
+              <ChatBubble
                 key={msg._id}
-                style={[styles.messageBubble, isSelf ? styles.selfBubble : styles.otherBubble]}
+                variant={isSelf ? "sent" : "received"}
+                timestamp={new Date(msg.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                className="mb-2"
               >
-                <Text style={[styles.messageText, isSelf && styles.selfMessageText]}>
-                  {msg.content}
-                </Text>
-                <Text style={[styles.messageTime, isSelf && styles.selfMessageTime]}>
-                  {new Date(msg.createdAt).toLocaleTimeString("en-US", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Text>
-              </View>
+                <Text className={isSelf ? "text-white text-base font-medium" : "text-gray-800 text-base font-medium"}>{msg.content}</Text>
+              </ChatBubble>
             );
           })
         )}
       </ScrollView>
 
       <View style={styles.inputBar}>
-        <TextInput
-          style={styles.input}
+        <Input
           placeholder="Type a message..."
           placeholderTextColor="#9CA3AF"
           value={message}
           onChangeText={setMessage}
           onSubmitEditing={handleSend}
+          className="flex-1 bg-gray-50 border-gray-200 rounded-full"
         />
-        <TouchableOpacity
-          style={[styles.sendButton, !message.trim() && styles.sendButtonDisabled]}
+        <Button
           onPress={handleSend}
+          size="icon"
           disabled={!message.trim()}
+          className="w-10 h-10 rounded-full bg-gray-800 disabled:bg-gray-400"
         >
-          <Ionicons name="send" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+          <Ionicons name="send" size={18} color="#FFFFFF" />
+        </Button>
       </View>
     </View>
   );
@@ -145,26 +126,10 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   loadingText: { fontSize: 15, fontWeight: "600", color: "#6B7280", textAlign: "center", marginTop: 60 },
-  emptyWrap: { alignItems: "center", paddingVertical: 80 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: NAVY, marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, fontWeight: "500", color: "#6B7280", textAlign: "center" },
-  messageBubble: { maxWidth: "75%", borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 8 },
-  selfBubble: { alignSelf: "flex-end", backgroundColor: NAVY, borderBottomRightRadius: 4 },
-  otherBubble: { alignSelf: "flex-start", backgroundColor: "#F3F4F6", borderBottomLeftRadius: 4 },
-  messageText: { fontSize: 14, fontWeight: "500", color: NAVY, lineHeight: 20 },
-  selfMessageText: { color: "#FFFFFF" },
-  messageTime: { fontSize: 11, fontWeight: "500", color: "#9CA3AF", marginTop: 4, textAlign: "right" },
-  selfMessageTime: { color: "rgba(255,255,255,0.7)" },
   inputBar: {
     flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#FFFFFF",
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E5E7EB",
     paddingHorizontal: 16, paddingVertical: 12, paddingBottom: Platform.select({ ios: 24, android: 16 }),
   },
-  input: {
-    flex: 1, backgroundColor: "#F9FAFB", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,
-    fontSize: 15, color: NAVY, borderWidth: 1, borderColor: "#E5E7EB",
-  },
-  sendButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: NAVY, alignItems: "center", justifyContent: "center" },
-  sendButtonDisabled: { backgroundColor: "#9CA3AF" },
   errorText: { fontSize: 16, fontWeight: "600", color: "#6B7280", textAlign: "center", marginTop: 60 },
 });

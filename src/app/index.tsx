@@ -13,7 +13,5 @@ export default function Index() {
     router.replace("/home");
   }, [rootNavigationState?.key]);
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }} />
-  );
+  return <View className="flex-1 bg-white" />;
 }

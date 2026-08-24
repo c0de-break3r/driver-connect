@@ -14,6 +14,11 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/lib/convexApi";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
+import { Card } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -238,32 +243,24 @@ export default function CalendarDashboard() {
           >
             <View style={styles.vehicleChips}>
               {vehicles?.map((vehicle) => (
-                <TouchableOpacity
+                <Chip
                   key={vehicle._id}
-                  style={[
-                    styles.vehicleChip,
-                    selectedVehicleId === vehicle._id && styles.vehicleChipActive,
-                  ]}
+                  selected={selectedVehicleId === vehicle._id}
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     setSelectedVehicleId(vehicle._id);
                   }}
+                  className={selectedVehicleId === vehicle._id ? "bg-navy" : ""}
+                  textClassName={selectedVehicleId === vehicle._id ? "text-white" : ""}
                 >
-                  <Text
-                    style={[
-                      styles.vehicleChipText,
-                      selectedVehicleId === vehicle._id && styles.vehicleChipTextActive,
-                    ]}
-                  >
-                    {vehicle.make} {vehicle.model}
-                  </Text>
-                </TouchableOpacity>
+                  {vehicle.make} {vehicle.model}
+                </Chip>
               ))}
             </View>
           </ScrollView>
         </View>
 
-        <View style={styles.calendarCard}>
+        <Card className="mb-6">
           <View style={styles.monthRow}>
             <TouchableOpacity hitSlop={8} onPress={goToPreviousMonth}>
               <Ionicons name="chevron-back" size={22} color={NAVY} />
@@ -337,10 +334,10 @@ export default function CalendarDashboard() {
               <Text style={styles.legendText}>Available</Text>
             </View>
           </View>
-        </View>
+        </Card>
 
         {dayInfo && (
-          <View style={styles.dayInfoCard}>
+          <Card className="mb-6">
             <Text style={styles.dayInfoDate}>{formatDate(dayInfo.date)}</Text>
             <Text style={[styles.dayInfoStatus, { color: statusColor(dayInfo.status) }]}>
               {dayInfo.status.charAt(0).toUpperCase() + dayInfo.status.slice(1)}
@@ -384,106 +381,89 @@ export default function CalendarDashboard() {
             {dayInfo.bookings.length === 0 && dayInfo.blocks.length === 0 ? (
               <Text style={styles.dayInfoEmpty}>No bookings or blocks on this day.</Text>
             ) : null}
-          </View>
+          </Card>
         )}
       </ScrollView>
 
-      {showCreateModal && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create Availability Block</Text>
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent className="w-80">
+          <DialogHeader>
+            <DialogTitle>Create Availability Block</DialogTitle>
             <Text style={styles.modalDate}>
               {selectedDate ? formatDate(selectedDate) : ""}
             </Text>
+          </DialogHeader>
 
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Vehicle</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.vehicleChips}
-              >
-                <View style={styles.vehicleChipsRow}>
-                  {vehicles?.map((vehicle) => (
-                    <TouchableOpacity
-                      key={vehicle._id}
-                      style={[
-                        styles.vehicleChip,
-                        selectedVehicleId === vehicle._id && styles.vehicleChipActive,
-                      ]}
-                      onPress={() => setSelectedVehicleId(vehicle._id)}
-                    >
-                      <Text
-                        style={[
-                          styles.vehicleChipText,
-                          selectedVehicleId === vehicle._id && styles.vehicleChipTextActive,
-                        ]}
-                      >
-                        {vehicle.make} {vehicle.model}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Start date</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
-                value={blockStartDate}
-                onChangeText={setBlockStartDate}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>End date</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
-                value={blockEndDate}
-                onChangeText={setBlockEndDate}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Reason (optional)</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="e.g. Maintenance"
-                placeholderTextColor="#9CA3AF"
-                value={blockReason}
-                onChangeText={setBlockReason}
-              />
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => {
-                  setShowCreateModal(false);
-                  setSelectedDate(null);
-                }}
-              >
-                <Text style={styles.modalCancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalCreateButton}
-                onPress={handleCreateBlock}
-              >
-                <Text style={styles.modalCreateButtonText}>Create Block</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Vehicle</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.vehicleChips}
+            >
+              <View style={styles.vehicleChipsRow}>
+                {vehicles?.map((vehicle) => (
+                  <Chip
+                    key={vehicle._id}
+                    selected={selectedVehicleId === vehicle._id}
+                    onPress={() => setSelectedVehicleId(vehicle._id)}
+                    className={selectedVehicleId === vehicle._id ? "bg-navy" : ""}
+                    textClassName={selectedVehicleId === vehicle._id ? "text-white" : ""}
+                  >
+                    {vehicle.make} {vehicle.model}
+                  </Chip>
+                ))}
+              </View>
+            </ScrollView>
           </View>
-        </View>
-      )}
+
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Start date</Text>
+            <Input
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor="#9CA3AF"
+              value={blockStartDate}
+              onChangeText={setBlockStartDate}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>End date</Text>
+            <Input
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor="#9CA3AF"
+              value={blockEndDate}
+              onChangeText={setBlockEndDate}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Reason (optional)</Text>
+            <Input
+              placeholder="e.g. Maintenance"
+              placeholderTextColor="#9CA3AF"
+              value={blockReason}
+              onChangeText={setBlockReason}
+            />
+          </View>
+
+          <DialogFooter>
+            <Button variant="outline" onPress={() => {
+              setShowCreateModal(false);
+              setSelectedDate(null);
+            }}>
+              <Text style={styles.modalCancelButtonText}>Cancel</Text>
+            </Button>
+            <Button onPress={handleCreateBlock}>
+              <Text style={styles.modalCreateButtonText}>Create Block</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </View>
   );
 }
@@ -529,34 +509,6 @@ const styles = StyleSheet.create({
   vehicleChipsRow: {
     flexDirection: "row",
     gap: 8,
-  },
-  vehicleChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-  },
-  vehicleChipActive: {
-    backgroundColor: NAVY,
-    borderColor: NAVY,
-  },
-  vehicleChipText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  vehicleChipTextActive: {
-    color: "#FFFFFF",
-  },
-  calendarCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: 24,
   },
   monthRow: {
     flexDirection: "row",
@@ -683,30 +635,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#6B7280",
   },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 24,
-    width: "100%",
-    maxWidth: 400,
-    gap: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#111827",
-  },
   modalDate: {
     fontSize: 14,
     fontWeight: "500",
@@ -720,42 +648,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#374151",
   },
-  textInput: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#111827",
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 8,
-  },
-  modalCancelButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
   modalCancelButtonText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#374151",
-  },
-  modalCreateButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    backgroundColor: NAVY,
+    color: NAVY,
   },
   modalCreateButtonText: {
     fontSize: 15,

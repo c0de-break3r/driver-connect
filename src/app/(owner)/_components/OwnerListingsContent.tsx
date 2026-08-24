@@ -15,6 +15,10 @@ import {
   View,
 } from "react-native";
 import { images } from "@/constants/images";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
 import Toast from "@/components/Toast";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
@@ -179,9 +183,9 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
             <TouchableOpacity hitSlop={8} style={styles.iconButton}>
               <Ionicons name="pencil-outline" size={22} color="#374151" />
             </TouchableOpacity>
-            <TouchableOpacity hitSlop={8} style={styles.addButton} onPress={handleAddListing}>
+            <Button size="icon" className="bg-navy" onPress={handleAddListing}>
               <Ionicons name="add" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
+            </Button>
           </View>
         </View>
       )}
@@ -203,7 +207,7 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
           showsVerticalScrollIndicator={false}
         >
           {vehicles.map((vehicle) => (
-            <View key={vehicle._id} style={styles.listingCard}>
+            <Card key={vehicle._id} className="mb-3 overflow-hidden">
               <View style={styles.listingImagePlaceholder}>
                 {vehicle.images && vehicle.images.length > 0 ? (
                   <Image source={{ uri: vehicle.images[0] }} style={styles.listingImage} contentFit="cover" />
@@ -250,39 +254,24 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
 
                 <View style={styles.listingActions}>
                   {vehicle.status === "draft" && (
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.publishActionButton]}
-                      onPress={() => handlePublishDraft(vehicle._id)}
-                    >
+                    <Button size="sm" className="bg-navy" onPress={() => handlePublishDraft(vehicle._id)}>
                       <Ionicons name="rocket-outline" size={16} color="#FFFFFF" />
                       <Text style={styles.publishActionButtonText}>Publish</Text>
-                    </TouchableOpacity>
+                    </Button>
                   )}
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleEditPress(vehicle._id)}
-                  >
+                  <Button variant="outline" size="sm" onPress={() => handleEditPress(vehicle._id)}>
                     <Ionicons name="pencil-outline" size={16} color={NAVY} />
                     <Text style={styles.actionButtonText}>Edit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleOpenSettings(vehicle._id)}
-                  >
+                  </Button>
+                  <Button variant="outline" size="sm" onPress={() => handleOpenSettings(vehicle._id)}>
                     <Ionicons name="settings-outline" size={16} color={NAVY} />
                     <Text style={styles.actionButtonText}>Settings</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleOpenCalendar(vehicle._id)}
-                  >
+                  </Button>
+                  <Button variant="outline" size="sm" onPress={() => handleOpenCalendar(vehicle._id)}>
                     <Ionicons name="calendar-outline" size={16} color={NAVY} />
                     <Text style={styles.actionButtonText}>Calendar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleToggleStatus(vehicle._id, vehicle.status)}
-                  >
+                  </Button>
+                  <Button variant="outline" size="sm" onPress={() => handleToggleStatus(vehicle._id, vehicle.status)}>
                     <Ionicons
                       name={vehicle.status === "active" ? "pause-outline" : "play-outline"}
                       size={16}
@@ -291,19 +280,16 @@ export default function OwnerListingsContent({ hideHeader = false }: OwnerListin
                     <Text style={styles.actionButtonText}>
                       {vehicle.status === "active" ? "Pause" : "Activate"}
                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleDelete(vehicle._id)}
-                  >
+                  </Button>
+                  <Button variant="outline" size="sm" onPress={() => handleDelete(vehicle._id)}>
                     <Ionicons name="trash-outline" size={16} color="#EF4444" />
                     <Text style={[styles.actionButtonText, { color: "#EF4444" }]}>
                       Delete
                     </Text>
-                  </TouchableOpacity>
+                  </Button>
                 </View>
               </View>
-            </View>
+            </Card>
           ))}
         </ScrollView>
       )}
@@ -372,14 +358,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#F3F4F6",
   },
-  addButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 12,
-    backgroundColor: NAVY,
-  },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
@@ -425,14 +403,6 @@ const styles = StyleSheet.create({
   },
   emptyStateNoScroll: {
     flex: 1,
-  },
-  listingCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: 12,
   },
   listingImagePlaceholder: {
     width: "100%",
@@ -517,23 +487,9 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  actionButtonText: {
     fontSize: 13,
     fontWeight: "600",
     color: NAVY,
-  },
-  publishActionButton: {
-    backgroundColor: NAVY,
   },
   publishActionButtonText: {
     color: "#FFFFFF",

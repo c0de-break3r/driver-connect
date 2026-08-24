@@ -10,6 +10,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
+import { Card } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
 
 const NAVY = "#2C3E5B";
 
@@ -80,7 +82,10 @@ export default function OwnerCalendarScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>Calendars</Text>
           <TouchableOpacity hitSlop={8}>
@@ -93,29 +98,21 @@ export default function OwnerCalendarScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vehicleScroll}>
             <View style={styles.vehicleChips}>
               {vehicles?.map((vehicle) => (
-                <TouchableOpacity
+                <Chip
                   key={vehicle._id}
-                  style={[
-                    styles.vehicleChip,
-                    selectedVehicleId === vehicle._id && styles.vehicleChipActive,
-                  ]}
+                  selected={selectedVehicleId === vehicle._id}
                   onPress={() => setSelectedVehicleId(vehicle._id)}
+                  className={selectedVehicleId === vehicle._id ? "bg-navy" : ""}
+                  textClassName={selectedVehicleId === vehicle._id ? "text-white" : ""}
                 >
-                  <Text
-                    style={[
-                      styles.vehicleChipText,
-                      selectedVehicleId === vehicle._id && styles.vehicleChipTextActive,
-                    ]}
-                  >
-                    {vehicle.make} {vehicle.model}
-                  </Text>
-                </TouchableOpacity>
+                  {vehicle.make} {vehicle.model}
+                </Chip>
               ))}
             </View>
           </ScrollView>
         </View>
 
-        <View style={styles.calendarCard}>
+        <Card className="mb-4">
           <View style={styles.monthRow}>
             <TouchableOpacity hitSlop={8} onPress={goToPreviousMonth}>
               <Ionicons name="chevron-back" size={22} color={NAVY} />
@@ -172,7 +169,7 @@ export default function OwnerCalendarScreen() {
               <Text style={styles.legendText}>Blocked</Text>
             </View>
           </View>
-        </View>
+        </Card>
 
         {!selectedVehicle && vehicles && vehicles.length > 0 && (
           <View style={styles.hint}>
@@ -182,7 +179,7 @@ export default function OwnerCalendarScreen() {
             </Text>
           </View>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -224,33 +221,6 @@ const styles = StyleSheet.create({
   vehicleChips: {
     flexDirection: "row",
     gap: 8,
-  },
-  vehicleChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-  },
-  vehicleChipActive: {
-    backgroundColor: NAVY,
-    borderColor: NAVY,
-  },
-  vehicleChipText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  vehicleChipTextActive: {
-    color: "#FFFFFF",
-  },
-  calendarCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
   },
   monthRow: {
     flexDirection: "row",

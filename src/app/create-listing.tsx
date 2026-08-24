@@ -1579,7 +1579,7 @@ export default function CreateListingScreen() {
                     style={styles.photoCoverDelete}
                     onPress={() => setImages(images.filter((_, i) => i !== 0))}
                   >
-                    <Ionicons name="close-circle" size={24} color="#EF4444" />
+                    <Ionicons name="close" size={18} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
 
@@ -1601,7 +1601,7 @@ export default function CreateListingScreen() {
                         style={styles.photoThumbDelete}
                         onPress={() => setImages(images.filter((_, i) => i !== idx + 1))}
                       >
-                        <Ionicons name="close-circle" size={20} color="#EF4444" />
+                        <Ionicons name="close" size={16} color="#FFFFFF" />
                       </TouchableOpacity>
                     </TouchableOpacity>
                   ))}
@@ -2696,6 +2696,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   photoRowContent: {
     paddingHorizontal: 0,
@@ -2717,6 +2723,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 4,
     right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   photoAddMore: {
     width: 100,

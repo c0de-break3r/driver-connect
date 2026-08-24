@@ -12,6 +12,10 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/lib/convexApi";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 
 const NAVY = "#2C3E5B";
 
@@ -75,11 +79,12 @@ export default function OwnerProfileScreen() {
         </View>
 
         <View style={styles.avatarSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {convexUser?.firstName?.[0]?.toUpperCase() ?? "O"}
-            </Text>
-          </View>
+          <Avatar
+            size="lg"
+            src={undefined}
+            fallback={convexUser?.firstName?.[0]?.toUpperCase() ?? "O"}
+            className="bg-gray-200"
+          />
           <Text style={styles.ownerName}>
             {convexUser?.firstName ?? "Vehicle Owner"}
           </Text>
@@ -89,50 +94,52 @@ export default function OwnerProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Business Details</Text>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Company / Business Name</Text>
-            <TextInput
-              style={styles.input}
-              value={companyName}
-              onChangeText={setCompanyName}
-              placeholder="e.g. Nana Agyemang Motors"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
+          <Card className="mb-3">
+            <View style={styles.field}>
+              <Text style={styles.label}>Company / Business Name</Text>
+              <Input
+                value={companyName}
+                onChangeText={setCompanyName}
+                placeholder="e.g. Nana Agyemang Motors"
+                placeholderTextColor="#9CA3AF"
+              />
+            </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Fleet Size</Text>
-            <TextInput
-              style={styles.input}
-              value={fleetSize}
-              onChangeText={setFleetSize}
-              placeholder="Number of vehicles"
-              placeholderTextColor="#9CA3AF"
-              keyboardType="number-pad"
-            />
-          </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Fleet Size</Text>
+              <Input
+                value={fleetSize}
+                onChangeText={setFleetSize}
+                placeholder="Number of vehicles"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="number-pad"
+              />
+            </View>
+          </Card>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, styles.inputDisabled]}
-              value={convexUser?.email ?? ""}
-              editable={false}
-            />
-          </View>
+          <Card className="mb-3">
+            <View style={styles.field}>
+              <Text style={styles.label}>Email</Text>
+              <Input
+                value={convexUser?.email ?? ""}
+                editable={false}
+                className="bg-gray-100"
+              />
+            </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Role</Text>
-            <TextInput
-              style={[styles.input, styles.inputDisabled]}
-              value="Vehicle Owner"
-              editable={false}
-            />
-          </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>Role</Text>
+              <Input
+                value="Vehicle Owner"
+                editable={false}
+                className="bg-gray-100"
+              />
+            </View>
+          </Card>
         </View>
       </ScrollView>
     </View>
@@ -169,20 +176,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 32,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: NAVY,
-  },
   ownerName: {
     fontSize: 20,
     fontWeight: "700",
@@ -213,20 +206,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#374151",
     marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#111827",
-    backgroundColor: "#F9FAFB",
-  },
-  inputDisabled: {
-    backgroundColor: "#F3F4F6",
-    color: "#6B7280",
   },
 });

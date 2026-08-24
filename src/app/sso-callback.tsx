@@ -20,8 +20,8 @@ export default function SSOCallback() {
   }, [isLoaded, signedIn, rootNavigationState?.key]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ color: "#2C3E5B" }}>Completing sign in…</Text>
+    <View className="flex-1 bg-white items-center justify-center">
+      <Text className="text-[#2C3E5B]">Completing sign in…</Text>
     </View>
   );
 }

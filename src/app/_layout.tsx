@@ -2,6 +2,8 @@ import { useMemo, useEffect } from "react";
 import { ConvexProviderWithAuth } from "convex/react";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { PortalHost } from "@rn-primitives/portal";
 
 import { convex } from "@/lib/convex";
 import { useConvexRoleSync } from "@/hooks/useConvexRoleSync";
@@ -60,7 +62,9 @@ export default function RootLayout() {
       <ClerkProvider publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
         <AuthProvider>
           <ConvexAuthWrapper>
-            <AppInner />
+            <BottomSheetModalProvider>
+              <AppInner />
+            </BottomSheetModalProvider>
           </ConvexAuthWrapper>
         </AuthProvider>
       </ClerkProvider>
@@ -77,6 +81,7 @@ function AppInner() {
       <NotificationSetup />
       <ConvexSync />
       <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }} />
+      <PortalHost />
     </>
   );
 }

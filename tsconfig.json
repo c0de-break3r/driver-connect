@@ -10,6 +10,9 @@
       "@/assets/*": [
         "./assets/*"
       ],
+      "@/components/ui/*": [
+        "./src/components/ui/*"
+      ],
       "convex/_generated/*": [
         "./convex/_generated/*"
       ]
@@ -24,6 +27,7 @@
   ],
   "exclude": [
     "node_modules",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "src/components/ui"
   ]
 }

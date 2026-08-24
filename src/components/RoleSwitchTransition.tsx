@@ -69,17 +69,17 @@ export default function RoleSwitchTransition({
   const iconName = ROLE_ICONS[role] || "person-outline";
 
   return (
-    <View style={styles.container}>
+    <View className="absolute inset-0 bg-white items-center justify-center z-[100]">
       <Animated.View
         style={[
           styles.content,
           { opacity: contentFade, transform: [{ scale: scaleAnim }] },
         ]}
       >
-        <View style={styles.iconWrap}>
+        <View className="w-80 h-80 items-center justify-center overflow-hidden">
           <Ionicons name={iconName} size={120} color={NAVY} />
         </View>
-        <Text style={styles.label}>
+        <Text className="text-lg font-bold text-[#111827] text-center">
           Switching to {ROLE_LABELS[role] || role}
         </Text>
       </Animated.View>
@@ -88,29 +88,9 @@ export default function RoleSwitchTransition({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 100,
-  },
   content: {
     alignItems: "center",
     justifyContent: "center",
     gap: 32,
-  },
-  iconWrap: {
-    width: 320,
-    height: 320,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  label: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111827",
-    textAlign: "center",
   },
 });

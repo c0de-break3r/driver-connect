@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList, Dimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList } from "react-native";
 import { Image } from "expo-image";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { Search, X, SlidersHorizontal, LayoutGrid, List } from "lucide-react-native";
+import { Card } from "@/components/ui/card";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
@@ -16,9 +20,6 @@ import { useToast } from "@/hooks/useToast";
 const NAVY = "#2C3E5B";
 const ICON_SIZE_BASE = 20;
 const ICON_SIZE_ACTIVE = 24;
-
-
-
 
 const FEATURED_VEHICLES = [
   {
@@ -83,6 +84,25 @@ type HomeScreenContentProps = {
   onLoginPress?: () => void;
 };
 
+type SortOption = "recommended" | "price_asc" | "price_desc" | "rating";
+
+const SORT_OPTIONS: { id: SortOption; label: string }[] = [
+  { id: "recommended", label: "Recommended" },
+  { id: "price_asc", label: "Price: Low to High" },
+  { id: "price_desc", label: "Price: High to Low" },
+  { id: "rating", label: "Highest Rated" },
+];
+
+const CATEGORY_OPTIONS = [
+  { id: "all", label: "All" },
+  { id: "drivers", label: "Drivers" },
+  { id: "airports", label: "Airports" },
+  { id: "monthly", label: "Monthly" },
+  { id: "nearby", label: "Nearby" },
+  { id: "delivered", label: "Delivered" },
+  { id: "cities", label: "Cities" },
+];
+
 export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedResult, setSelectedResult] = useState<any | null>(null);
@@ -91,9 +111,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [placesResults, setPlacesResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [sortBy, setSortBy] = useState<"recommended" | "price_asc" | "price_desc" | "rating">("recommended");
+  const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const convexVehicles = useQuery(api.jobs.listVehicles, {});
   const vehicles = (convexVehicles ?? []).map((v: any) => ({
@@ -118,8 +138,6 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     pricePerDay: v.pricePerDay,
   }));
 
-
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const sectionAnims = useRef<Animated.Value[]>(
     Array.from({ length: 6 }, () => new Animated.Value(1))
   ).current;
@@ -131,6 +149,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   useEffect(() => {
     loadFavoritesForUser(email);
   }, [email, loadFavoritesForUser]);
+
   const iconAnim = useRef(new Animated.Value(ICON_SIZE_BASE)).current;
   const heartAnims = useRef<Map<string, Animated.Value>>(new Map()).current;
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -294,38 +313,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const sortedFeaturedVehicles = sortVehicles(FEATURED_VEHICLES);
   const sortedDrivers = sortDrivers(DRIVERS);
 
-  const chips = [
-    { id: "all", label: "All", icon: "account-group", family: "material" as const },
-    { id: "drivers", label: "Drivers", icon: "steering", family: "material" as const },
-    { id: "airports", label: "Airports", icon: "airplane-outline", family: "ion" as const },
-    { id: "monthly", label: "Monthly", icon: "calendar-outline", family: "ion" as const },
-    { id: "nearby", label: "Nearby", icon: "location-outline", family: "ion" as const },
-    { id: "delivered", label: "Delivered", icon: "car-sport-outline", family: "ion" as const },
-    { id: "cities", label: "Cities", icon: "business-outline", family: "ion" as const },
-  ];
-
-  const handleSort = (option: "recommended" | "price_asc" | "price_desc" | "rating") => {
+  const handleSort = (option: SortOption) => {
     setSortBy(option);
-    setShowSortDropdown(false);
-  };
-
-  const categoryScrollViewRef = useRef<ScrollView>(null);
-  const chipLayouts = useRef<{ [key: string]: { x: number; width: number } }>({}).current;
-
-  const handleCategoryPress = (id: string) => {
-    setSelectedCategory(id);
-
-    const layout = chipLayouts[id];
-    if (layout && categoryScrollViewRef.current) {
-      const scrollViewWidth = Dimensions.get("window").width - 40;
-      const targetX = layout.x - scrollViewWidth / 2 + layout.width / 2;
-      categoryScrollViewRef.current.scrollTo({ x: Math.max(0, targetX), animated: true });
-    }
-  };
-
-  const handleChipLayout = (id: string, event: any) => {
-    const { x, width } = event.nativeEvent.layout;
-    chipLayouts[id] = { x, width };
   };
 
   const iconScale = iconAnim.interpolate({
@@ -366,23 +355,23 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   })();
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-white">
       {/* Fixed header */}
-      <View style={styles.header}>
+      <View className="bg-white pt-4 pb-3">
         {/* Unified search */}
-        <View style={styles.searchWrapper}>
-          <View style={styles.searchTextInputContainer}>
+        <View className="mx-5 relative z-20">
+          <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-3.5 py-2.5 gap-2.5">
             {selectedResult ? (
               <Pressable onPress={clearSearch}>
                 <Ionicons name="arrow-back" size={ICON_SIZE_BASE} color={NAVY} />
               </Pressable>
             ) : (
               <Animated.View style={{ transform: [{ scale: iconScale }] }}>
-                <Ionicons name="search-outline" size={ICON_SIZE_BASE} color={NAVY} />
+                <Search size={ICON_SIZE_BASE} color={NAVY} />
               </Animated.View>
             )}
             <TextInput
-              style={styles.searchInput}
+              className="flex-1 text-base text-[#2C3E5B]"
               placeholder="Search places or people"
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
@@ -392,16 +381,16 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={clearSearch}>
-                <Ionicons name="close-circle" size={ICON_SIZE_BASE} color="#9CA3AF" />
+                <X size={ICON_SIZE_BASE} color="#9CA3AF" />
               </Pressable>
             )}
           </View>
 
           {focused && (searchQuery.trim().length > 0 || isSearching) && (
-            <View style={styles.unifiedSearchResults}>
+            <View className="mt-1 bg-white rounded-xl border border-gray-200 overflow-hidden" style={{ height: 180, zIndex: 30, elevation: 30 }}>
               {isSearching ? (
-                <View style={styles.searchResultRow}>
-                  <Text style={styles.searchResultText}>Searching...</Text>
+                <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
+                  <Text className="text-sm text-gray-500">Searching...</Text>
                 </View>
               ) : combinedResults.length > 0 ? (
                 <FlatList
@@ -410,17 +399,16 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   nestedScrollEnabled
                   keyboardShouldPersistTaps="handled"
                   showsVerticalScrollIndicator={false}
-                  style={styles.unifiedSearchFlatList}
                   renderItem={({ item }) => (
                     <Pressable
-                      style={styles.searchResultRow}
+                      className="flex-row items-center px-4 py-3 border-b border-gray-100 gap-3"
                       onPress={() => handleResultSelect(item)}
                     >
-                      <View style={styles.searchResultIcon}>
+                      <View className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center">
                         {item.type === "person" && item.image ? (
                           <Image
                             source={{ uri: item.image }}
-                            style={styles.searchResultAvatar}
+                            className="w-9 h-9 rounded-full"
                             contentFit="cover"
                           />
                         ) : item.type === "place" ? (
@@ -429,22 +417,22 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                           <Ionicons name="person-outline" size={ICON_SIZE_BASE} color={NAVY} />
                         )}
                       </View>
-                      <View style={styles.searchResultInfo}>
-                        <Text style={styles.searchResultTitle}>{item.title}</Text>
+                      <View className="flex-1">
+                        <Text className="text-sm font-semibold text-[#2C3E5B]">{item.title}</Text>
                         {item.subtitle ? (
-                          <Text style={styles.searchResultSubtitle}>{item.subtitle}</Text>
+                          <Text className="text-xs text-gray-500 mt-0.5">{item.subtitle}</Text>
                         ) : null}
                       </View>
-                      <Text style={styles.searchResultType}>
+                      <Text className="text-[10px] font-semibold text-gray-400 uppercase">
                         {item.type === "place" ? "Place" : item.data?.role === "client" ? "Guest" : "Person"}
                       </Text>
                     </Pressable>
                   )}
                 />
               ) : (
-                <View style={styles.searchResultRow}>
-                  <Text style={styles.searchResultText}>No results found</Text>
-                  <Text style={styles.searchResultSubtext}>Try a different search term</Text>
+                <View className="px-4 py-6 items-center">
+                  <Text className="text-sm text-gray-500 text-center">No results found</Text>
+                  <Text className="text-xs text-gray-400 text-center mt-1">Try a different search term</Text>
                 </View>
               )}
             </View>
@@ -452,76 +440,61 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
         </View>
 
         {/* Active chips + count + sort + view toggle */}
-        <View style={styles.exploreControls}>
-          <Text style={styles.adsCount}>Found {displayedVehicles.length} ads</Text>
-          <View style={styles.controlsRight}>
-            <View style={styles.sortWrapper}>
-              <Pressable style={styles.sortButton} onPress={() => setShowSortDropdown(!showSortDropdown)}>
-                <Text style={styles.sortButtonText}>Sort</Text>
-                <Ionicons name={showSortDropdown ? "chevron-up" : "chevron-down"} size={14} color={NAVY} />
-              </Pressable>
-              {showSortDropdown && (
-                <View style={styles.sortDropdown}>
-                  {[
-                    { id: "recommended", label: "Recommended" },
-                    { id: "price_asc", label: "Price: Low to High" },
-                    { id: "price_desc", label: "Price: High to Low" },
-                    { id: "rating", label: "Highest Rated" },
-                  ].map((option) => (
-                    <Pressable
-                      key={option.id}
-                      style={[styles.sortOption, sortBy === option.id && styles.sortOptionActive]}
-                      onPress={() => handleSort(option.id as any)}
-                    >
-                      <Text style={[styles.sortOptionText, sortBy === option.id && styles.sortOptionTextActive]}>
-                        {option.label}
-                      </Text>
-                      {sortBy === option.id && (
-                        <Ionicons name="checkmark" size={18} color={NAVY} />
-                      )}
-                     </Pressable>
-                   ))}
-                </View>
-              )}
-            </View>
+        <View className="flex-row items-center justify-between px-5 mt-3 gap-2">
+          <Text className="text-xs font-semibold text-gray-400">Found {displayedVehicles.length} ads</Text>
+          <View className="flex-row items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Pressable className="flex-row items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-gray-200">
+                  <SlidersHorizontal size={14} color={NAVY} />
+                  <Text className="text-xs font-semibold text-[#2C3E5B]">Sort</Text>
+                  <Ionicons name="chevron-down" size={12} color={NAVY} />
+                </Pressable>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="bottom" align="end" className="min-w-[200px]">
+                {SORT_OPTIONS.map((option) => (
+                  <DropdownMenuItem key={option.id} onPress={() => handleSort(option.id)}>
+                    <Text className={sortBy === option.id ? "text-sm font-bold text-[#2C3E5B]" : "text-sm text-[#2C3E5B]"}>
+                      {option.label}
+                    </Text>
+                    {sortBy === option.id && (
+                      <Ionicons name="checkmark" size={16} color={NAVY} className="ml-auto" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Pressable
-              style={styles.viewToggle}
+              className="w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center"
               onPress={handleViewModeToggle}
             >
-              <Ionicons name={viewMode === "grid" ? "grid-outline" : "list-outline"} size={18} color={NAVY} />
+              {viewMode === "grid" ? (
+                <LayoutGrid size={18} color={NAVY} />
+              ) : (
+                <List size={18} color={NAVY} />
+              )}
             </Pressable>
           </View>
         </View>
 
         {/* Category filter chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryChipsRow}
-          ref={categoryScrollViewRef}
-        >
-          {chips.map((chip) => (
-            <Pressable
-              key={chip.id}
-              style={[styles.categoryChip, selectedCategory === chip.id && styles.categoryChipActive]}
-              onPress={() => handleCategoryPress(chip.id)}
-              onLayout={(e) => handleChipLayout(chip.id, e)}
-            >
-              {chip.family === "material" ? (
-                <MaterialCommunityIcons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
-              ) : (
-                <Ionicons name={chip.icon as any} size={18} color={selectedCategory === chip.id ? "#FFFFFF" : NAVY} />
-              )}
-              <Text style={[styles.categoryChipText, selectedCategory === chip.id && styles.categoryChipTextActive]}>{chip.label}</Text>
-            </Pressable>
-          )
-        )}
-        </ScrollView>
+        <View className="mt-3">
+          <SegmentedControl
+            options={CATEGORY_OPTIONS.map(opt => opt.label)}
+            value={CATEGORY_OPTIONS.find(opt => opt.id === selectedCategory)?.label || "All"}
+            onValueChange={(label) => {
+              const found = CATEGORY_OPTIONS.find(opt => opt.label === label);
+              if (found) setSelectedCategory(found.id);
+            }}
+            size="sm"
+          />
+        </View>
       </View>
 
       {/* Scrollable content */}
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, gap: 20 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#2C3E5B" colors={["#2C3E5B"]} />
@@ -530,14 +503,15 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
         {selectedResult ? (
           <>
             {/* Search results */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.searchResultsTitle}>
-                <Text>Results for </Text>
-                <Text style={styles.searchResultsQuery}>{searchQuery}</Text>
-              </Text>
-              <Text style={styles.searchResultsSubtitle}>
-                {selectedResult.type === "place" ? "Place" : "Person"} • Ghana
-              </Text>
+            <View className="flex-row items-center justify-between mt-2">
+              <View>
+                <Text className="text-base font-bold text-[#2C3E5B]">
+                  Results for <Text className="text-[#2C3E5B]">{searchQuery}</Text>
+                </Text>
+                <Text className="text-xs text-gray-500 mt-0.5">
+                  {selectedResult.type === "place" ? "Place" : "Person"} • Ghana
+                </Text>
+              </View>
             </View>
 
             <Animated.View
@@ -564,8 +538,6 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                   (v.category ?? "").toLowerCase().includes(query)
                 );
               }).map((vehicle) => {
-
-
                 return (
                 <VehicleCard
                   key={vehicle.id}
@@ -583,8 +555,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
         ) : (
           <>
             {/* Top Rated Drivers */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Top Rated Drivers</Text>
+            <View className="flex-row items-center justify-between mt-2">
+              <Text className="text-lg font-extrabold text-white">Top Rated Drivers</Text>
             </View>
             <Animated.View
               style={[
@@ -615,53 +587,55 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 };
                 return (
                 <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => handleDriverPress(driver.id)}>
-                  <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
-                    <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
-                      <Pressable style={styles.favoriteBadge} onPress={() => {
-                        triggerHeartBeat();
-                        handleFavoritePress(driver.id, driver.name, driver.image, driver.hourlyRate, driver.location, driver.rating);
-                      }}>
-                        <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                          <Ionicons
-                            name={savedItems.some((item) => item.id === driver.id) ? "heart" : "heart-outline"}
-                            size={22}
-                            color={savedItems.some((item) => item.id === driver.id) ? "#E74C3C" : "#FFFFFF"}
-                          />
-                        </Animated.View>
-                      </Pressable>
-                  </View>
-                  <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                      {driver.name}
-                    </Text>
-                    <Text style={styles.cardSubtitle}>{driver.location}</Text>
-                    <View style={styles.ratingRow}>
-                      <Ionicons name="star" size={12} color="#FFB800" />
-                      <Text style={styles.ratingText}>{driver.rating}</Text>
-                      <Text style={styles.tripsText}>({driver.trips} trips)</Text>
+                  <Card className={`p-0 overflow-hidden ${viewMode === "list" ? "flex-row" : ""}`}>
+                    <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
+                      <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
+                        <Pressable style={styles.favoriteBadge} onPress={() => {
+                          triggerHeartBeat();
+                          handleFavoritePress(driver.id, driver.name, driver.image, driver.hourlyRate, driver.location, driver.rating);
+                        }}>
+                          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                            <Ionicons
+                              name={savedItems.some((item) => item.id === driver.id) ? "heart" : "heart-outline"}
+                              size={22}
+                              color={savedItems.some((item) => item.id === driver.id) ? "#E74C3C" : "#FFFFFF"}
+                            />
+                          </Animated.View>
+                        </Pressable>
                     </View>
-                    <View style={styles.rateRow}>
-                      <Text style={styles.rateText}>{driver.hourlyRate}/hr</Text>
-                      {driver.isVerified && (
-                        <View style={styles.verifiedBadgeInline}>
-                          <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                          <Text style={styles.verifiedBadgeText}>Verified</Text>
-                        </View>
-                      )}
+                    <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
+                      <Text style={styles.cardTitle} numberOfLines={1}>
+                        {driver.name}
+                      </Text>
+                      <Text style={styles.cardSubtitle}>{driver.location}</Text>
+                      <View style={styles.ratingRow}>
+                        <Ionicons name="star" size={12} color="#FFB800" />
+                        <Text style={styles.ratingText}>{driver.rating}</Text>
+                        <Text style={styles.tripsText}>({driver.trips} trips)</Text>
+                      </View>
+                      <View style={styles.rateRow}>
+                        <Text style={styles.rateText}>{driver.hourlyRate}/hr</Text>
+                        {driver.isVerified && (
+                          <View className="flex-row items-center gap-1 ml-auto px-2 py-0.5 rounded-md bg-emerald-50">
+                            <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                            <Text className="text-[#10B981] font-bold text-[11px]">Verified</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.metaRow}>
+                        <Text style={styles.yearsText}>{driver.yearsOnPlatform}</Text>
+                        <Text style={styles.vehicleTypeText}>{driver.vehicleType}</Text>
+                      </View>
                     </View>
-                    <View style={styles.metaRow}>
-                      <Text style={styles.yearsText}>{driver.yearsOnPlatform}</Text>
-                      <Text style={styles.vehicleTypeText}>{driver.vehicleType}</Text>
-                    </View>
-                  </View>
+                  </Card>
                 </Pressable>
               );
             })}
             </Animated.View>
 
             {/* Featured Vehicles */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Featured Vehicles</Text>
+            <View className="flex-row items-center justify-between mt-2">
+              <Text className="text-lg font-extrabold text-white">Featured Vehicles</Text>
             </View>
 
             <Animated.View
@@ -693,39 +667,41 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 };
                 return (
                 <Pressable key={vehicle.id} style={[styles.featuredCard, viewMode === "list" ? styles.listCard : undefined]} onPress={() => handleVehiclePress(vehicle.id)}>
-                  <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
-                    <Image
-                      source={{ uri: vehicle.image }}
-                      style={styles.cardImage}
-                      contentFit="cover"
-                      onError={() => handleImageError(vehicle.id)}
-                    />
-                    {imageErrors[vehicle.id] && (
-                      <View style={styles.imageFallback}>
-                        <Ionicons name="image-outline" size={24} color="#9CA3AF" />
+                  <Card className={`p-0 overflow-hidden ${viewMode === "list" ? "flex-row" : ""}`}>
+                    <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
+                      <Image
+                        source={{ uri: vehicle.image }}
+                        style={styles.cardImage}
+                        contentFit="cover"
+                        onError={() => handleImageError(vehicle.id)}
+                      />
+                      {imageErrors[vehicle.id] && (
+                        <View style={styles.imageFallback}>
+                          <Ionicons name="image-outline" size={24} color="#9CA3AF" />
+                        </View>
+                      )}
+                      <View style={styles.topRightActions}>
+                        <Pressable style={styles.favoriteBadge} onPress={() => {
+                          triggerHeartBeat();
+                          handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, `GH₵ ${vehicle.pricePerDay}`, vehicle.location, vehicle.rating);
+                        }}>
+                          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                            <Ionicons
+                              name={savedItems.some((item) => item.id === vehicle.id) ? "heart" : "heart-outline"}
+                              size={22}
+                              color={savedItems.some((item) => item.id === vehicle.id) ? "#E74C3C" : "#FFFFFF"}
+                            />
+                          </Animated.View>
+                        </Pressable>
                       </View>
-                    )}
-                    <View style={styles.topRightActions}>
-                      <Pressable style={styles.favoriteBadge} onPress={() => {
-                        triggerHeartBeat();
-                        handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, `GH₵ ${vehicle.pricePerDay}`, vehicle.location, vehicle.rating);
-                      }}>
-                        <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                          <Ionicons
-                            name={savedItems.some((item) => item.id === vehicle.id) ? "heart" : "heart-outline"}
-                            size={22}
-                            color={savedItems.some((item) => item.id === vehicle.id) ? "#E74C3C" : "#FFFFFF"}
-                          />
-                        </Animated.View>
-                      </Pressable>
                     </View>
-                  </View>
-                  <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                      {vehicle.title}
-                    </Text>
-                    <Text style={styles.cardSubtitle}>{vehicle.subtitle}</Text>
-                  </View>
+                    <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
+                      <Text style={styles.cardTitle} numberOfLines={1}>
+                        {vehicle.title}
+                      </Text>
+                      <Text style={styles.cardSubtitle}>{vehicle.subtitle}</Text>
+                    </View>
+                  </Card>
                 </Pressable>
               );
             })}
@@ -745,280 +721,103 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   );
 }
 
-function Card({
-  children,
-  style,
-}: {
-  children: React.ReactNode;
-  style?: any;
-}) {
-  return (
-    <View style={[styles.cardStyle, style]}>
-      {children}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
+  list: {
+    flexDirection: "column",
+    gap: 14,
   },
-  header: {
-    backgroundColor: "#FFFFFF",
-    paddingTop: 16,
-    paddingBottom: 12,
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 14,
   },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-    gap: 20,
-  },
-
-  /* Search */
-  searchBar: {
+  listCard: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
+  },
+  card: {
+    width: "47%",
     backgroundColor: "#FFFFFF",
-    borderRadius: 32,
-    paddingHorizontal: 16,
-    height: 52,
-    gap: 12,
-    marginHorizontal: 20,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  featuredCard: {
+    width: "47%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#2C3E5B",
-    paddingVertical: 0,
-    backgroundColor: "transparent",
-    borderBottomWidth: 0,
-    borderBottomColor: "transparent",
-    textDecorationLine: "none",
-  },
-   searchTextInputContainer: {
-     flexDirection: "row",
-     alignItems: "center",
-     backgroundColor: "#FFFFFF",
-     borderRadius: 20,
-     paddingHorizontal: 14,
-     paddingVertical: 10,
-     height: 44,
-     gap: 10,
-     borderWidth: 1.5,
-     borderColor: "#E5E7EB",
-   },
-   searchAutocompleteContainer: {
-     marginHorizontal: 20,
-     position: "relative",
-     zIndex: 10,
-   },
-   searchListView: {
-     marginTop: 4,
-     backgroundColor: "#FFFFFF",
-     borderRadius: 14,
-     borderWidth: 1,
-     borderColor: "#E5E7EB",
-     maxHeight: 240,
-     width: "100%",
-     zIndex: 10,
-     elevation: 10,
-   },
-  searchRow: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
-  },
-  searchWrapper: {
-    marginHorizontal: 20,
+  imageWrap: {
     position: "relative",
-    zIndex: 20,
+    width: "100%",
+    height: 120,
   },
-    unifiedSearchResults: {
-      position: "absolute",
-      top: 56,
-      left: 0,
-      right: 0,
-      backgroundColor: "#FFFFFF",
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: "#E5E7EB",
-      height: 180,
-      zIndex: 30,
-      elevation: 30,
-    },
-  searchResultRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-     borderBottomColor: "#E5E7EB",
-     gap: 12,
-   },
-   searchResultIcon: {
-     width: 36,
-     height: 36,
-     borderRadius: 18,
-     backgroundColor: "#F3F4F6",
-     alignItems: "center",
-     justifyContent: "center",
-   },
-  searchResultAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  cardImage: {
+    width: "100%",
+    height: "100%",
   },
-  searchResultInfo: {
-    flex: 1,
-  },
-  searchResultTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#2C3E5B",
-  },
-  searchResultSubtitle: {
-    fontSize: 12,
-    color: "#6B7280",
-    marginTop: 2,
-  },
-  searchResultText: {
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
-    paddingVertical: 12,
-  },
-  searchResultSubtext: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    textAlign: "center",
-    marginTop: 4,
-  },
-  searchResultType: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#9CA3AF",
-    textTransform: "uppercase",
-  },
-  unifiedSearchFlatList: {
-    flex: 1,
-  },
-  searchResultsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
-  },
-  searchResultsBackButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  searchResultsHeaderText: {
-    flex: 1,
-  },
-  searchResultsTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#2C3E5B",
-  },
-  searchResultsQuery: {
-    fontWeight: "800",
-    color: "#2C3E5B",
-  },
-  searchResultsSubtitle: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginTop: 2,
-  },
-
-  /* Explore controls */
-  exploreControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    marginTop: 12,
-    gap: 10,
-  },
-  chipsRow: {
-    gap: 8,
-    flex: 1,
-  },
-  activeChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  activeChipCheck: {
-    color: "#10B981",
-    fontWeight: "700",
-  },
-  activeChipText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: NAVY,
-  },
-  controlsRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  adsCount: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#9CA3AF",
-  },
-  sortButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  sortButtonText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#2C3E5B",
-  },
-  viewToggle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  verifiedBadgeTop: {
+  favoriteBadge: {
     position: "absolute",
     top: 8,
     right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.9)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  topRightActions: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    gap: 8,
+  },
+  imageFallback: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3F4F6",
+  },
+  cardBody: {
+    padding: 10,
+    gap: 4,
+    flex: 1,
+  },
+  listCardBody: {
+    padding: 12,
+    justifyContent: "center",
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: NAVY,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#6B7280",
+  },
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  rateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: NAVY,
   },
   tripsText: {
     fontSize: 11,
@@ -1047,361 +846,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 4,
   },
-
-  /* Continue searching */
-  continueCard: {
-    backgroundColor: "#111111",
-    borderRadius: 20,
-    padding: 16,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  continueContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  continueTextWrap: {
-    flex: 1,
-  },
-  continueTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  continueDate: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#9CA3AF",
-    marginTop: 6,
-  },
-  continueImageWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  continueImage: {
-    width: "100%",
-    height: "100%",
-  },
-
-  /* Sections */
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#FFFFFF",
-    flex: 1,
-  },
-
-  /* Grid */
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 14,
-  },
-  list: {
-    flexDirection: "column",
-    gap: 14,
-  },
-  listCard: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-  },
   listImageWrap: {
     width: 140,
-    height: 140,
+    aspectRatio: 1.5,
     flexShrink: 1,
   },
-  listCardBody: {
-    padding: 12,
-    justifyContent: "center",
-    flex: 1,
-  },
-  card: {
-    width: "47%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    overflow: "hidden",
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  featuredCard: {
-    width: "47%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  imageWrap: {
-    position: "relative",
-    width: "100%",
-    height: 120,
-  },
-  cardImage: {
-    width: "100%",
-    height: "100%",
-  },
-  favoriteBadge: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  saveBadge: {
-    position: "absolute",
-    top: 8,
-    right: 44,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topRightActions: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    flexDirection: "row",
-    gap: 8,
-  },
-  imageFallback: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F3F4F6",
-  },
-  cardBody: {
-    padding: 12,
-    gap: 4,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#2C3E5B",
-  },
-  cardCategory: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 4,
-  },
-  rateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  priceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 4,
-  },
-  price: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  originalPrice: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#9CA3AF",
-    textDecorationLine: "line-through",
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-
-  /* Mosaic message card */
-  mosaicCard: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    overflow: "hidden",
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  mosaicGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    width: "100%",
-    height: 80,
-  },
-  mosaicItem: {
-    width: "50%",
-    height: "50%",
-    padding: 1,
-  },
-  mosaicImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 2,
-  },
-  mosaicOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 8,
-  },
-  mosaicTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#FFFFFF",
-    textAlign: "center",
-    marginBottom: 2,
-  },
-  mosaicMessage: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#FFFFFF",
-    textAlign: "center",
-    opacity: 0.95,
-  },
-
-  /* Generic card */
-  cardStyle: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    gap: 8,
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-
-  /* Category chips */
-  categoryChipsRow: {
-    paddingHorizontal: 20,
-    gap: 10,
-    marginTop: 12,
-  },
-  categoryChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
-  },
-  categoryChipActive: {
-    backgroundColor: NAVY,
-  },
-  categoryChipText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#2C3E5B",
-  },
-  categoryChipTextActive: {
-    color: "#FFFFFF",
-  },
-
-  /* Sort */
-  sortWrapper: {
-    position: "relative",
-  },
-  sortDropdown: {
-    position: "absolute",
-    top: "100%",
-    right: 0,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingVertical: 6,
-    zIndex: 50,
-    elevation: 10,
-    minWidth: 200,
-    shadowColor: NAVY,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    marginTop: 4,
-  },
-  sortOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    gap: 10,
-  },
-  sortOptionActive: {
-    backgroundColor: "#F3F4F6",
-  },
-  sortOptionText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#2C3E5B",
-  },
-  sortOptionTextActive: {
-    fontWeight: "700",
-  },
-  cardTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  verifiedBadgeInline: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    backgroundColor: "#ECFDF5",
-  },
-  verifiedBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#10B981",
-  },
 });
-
-

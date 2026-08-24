@@ -10,6 +10,11 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { SearchBar } from "@/components/ui/search-bar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const NAVY = "#2C3E5B";
 
@@ -18,7 +23,6 @@ export default function DriverMessagesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchExpanded, setSearchExpanded] = useState(false);
   const settingsSheetAnim = useRef(new Animated.Value(0)).current;
-  const searchWidthAnim = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef<TextInput>(null);
 
   const openSettings = () => {
@@ -42,15 +46,14 @@ export default function DriverMessagesScreen() {
   const toggleSearch = () => {
     if (searchExpanded) {
       setSearchExpanded(false);
-      Animated.timing(searchWidthAnim, {
+      Animated.timing(settingsSheetAnim, {
         toValue: 0,
         duration: 240,
         useNativeDriver: false,
       }).start();
     } else {
       setSearchExpanded(true);
-      searchWidthAnim.setValue(0);
-      Animated.timing(searchWidthAnim, {
+      Animated.timing(settingsSheetAnim, {
         toValue: 1,
         duration: 240,
         useNativeDriver: false,
@@ -63,7 +66,7 @@ export default function DriverMessagesScreen() {
   const handleClearSearch = () => {
     setSearchQuery("");
     setSearchExpanded(false);
-    Animated.timing(searchWidthAnim, {
+    Animated.timing(settingsSheetAnim, {
       toValue: 0,
       duration: 240,
       useNativeDriver: false,
@@ -78,30 +81,16 @@ export default function DriverMessagesScreen() {
       >
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <Animated.View
-              style={{
-                opacity: searchWidthAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [1, 0],
-                }),
-                position: "absolute",
-                left: 0,
-              }}
-            >
-              <TouchableOpacity onPress={toggleSearch} hitSlop={8} style={styles.iconButton}>
-                <Ionicons name="search" size={22} color={NAVY} />
-              </TouchableOpacity>
-            </Animated.View>
+            <TouchableOpacity onPress={toggleSearch} hitSlop={8} style={styles.iconButton}>
+              <Ionicons name="search" size={22} color={NAVY} />
+            </TouchableOpacity>
 
             <Animated.View
               style={[
                 styles.searchExpandWrap,
                 {
-                  width: searchWidthAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 200],
-                  }),
-                  opacity: searchWidthAnim,
+                  width: searchExpanded ? 200 : 0,
+                  opacity: searchExpanded ? 1 : 0,
                 },
               ]}
             >
@@ -121,22 +110,27 @@ export default function DriverMessagesScreen() {
             </Animated.View>
           </View>
 
-          <TouchableOpacity
-            style={styles.sortButton}
-            onPress={() => {}}
-            hitSlop={8}
-          >
-            <Text style={styles.sortButtonText}>Sort</Text>
-            <Ionicons name="chevron-down" size={14} color={NAVY} />
-          </TouchableOpacity>
+          <Button variant="outline" size="sm" onPress={() => {}} iconAfter={<Ionicons name="chevron-down" size={14} color={NAVY} />} className="rounded-full">
+            Sort
+          </Button>
           <TouchableOpacity onPress={openSettings} hitSlop={8} style={styles.iconButton}>
             <Ionicons name="settings-outline" size={22} color={NAVY} />
           </TouchableOpacity>
         </View>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>You don&apos;t have any messages</Text>
-          <Text style={styles.emptySubtitle}>When you receive a new message, it will appear here.</Text>
-        </View>
+
+        <Card className="mb-6">
+          <CardContent>
+            <EmptyState
+              icon={
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons name="chatbubble-ellipses-outline" size={40} color={NAVY} />
+                </View>
+              }
+              title="You don't have any messages"
+              description="When you receive a new message, it will appear here."
+            />
+          </CardContent>
+        </Card>
       </ScrollView>
 
       <Modal
@@ -165,22 +159,32 @@ export default function DriverMessagesScreen() {
               },
             ]}
           >
-            <View style={styles.settingsHeader}>
-              <Text style={styles.settingsTitle}>Messaging settings</Text>
-              <TouchableOpacity onPress={closeSettings} hitSlop={8}>
-                <Ionicons name="close" size={22} color={NAVY} />
+            <CardContent>
+              <View style={styles.settingsHeader}>
+                <Text style={styles.settingsTitle}>Messaging settings</Text>
+                <TouchableOpacity onPress={closeSettings} hitSlop={8}>
+                  <Ionicons name="close" size={22} color={NAVY} />
+                </TouchableOpacity>
+              </View>
+
+              <Separator className="my-4" />
+
+              <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7}>
+                <View style={styles.settingsIconWrap}>
+                  <Ionicons name="archive-outline" size={22} color={NAVY} />
+                </View>
+                <Text style={styles.settingsItemText}>Archived</Text>
               </TouchableOpacity>
-            </View>
 
-            <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7}>
-              <Ionicons name="archive-outline" size={22} color={NAVY} />
-              <Text style={styles.settingsItemText}>Archived</Text>
-            </TouchableOpacity>
+              <Separator className="my-2" />
 
-            <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7}>
-              <Ionicons name="paper-plane-outline" size={22} color={NAVY} />
-              <Text style={styles.settingsItemText}>Give feedback</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7}>
+                <View style={styles.settingsIconWrap}>
+                  <Ionicons name="paper-plane-outline" size={22} color={NAVY} />
+                </View>
+                <Text style={styles.settingsItemText}>Give feedback</Text>
+              </TouchableOpacity>
+            </CardContent>
           </Animated.View>
         </TouchableOpacity>
       </Modal>
@@ -240,27 +244,10 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 8,
   },
-  sortButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
   sortButtonText: {
     fontSize: 12,
     fontWeight: "600",
     color: NAVY,
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 80,
-    gap: 12,
   },
   emptyIconCircle: {
     width: 80,
@@ -270,20 +257,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: NAVY,
-    textAlign: "center",
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: 32,
   },
   modalOverlay: {
     flex: 1,
@@ -314,8 +287,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
     paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+  },
+  settingsIconWrap: {
+    width: 24,
+    alignItems: "center",
   },
   settingsItemText: {
     fontSize: 15,

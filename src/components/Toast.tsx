@@ -69,13 +69,11 @@ export default function Toast({ visible, message, type = "success", onHide, dura
         },
       ]}
     >
-      <View style={styles.container}>
-        <View style={styles.iconWrap}>
-          <Ionicons name={icon.name} size={22} color={icon.color} />
+      <View className="bg-white rounded-2xl px-4 py-3.5 flex-row items-center gap-3 shadow-lg border border-[#E5E7EB]">
+        <View className="w-7 h-7 rounded-full bg-[#F3F4F6] items-center justify-center border border-[#E5E7EB]">
+          <Ionicons name={icon.name} size={16} color={icon.color} />
         </View>
-        <Text style={styles.message} numberOfLines={2}>
-          {message}
-        </Text>
+        <Text className="flex-1 text-sm font-bold text-[#2C3E5B]" numberOfLines={2}>{message}</Text>
       </View>
     </Animated.View>
   );
@@ -88,37 +86,5 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     zIndex: 9999,
-  },
-  container: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  iconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  message: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "700",
-    color: NAVY,
   },
 });

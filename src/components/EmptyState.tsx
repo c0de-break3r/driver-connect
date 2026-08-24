@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "react-native";
 import { StyleSheet } from "react-native";
+import { Button } from "@/components/ui/button";
 
 const NAVY = "#2C3E5B";
 
@@ -23,29 +24,22 @@ export default function EmptyState({
   compact = false,
 }: EmptyStateProps) {
   return (
-    <View style={styles.emptyState}>
+    <View className="items-center justify-center py-16">
       {image && (
         <View style={[styles.illustrationWrap, compact && styles.illustrationWrapCompact]}>
           <Image source={image} style={[styles.emptyImage, compact && styles.emptyImageCompact]} contentFit="contain" />
         </View>
       )}
-      <Text style={styles.emptyTitle}>{title}</Text>
-      {subtitle && <Text style={styles.emptySubtitle}>{subtitle}</Text>}
+      <Text className="text-lg font-extrabold text-[#2C3E5B] text-center mb-1">{title}</Text>
+      {subtitle && <Text className="text-sm font-medium text-[#6B7280] text-center mb-8 max-w-[280px]">{subtitle}</Text>}
       {ctaText && onCtaPress && (
-        <TouchableOpacity style={styles.ctaButton} onPress={onCtaPress}>
-          <Text style={styles.ctaButtonText}>{ctaText}</Text>
-        </TouchableOpacity>
+        <Button onPress={onCtaPress}>{ctaText}</Button>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-  },
   illustrationWrap: {
     marginBottom: 24,
   },
@@ -59,32 +53,5 @@ const styles = StyleSheet.create({
   },
   emptyImageCompact: {
     marginBottom: 8,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: NAVY,
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: 24,
-    marginBottom: 32,
-  },
-  ctaButton: {
-    backgroundColor: "#F3F4F6",
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 14,
-  },
-  ctaButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: NAVY,
   },
 });

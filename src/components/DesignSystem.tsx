@@ -1,6 +1,8 @@
 import { StyleSheet, View, Text, Pressable, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRef, type ReactNode } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const NAVY = "#2C3E5B";
 export const GREEN = "#10B981";
@@ -74,10 +76,10 @@ export function PressableCard({
 
 export function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
   return (
-    <View style={styles.sectionHeader}>
+    <View className="flex-row items-center justify-between mt-1 mb-1 gap-3">
       <View>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
+        <Text className="text-xl font-extrabold text-[#2C3E5B]">{title}</Text>
+        {subtitle ? <Text className="text-sm font-medium text-[#6B7280] mt-1">{subtitle}</Text> : null}
       </View>
       {right}
     </View>
@@ -102,9 +104,9 @@ export function StatusBadge({ label, tone = "neutral" }: { label: string; tone?:
   };
   const colors = palette[tone] ?? palette.neutral;
   return (
-    <View style={[styles.statusBadge, { backgroundColor: colors.bg }]}>
+    <Badge variant="secondary" className="px-2.5 py-0.5" style={{ backgroundColor: colors.bg }}>
       <Text style={[styles.statusBadgeText, { color: colors.text }]}>{label}</Text>
-    </View>
+    </Badge>
   );
 }
 
@@ -128,36 +130,12 @@ export function Row({ icon, label, value, onPress }: { icon: keyof typeof Ionico
 }
 
 const styles = StyleSheet.create({
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-    marginBottom: 4,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: NAVY,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: MUTED,
-    marginTop: 2,
-  },
   iconBadge: {
     width: 36,
     height: 36,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
   },
   statusBadgeText: {
     fontSize: 12,

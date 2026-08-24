@@ -1,9 +1,11 @@
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Platform } from "react-native";
+import { View, StyleSheet, Text, ScrollView, Platform } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
 import { Ionicons } from "@expo/vector-icons";
-import { createCardStyle, SectionHeader, Divider } from "@/components/DesignSystem";
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 const NAVY = "#2C3E5B";
 
@@ -40,77 +42,72 @@ export default function BookingConfirmationScreen() {
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Booking Details" />
-          <View style={createCardStyle()}>
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Booking ID</Text>
-              <Text style={styles.rowValue}>{booking._id}</Text>
+          <Text className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Booking Details</Text>
+          <Card className="bg-gray-50 border-gray-200">
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Booking ID</Text>
+              <Text className="text-sm font-semibold" style={{ color: NAVY }}>{booking._id}</Text>
             </View>
-            <Divider />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Status</Text>
-              <Text style={[styles.rowValue, styles.statusText]}>{booking.status}</Text>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Status</Text>
+              <Text className="text-sm font-semibold capitalize" style={{ color: NAVY }}>{booking.status}</Text>
             </View>
-            <Divider />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Dates</Text>
-              <Text style={styles.rowValue}>
-                {booking.startDate} — {booking.endDate}
-              </Text>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Dates</Text>
+              <Text className="text-sm font-semibold" style={{ color: NAVY }}>{booking.startDate} — {booking.endDate}</Text>
             </View>
-            <Divider />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Pickup</Text>
-              <Text style={styles.rowValue}>{booking.pickupLocation}</Text>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Pickup</Text>
+              <Text className="text-sm font-semibold text-right flex-1 ml-3" style={{ color: NAVY }}>{booking.pickupLocation}</Text>
             </View>
-            <Divider />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Drop-off</Text>
-              <Text style={styles.rowValue}>{booking.dropoffLocation}</Text>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Drop-off</Text>
+              <Text className="text-sm font-semibold text-right flex-1 ml-3" style={{ color: NAVY }}>{booking.dropoffLocation}</Text>
             </View>
-          </View>
+          </Card>
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Payment" />
-          <View style={createCardStyle()}>
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Subtotal</Text>
-              <Text style={styles.rowValue}>GHS {booking.subtotal.toLocaleString()}</Text>
+          <Text className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Payment</Text>
+          <Card className="bg-gray-50 border-gray-200">
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Subtotal</Text>
+              <Text className="text-sm font-semibold" style={{ color: NAVY }}>GHS {booking.subtotal.toLocaleString()}</Text>
             </View>
-            <Divider />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Driver fee</Text>
-              <Text style={styles.rowValue}>GHS {booking.driverFee.toLocaleString()}</Text>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Driver fee</Text>
+              <Text className="text-sm font-semibold" style={{ color: NAVY }}>GHS {booking.driverFee.toLocaleString()}</Text>
             </View>
-            <Divider />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Service fee</Text>
-              <Text style={styles.rowValue}>GHS {booking.serviceFee.toLocaleString()}</Text>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Service fee</Text>
+              <Text className="text-sm font-semibold" style={{ color: NAVY }}>GHS {booking.serviceFee.toLocaleString()}</Text>
             </View>
-            <Divider />
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Security deposit</Text>
-              <Text style={styles.rowValue}>GHS {booking.securityDeposit.toLocaleString()}</Text>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-medium text-gray-500">Security deposit</Text>
+              <Text className="text-sm font-semibold" style={{ color: NAVY }}>GHS {booking.securityDeposit.toLocaleString()}</Text>
             </View>
-            <Divider />
-            <View style={styles.row}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>GHS {booking.totalAmount.toLocaleString()}</Text>
+            <View style={styles.divider} />
+            <View className="flex-row items-center justify-between py-2">
+              <Text className="text-base font-bold" style={{ color: NAVY }}>Total</Text>
+              <Text className="text-lg font-extrabold" style={{ color: NAVY }}>GHS {booking.totalAmount.toLocaleString()}</Text>
             </View>
-          </View>
+          </Card>
         </View>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.primaryButtonText}>View My Trips</Text>
-        </TouchableOpacity>
+        <Button onPress={() => router.back()} className="rounded-xl py-4">
+          <Text className="text-sm font-bold text-white">View My Trips</Text>
+        </Button>
       </View>
     </View>
   );
@@ -132,18 +129,11 @@ const styles = StyleSheet.create({
   successTitle: { fontSize: 24, fontWeight: "800", color: NAVY, marginBottom: 8 },
   successSubtitle: { fontSize: 15, fontWeight: "500", color: "#6B7280", textAlign: "center", paddingHorizontal: 24, lineHeight: 22 },
   section: { marginBottom: 24 },
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 },
-  rowLabel: { fontSize: 14, fontWeight: "500", color: "#6B7280" },
-  rowValue: { fontSize: 14, fontWeight: "600", color: NAVY, textAlign: "right", flex: 1, marginLeft: 12 },
-  statusText: { textTransform: "capitalize" },
-  totalLabel: { fontSize: 16, fontWeight: "700", color: NAVY },
-  totalValue: { fontSize: 18, fontWeight: "800", color: NAVY },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: "#E5E7EB" },
   bottomSpacer: { height: 20 },
   bottomBar: {
     position: "absolute", left: 0, right: 0, bottom: 0, backgroundColor: "#FFFFFF",
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E5E7EB",
     paddingHorizontal: 20, paddingVertical: 16, paddingBottom: Platform.select({ ios: 24, android: 16 }),
   },
-  primaryButton: { backgroundColor: NAVY, paddingVertical: 16, borderRadius: 14, alignItems: "center" },
-  primaryButtonText: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
 });

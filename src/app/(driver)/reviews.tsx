@@ -10,10 +10,16 @@ import {
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import EmptyState from "@/components/EmptyState";
+import { Rating } from "@/components/ui/rating";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Separator } from "@/components/ui/separator";
 import { DRIVERS } from "@/data/drivers";
 
-const NAVY = "#2C3E5B";
 const ORANGE = "#F97316";
 
 type Review = {
@@ -134,101 +140,86 @@ export default function ReviewsScreen() {
   const summary = useMemo(() => computeSummary(reviews), [reviews]);
   const entityName = useMemo(() => getEntityName(driverId, vehicleId), [driverId, vehicleId]);
 
-  const renderStars = (rating: number) => {
+  if (reviews.length === 0) {
     return (
-      <View style={styles.starsRow}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Ionicons
-            key={star}
-            name={star <= rating ? "star" : "star-outline"}
-            size={14}
-            color="#FFB800"
-          />
-        ))}
-      </View>
-    );
-  };
-
-   if (reviews.length === 0) {
-     return (
-       <SafeAreaView style={styles.safeArea}>
-         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-           <View style={styles.header}>
-             <Pressable onPress={() => router.back()} style={styles.backButton}>
-               <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-             </Pressable>
-             <Text style={styles.headerTitle}>Reviews</Text>
-             <View style={styles.headerRight} />
-           </View>
-           <EmptyState
-             title="No reviews yet"
-             subtitle="Reviews will appear here once available."
-           />
-         </ScrollView>
-       </SafeAreaView>
-     );
-   }
-
-   return (
-     <SafeAreaView style={styles.safeArea}>
-       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-         <View style={styles.header}>
-           <Pressable onPress={() => router.back()} style={styles.backButton}>
-             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-           </Pressable>
-           <Text style={styles.headerTitle}>Reviews</Text>
-           <Pressable style={styles.writeButton} onPress={() => router.push(`/(driver)/write-review?driverId=${driverId}` as any)}>
-             <Ionicons name="pencil" size={18} color="#FFFFFF" />
-             <Text style={styles.writeButtonText}>Write</Text>
-           </Pressable>
-         </View>
-
-        <View style={styles.summaryCard}>
-          <Text style={styles.entityNameHeader}>{entityName}</Text>
-          <View style={styles.summaryBody}>
-            <View style={styles.summaryLeft}>
-              <Text style={styles.averageRating}>{summary.average.toFixed(1)}</Text>
-              {renderStars(Math.round(summary.average))}
-              <Text style={styles.totalReviews}>
-                {summary.total} review{summary.total !== 1 ? "s" : ""}
-              </Text>
-            </View>
-            <View style={styles.summaryRight}>
-              {summary.distribution.map((count, index) => (
-                <View key={index} style={styles.distributionRow}>
-                  <Text style={styles.distributionLabel}>{5 - index}</Text>
-                  <View style={styles.distributionBarBg}>
-                    <View
-                      style={[
-                        styles.distributionBarFill,
-                        {
-                          width: `${(count / summary.total) * 100}%`,
-                          backgroundColor: count > 0 ? ORANGE : "#E5E7EB",
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.distributionCount}>{count}</Text>
-                </View>
-              ))}
-            </View>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            </Pressable>
+            <Text style={styles.headerTitle}>Reviews</Text>
+            <View style={styles.headerRight} />
           </View>
+          <EmptyState
+            title="No reviews yet"
+            description="Reviews will appear here once available."
+          />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          </Pressable>
+          <Text style={styles.headerTitle}>Reviews</Text>
+          <Button size="sm" onPress={() => router.push(`/(driver)/write-review?driverId=${driverId}` as any)} className="rounded-full">
+            <Ionicons name="pencil" size={18} color="#FFFFFF" />
+            <Text style={styles.writeButtonText}>Write</Text>
+          </Button>
         </View>
+
+        <Card className="mb-6">
+          <CardContent>
+            <Text style={styles.entityNameHeader}>{entityName}</Text>
+            <View style={styles.summaryBody}>
+              <View style={styles.summaryLeft}>
+                <Text style={styles.averageRating}>{summary.average.toFixed(1)}</Text>
+                <Rating value={Math.round(summary.average)} readOnly size="md" />
+                <Text style={styles.totalReviews}>
+                  {summary.total} review{summary.total !== 1 ? "s" : ""}
+                </Text>
+              </View>
+              <View style={styles.summaryRight}>
+                {summary.distribution.map((count, index) => (
+                  <View key={index} style={styles.distributionRow}>
+                    <Text style={styles.distributionLabel}>{5 - index}</Text>
+                    <View style={styles.distributionBarBg}>
+                      <Progress
+                        value={summary.total > 0 ? (count / summary.total) * 100 : 0}
+                        className="h-2"
+                        indicatorClassName="bg-orange-500"
+                      />
+                    </View>
+                    <Text style={styles.distributionCount}>{count}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </CardContent>
+        </Card>
 
         <View style={styles.reviewsList}>
           {reviews.map((review) => (
-            <View key={review.id} style={styles.reviewCard}>
-              <View style={styles.reviewHeader}>
-                <Image source={{ uri: review.avatar }} style={styles.reviewAvatar} contentFit="cover" />
-                <View style={styles.reviewHeaderText}>
-                  <Text style={styles.reviewerName}>{review.name}</Text>
-                  {renderStars(review.rating)}
+            <Card key={review.id} className="mb-3">
+              <CardContent>
+                <View style={styles.reviewHeader}>
+                  <Avatar src={review.avatar} fallback={review.name[0]} size="md" />
+                  <View style={styles.reviewHeaderText}>
+                    <Text style={styles.reviewerName}>{review.name}</Text>
+                    <Rating value={review.rating} readOnly size="sm" />
+                  </View>
+                  <Text style={styles.reviewDate}>{review.date}</Text>
                 </View>
-                <Text style={styles.reviewDate}>{review.date}</Text>
-              </View>
-              <Text style={styles.reviewTitle}>{review.title}</Text>
-              <Text style={styles.reviewComment}>{review.text}</Text>
-            </View>
+                <Text style={styles.reviewTitle}>{review.title}</Text>
+                <Text style={styles.reviewComment}>{review.text}</Text>
+              </CardContent>
+            </Card>
           ))}
         </View>
       </ScrollView>
@@ -268,33 +259,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: NAVY,
+    color: "#2C3E5B",
   },
   headerRight: {
     width: 80,
     alignItems: "flex-end",
   },
-  writeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: NAVY,
-  },
   writeButtonText: {
     fontSize: 14,
     fontWeight: "700",
     color: "#FFFFFF",
-  },
-  summaryCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
   },
   entityNameHeader: {
     fontSize: 14,
@@ -317,18 +291,7 @@ const styles = StyleSheet.create({
   averageRating: {
     fontSize: 48,
     fontWeight: "800",
-    color: NAVY,
-  },
-  starsRow: {
-    flexDirection: "row",
-    gap: 4,
-  },
-  star: {
-    fontSize: 18,
-    color: "#D1D5DB",
-  },
-  starActive: {
-    color: "#F59E0B",
+    color: "#2C3E5B",
   },
   totalReviews: {
     fontSize: 14,
@@ -358,10 +321,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5E7EB",
     overflow: "hidden",
   },
-  distributionBarFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
   distributionCount: {
     fontSize: 12,
     fontWeight: "700",
@@ -372,23 +331,11 @@ const styles = StyleSheet.create({
   reviewsList: {
     gap: 12,
   },
-  reviewCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
   reviewHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-  },
-  reviewAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    marginBottom: 12,
   },
   reviewHeaderText: {
     flex: 1,
@@ -397,7 +344,7 @@ const styles = StyleSheet.create({
   reviewerName: {
     fontSize: 14,
     fontWeight: "700",
-    color: NAVY,
+    color: "#2C3E5B",
   },
   reviewDate: {
     fontSize: 12,
@@ -407,7 +354,7 @@ const styles = StyleSheet.create({
   reviewTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: NAVY,
+    color: "#2C3E5B",
     marginBottom: 4,
   },
   reviewComment: {

@@ -19,7 +19,12 @@ import DriverMessagesScreen from "./messages";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
-import { createCardStyle, createBadgeStyle, PressableCard, SectionHeader, StatusBadge, Divider } from "@/components/DesignSystem";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Avatar } from "@/components/ui/avatar";
 
 const NAVY = "#2C3E5B";
 
@@ -83,9 +88,9 @@ export default function DriverDashboard() {
           <Text style={styles.emptySubtitle}>
             Log in to view and manage your job requests and offers.
           </Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={openAuth}>
-            <Text style={styles.primaryButtonText}>Log in</Text>
-          </TouchableOpacity>
+          <Button onPress={openAuth} className="min-w-[180px]">
+            Log in
+          </Button>
         </View>
       );
     }
@@ -94,10 +99,14 @@ export default function DriverDashboard() {
 
     return (
       <View>
-        <SectionHeader
-          title="Job Requests"
-          subtitle={`${jobCount} new request${jobCount !== 1 && "s"} waiting for your response`}
-        />
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>Job Requests</Text>
+            <Text style={styles.sectionSubtitle}>
+              {jobCount} new request{jobCount !== 1 && "s"} waiting for your response
+            </Text>
+          </View>
+        </View>
         <View style={styles.cardStack}>
           {!driverBookings ? (
             <Text style={styles.loadingText}>Loading jobs...</Text>
@@ -111,70 +120,92 @@ export default function DriverDashboard() {
           ) : (
             driverBookings.map((booking) => {
               const vehicle = booking.vehicle;
-              const statusTone = booking.status === "confirmed" ? "success" : booking.status === "pending" ? "warning" : booking.status === "in_progress" ? "info" : "neutral";
+              const statusTone = booking.status === "confirmed" ? "success" : booking.status === "pending" ? "warning" : booking.status === "in_progress" ? "info" : "secondary";
               return (
-                <View key={booking._id} style={createCardStyle()}>
-                  <View style={styles.jobCardHeader}>
-                    <View style={createBadgeStyle()}>
-                      <Ionicons name="car-outline" size={14} color={NAVY} />
-                      <Text style={styles.jobTypeText}>{vehicle.category}</Text>
+                <Card key={booking._id} className="mb-3">
+                  <CardContent>
+                    <View style={styles.jobCardHeader}>
+                      <View className="flex-row items-center gap-1 px-2.5 py-0.5 rounded-lg bg-gray-100">
+                        <Ionicons name="car-outline" size={14} color={NAVY} />
+                        <Text style={styles.jobTypeText}>{vehicle.category}</Text>
+                      </View>
+                      {booking.status === "confirmed" && (
+                        <View className="px-2.5 py-0.5 rounded-full bg-green-100 border border-green-400">
+                          <Text className="text-xs font-bold text-green-700 capitalize">{booking.status.replace(/_/g, " ")}</Text>
+                        </View>
+                      )}
+                      {booking.status === "pending" && (
+                        <View className="px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-400">
+                          <Text className="text-xs font-bold text-amber-600 capitalize">{booking.status.replace(/_/g, " ")}</Text>
+                        </View>
+                      )}
+                      {booking.status === "in_progress" && (
+                        <View className="px-2.5 py-0.5 rounded-full bg-blue-100 border border-blue-400">
+                          <Text className="text-xs font-bold text-blue-700 capitalize">{booking.status.replace(/_/g, " ")}</Text>
+                        </View>
+                      )}
+                      {!["confirmed", "pending", "in_progress"].includes(booking.status) && (
+                        <View className="px-2.5 py-0.5 rounded-full bg-gray-100 border border-gray-200">
+                          <Text className="text-xs font-bold text-gray-600 capitalize">{booking.status.replace(/_/g, " ")}</Text>
+                        </View>
+                      )}
                     </View>
-                    <StatusBadge label={booking.status.replace(/_/g, " ")} tone={statusTone as any} />
-                  </View>
 
-                  <View style={styles.jobDetailRow}>
-                    <View style={styles.jobDetailIcon}>
-                      <Ionicons name="person-outline" size={16} color="#6B7280" />
+                    <View style={styles.jobDetailRow}>
+                      <View style={styles.jobDetailIcon}>
+                        <Ionicons name="person-outline" size={16} color="#6B7280" />
+                      </View>
+                      <Text style={styles.jobDetailText}>{vehicle.title}</Text>
                     </View>
-                    <Text style={styles.jobDetailText}>{vehicle.title}</Text>
-                  </View>
 
-                  <View style={styles.jobDetailRow}>
-                    <View style={styles.jobDetailIcon}>
-                      <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-                    </View>
-                    <Text style={styles.jobDetailText}>
-                      {new Date(booking.startDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} — {new Date(booking.endDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </Text>
-                  </View>
-
-                  <View style={styles.jobDetailRow}>
-                    <View style={styles.jobDetailIcon}>
-                      <Ionicons name="location-outline" size={16} color="#6B7280" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.jobDetailText} numberOfLines={1}>
-                        From: {booking.pickupLocation}
+                    <View style={styles.jobDetailRow}>
+                      <View style={styles.jobDetailIcon}>
+                        <Ionicons name="calendar-outline" size={16} color="#6B7280" />
+                      </View>
+                      <Text style={styles.jobDetailText}>
+                        {new Date(booking.startDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} — {new Date(booking.endDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </Text>
-                      <Text style={[styles.jobDetailText, { color: "#9CA3AF", fontSize: 13 }]} numberOfLines={1}>
-                        To: {booking.dropoffLocation}
-                      </Text>
                     </View>
-                  </View>
 
-                  <Divider />
-                  <View style={styles.fareRow}>
-                    <Text style={styles.fareLabel}>Total fare</Text>
-                    <Text style={styles.fareValue}>{booking.currency} {booking.totalAmount.toLocaleString()}</Text>
-                  </View>
-                  <View style={styles.jobActionRow}>
-                    {(booking.status === "pending" || booking.status === "confirmed") && (
-                      <>
-                        <PressableCard style={styles.declineButton}>
-                          <Text style={styles.declineButtonText}>Decline</Text>
-                        </PressableCard>
-                        <PressableCard style={styles.acceptButton}>
-                          <Text style={styles.acceptButtonText}>Accept</Text>
-                        </PressableCard>
-                      </>
-                    )}
-                    {booking.status === "in_progress" && (
-                      <PressableCard style={styles.acceptButton}>
-                        <Text style={styles.acceptButtonText}>Complete</Text>
-                      </PressableCard>
-                    )}
-                  </View>
-                </View>
+                    <View style={styles.jobDetailRow}>
+                      <View style={styles.jobDetailIcon}>
+                        <Ionicons name="location-outline" size={16} color="#6B7280" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.jobDetailText} numberOfLines={1}>
+                          From: {booking.pickupLocation}
+                        </Text>
+                        <Text style={[styles.jobDetailText, { color: "#9CA3AF", fontSize: 13 }]} numberOfLines={1}>
+                          To: {booking.dropoffLocation}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Separator className="my-3" />
+
+                    <View style={styles.fareRow}>
+                      <Text style={styles.fareLabel}>Total fare</Text>
+                      <Text style={styles.fareValue}>{booking.currency} {booking.totalAmount.toLocaleString()}</Text>
+                    </View>
+                    <View style={styles.jobActionRow}>
+                      {(booking.status === "pending" || booking.status === "confirmed") && (
+                        <>
+                          <Button variant="outline" className="flex-1" onPress={() => {}}>
+                            Decline
+                          </Button>
+                          <Button className="flex-1" onPress={() => {}}>
+                            Accept
+                          </Button>
+                        </>
+                      )}
+                      {booking.status === "in_progress" && (
+                        <Button className="flex-1" onPress={() => {}}>
+                          Complete
+                        </Button>
+                      )}
+                    </View>
+                  </CardContent>
+                </Card>
               );
             })
           )}
@@ -194,9 +225,9 @@ export default function DriverDashboard() {
           <Text style={styles.emptySubtitle}>
             Log in to manage your availability and let clients book you.
           </Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={openAuth}>
-            <Text style={styles.primaryButtonText}>Log in</Text>
-          </TouchableOpacity>
+          <Button onPress={openAuth} className="min-w-[180px]">
+            Log in
+          </Button>
         </View>
       );
     }
@@ -214,52 +245,56 @@ export default function DriverDashboard() {
 
     return (
       <View>
-        <SectionHeader
-          title="Weekly Availability"
-          subtitle="Toggle days on to let clients know when you're available."
-        />
-
-        <View style={createCardStyle()}>
-          <View style={styles.daysRow}>
-            {weekDays.map((day, i) => (
-              <PressableCard
-                key={day}
-                style={[styles.dayChip, dayStatuses[i] && styles.dayChipActive]}
-              >
-                <Text
-                  style={[styles.dayChipLabel, dayStatuses[i] && styles.dayChipLabelActive]}
-                >
-                  {day}
-                </Text>
-              </PressableCard>
-            ))}
-          </View>
-
-          <Text style={styles.cardTitle}>Daily Time Slots</Text>
-          <View style={styles.timeSlotsGrid}>
-            {timeSlots.map((slot) => (
-              <PressableCard
-                key={slot.label}
-                style={[styles.timeSlotChip, slot.active && styles.timeSlotChipActive]}
-              >
-                <Ionicons
-                  name={slot.active ? "checkmark-circle" : "ellipse-outline"}
-                  size={18}
-                  color={slot.active ? NAVY : "#9CA3AF"}
-                />
-                <Text
-                  style={[styles.timeSlotLabel, slot.active && styles.timeSlotLabelActive]}
-                >
-                  {slot.label}
-              </Text>
-            </PressableCard>
-          ))}
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>Weekly Availability</Text>
+            <Text style={styles.sectionSubtitle}>Toggle days on to let clients know when you're available.</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>Save Schedule</Text>
-        </TouchableOpacity>
+        <Card className="mb-4">
+          <CardContent>
+            <View style={styles.daysRow}>
+              {weekDays.map((day, i) => (
+                <Pressable
+                  key={day}
+                  style={[styles.dayChip, dayStatuses[i] && styles.dayChipActive]}
+                >
+                  <Text
+                    style={[styles.dayChipLabel, dayStatuses[i] && styles.dayChipLabelActive]}
+                  >
+                    {day}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={styles.cardTitle}>Daily Time Slots</Text>
+            <View style={styles.timeSlotsGrid}>
+              {timeSlots.map((slot) => (
+                <Pressable
+                  key={slot.label}
+                  style={[styles.timeSlotChip, slot.active && styles.timeSlotChipActive]}
+                >
+                  <Ionicons
+                    name={slot.active ? "checkmark-circle" : "ellipse-outline"}
+                    size={18}
+                    color={slot.active ? NAVY : "#9CA3AF"}
+                  />
+                  <Text
+                    style={[styles.timeSlotLabel, slot.active && styles.timeSlotLabelActive]}
+                  >
+                    {slot.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </CardContent>
+        </Card>
+
+        <Button className="w-full">
+          Save Schedule
+        </Button>
       </View>
     );
   };
@@ -275,9 +310,9 @@ export default function DriverDashboard() {
           <Text style={styles.emptySubtitle}>
             Log in to view your earnings, payouts, and financial insights.
           </Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={openAuth}>
-            <Text style={styles.primaryButtonText}>Log in</Text>
-          </TouchableOpacity>
+          <Button onPress={openAuth} className="min-w-[180px]">
+            Log in
+          </Button>
         </View>
       );
     }
@@ -296,57 +331,71 @@ export default function DriverDashboard() {
 
     return (
       <View>
-        <SectionHeader
-          title="Earnings"
-          subtitle="Your earnings summary and payout history."
-        />
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>Earnings</Text>
+            <Text style={styles.sectionSubtitle}>Your earnings summary and payout history.</Text>
+          </View>
+        </View>
 
         <View style={styles.statCardsRow}>
           {statCards.map((stat) => (
-            <View key={stat.label} style={createCardStyle()}>
-              <View style={styles.statIconCircle}>
-                <Ionicons name={stat.icon as any} size={20} color={NAVY} />
-              </View>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-              <Text style={styles.statChange}>{stat.change}</Text>
-            </View>
+            <Card key={stat.label} className="flex-1 items-center">
+              <CardContent>
+                <View style={styles.statIconCircle}>
+                  <Ionicons name={stat.icon as any} size={20} color={NAVY} />
+                </View>
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+                <Text style={styles.statChange}>{stat.change}</Text>
+              </CardContent>
+            </Card>
           ))}
         </View>
 
-        <View style={createCardStyle()}>
-          <View style={styles.cardHeaderRow}>
-            <Text style={styles.cardTitle}>Earnings Trend</Text>
-            <StatusBadge label="Weekly" tone="info" />
-          </View>
-          <View style={styles.chartPlaceholder}>
-            <Ionicons name="bar-chart-outline" size={32} color="#D1D5DB" />
-            <Text style={styles.chartPlaceholderText}>Earnings chart</Text>
-            <Text style={styles.chartPlaceholderSub}>
-              Connect analytics to view your weekly earnings trend.
-            </Text>
+        <Card className="mb-4">
+          <CardContent>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardTitle}>Earnings Trend</Text>
+              <View className="px-2.5 py-0.5 rounded-full bg-blue-100 border border-blue-400">
+                <Text className="text-xs font-bold text-blue-700">Weekly</Text>
+              </View>
+            </View>
+            <View style={styles.chartPlaceholder}>
+              <Ionicons name="bar-chart-outline" size={32} color="#D1D5DB" />
+              <Text style={styles.chartPlaceholderText}>Earnings chart</Text>
+              <Text style={styles.chartPlaceholderSub}>
+                Connect analytics to view your weekly earnings trend.
+              </Text>
+            </View>
+          </CardContent>
+        </Card>
+
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>Payout History</Text>
+            <Text style={styles.sectionSubtitle}>Recent payouts to your account.</Text>
           </View>
         </View>
-
-        <SectionHeader
-          title="Payout History"
-          subtitle="Recent payouts to your account."
-        />
         <View style={styles.cardStack}>
           {payoutHistory.map((payout) => (
-            <View key={payout.id} style={createCardStyle()}>
-              <View style={styles.payoutLeft}>
-                <View style={styles.payoutIconCircle}>
-                  <Ionicons name="cash-outline" size={20} color={NAVY} />
+            <Card key={payout.id}>
+              <CardContent>
+                <View style={styles.payoutLeft}>
+                  <View style={styles.payoutIconCircle}>
+                    <Ionicons name="cash-outline" size={20} color={NAVY} />
+                  </View>
+                  <View>
+                    <Text style={styles.payoutAmount}>{payout.amount}</Text>
+                    <Text style={styles.payoutDate}>{payout.date}</Text>
+                    <Text style={styles.payoutTrips}>{payout.trips} trips</Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={styles.payoutAmount}>{payout.amount}</Text>
-                  <Text style={styles.payoutDate}>{payout.date}</Text>
-                  <Text style={styles.payoutTrips}>{payout.trips} trips</Text>
+                <View className="px-2.5 py-0.5 rounded-full bg-green-100 border border-green-400">
+                  <Text className="text-xs font-bold text-green-700">Paid</Text>
                 </View>
-              </View>
-              <StatusBadge label="Paid" tone="success" />
-            </View>
+              </CardContent>
+            </Card>
           ))}
         </View>
       </View>
@@ -364,9 +413,9 @@ export default function DriverDashboard() {
           <Text style={styles.emptySubtitle}>
             Log in to view and send messages to clients.
           </Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={openAuth}>
-            <Text style={styles.primaryButtonText}>Log in</Text>
-          </TouchableOpacity>
+          <Button onPress={openAuth} className="min-w-[180px]">
+            Log in
+          </Button>
         </View>
       );
     }
@@ -392,9 +441,9 @@ export default function DriverDashboard() {
           <Text style={styles.emptySubtitle}>
             Log in to access your driver dashboard and settings.
           </Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={openAuth}>
-            <Text style={styles.primaryButtonText}>Log in</Text>
-          </TouchableOpacity>
+          <Button onPress={openAuth} className="min-w-[180px]">
+            Log in
+          </Button>
         </View>
       );
     }
@@ -425,76 +474,80 @@ export default function DriverDashboard() {
           </View>
         </View>
 
-        <View style={createCardStyle()}>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={handleProfilePress}
-          >
-            <View style={styles.menuIconWrap}>
-              <Ionicons name="person-outline" size={20} color={NAVY} />
-            </View>
-            <View style={styles.menuTextWrap}>
-              <Text style={styles.menuLabel}>Complete your profile</Text>
-              <Text style={styles.menuSub}>License, vehicle, and verification</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-          </TouchableOpacity>
-          <Divider />
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => setActiveTab("schedule")}
-          >
-            <View style={styles.menuIconWrap}>
-              <Ionicons name="calendar-outline" size={20} color={NAVY} />
-            </View>
-            <View style={styles.menuTextWrap}>
-              <Text style={styles.menuLabel}>Availability settings</Text>
-              <Text style={styles.menuSub}>Days, hours, and preferred jobs</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-          </TouchableOpacity>
-          <Divider />
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => setActiveTab("earnings")}
-          >
-            <View style={styles.menuIconWrap}>
-              <Ionicons name="trending-up-outline" size={20} color={NAVY} />
-            </View>
-            <View style={styles.menuTextWrap}>
-              <Text style={styles.menuLabel}>Earnings insights</Text>
-              <Text style={styles.menuSub}>Payouts, trips, and weekly trends</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
+        <Card className="mb-4">
+          <CardContent>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleProfilePress}
+            >
+              <View style={styles.menuIconWrap}>
+                <Ionicons name="person-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuLabel}>Complete your profile</Text>
+                <Text style={styles.menuSub}>License, vehicle, and verification</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+            <Separator />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => setActiveTab("schedule")}
+            >
+              <View style={styles.menuIconWrap}>
+                <Ionicons name="calendar-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuLabel}>Availability settings</Text>
+                <Text style={styles.menuSub}>Days, hours, and preferred jobs</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+            <Separator />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => setActiveTab("earnings")}
+            >
+              <View style={styles.menuIconWrap}>
+                <Ionicons name="trending-up-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuLabel}>Earnings insights</Text>
+                <Text style={styles.menuSub}>Payouts, trips, and weekly trends</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+          </CardContent>
+        </Card>
 
-        <View style={createCardStyle({ marginTop: 16 })}>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuIconWrap}>
-              <Ionicons name="help-circle-outline" size={20} color={NAVY} />
-            </View>
-            <View style={styles.menuTextWrap}>
-              <Text style={styles.menuLabel}>Get help</Text>
-              <Text style={styles.menuSub}>Support, safety, and account help</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-          </TouchableOpacity>
-          <Divider />
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={handleSwitchToGuest}
-          >
-            <View style={styles.menuIconWrap}>
-              <Ionicons name="person-outline" size={20} color={NAVY} />
-            </View>
-            <View style={styles.menuTextWrap}>
-              <Text style={styles.menuLabel}>Switch to Guest</Text>
-              <Text style={styles.menuSub}>Browse vehicles and drivers</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
+        <Card className="mb-4">
+          <CardContent>
+            <TouchableOpacity style={styles.menuItem}>
+              <View style={styles.menuIconWrap}>
+                <Ionicons name="help-circle-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuLabel}>Get help</Text>
+                <Text style={styles.menuSub}>Support, safety, and account help</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+            <Separator />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleSwitchToGuest}
+            >
+              <View style={styles.menuIconWrap}>
+                <Ionicons name="person-outline" size={20} color={NAVY} />
+              </View>
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuLabel}>Switch to Guest</Text>
+                <Text style={styles.menuSub}>Browse vehicles and drivers</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+          </CardContent>
+        </Card>
 
         <View style={styles.logoutContainer}>
           <TouchableOpacity
@@ -736,20 +789,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 8,
   },
-  primaryButton: {
-    backgroundColor: NAVY,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 14,
-    minWidth: 180,
-    alignItems: "center",
-    marginTop: 8,
+  sectionHeader: {
+    marginBottom: 16,
   },
-  loadingText: { fontSize: 15, fontWeight: "600", color: "#6B7280", textAlign: "center", marginTop: 60 },
-  primaryButtonText: {
-    fontSize: 15,
+  sectionTitle: {
+    fontSize: 17,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: NAVY,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#6B7280",
+    marginTop: 4,
   },
   cardStack: {
     gap: 12,
@@ -768,6 +820,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginTop: 12,
   },
   jobDetailIcon: {
     width: 24,
@@ -783,6 +836,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 12,
   },
   fareLabel: {
     fontSize: 13,
@@ -797,27 +851,12 @@ const styles = StyleSheet.create({
   jobActionRow: {
     flexDirection: "row",
     gap: 10,
-  },
-  acceptButton: {
-    flex: 1,
-    backgroundColor: NAVY,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
+    marginTop: 12,
   },
   acceptButtonText: {
     fontSize: 14,
     fontWeight: "700",
     color: "#FFFFFF",
-  },
-  declineButton: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
   },
   declineButtonText: {
     fontSize: 14,
@@ -911,6 +950,17 @@ const styles = StyleSheet.create({
     color: "#059669",
     textAlign: "center",
   },
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: NAVY,
+  },
   chartPlaceholder: {
     alignItems: "center",
     justifyContent: "center",
@@ -959,79 +1009,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#9CA3AF",
   },
-  onboardingCard: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 24,
-    paddingVertical: 32,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  cardImagesRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 16,
-  },
-  cardImagePlaceholder: {
-    width: 72,
-    height: 72,
-    borderRadius: 12,
-    backgroundColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  onboardingTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  onboardingSubtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: 12,
-    marginBottom: 20,
-  },
-  onboardingButton: {
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 14,
-    minWidth: 180,
-    alignItems: "center",
-  },
-  onboardingButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  switchToGuestButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: NAVY,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 14,
-    minWidth: 180,
-    marginTop: 12,
-  },
-  switchToGuestText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  menuSection: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    overflow: "hidden",
-    marginBottom: 16,
-  },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -1055,10 +1032,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
     marginTop: 2,
-  },
-  menuItemBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
   },
   logoutContainer: {
     marginBottom: 0,
@@ -1101,14 +1074,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#9CA3AF",
   },
-  cardHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: NAVY,
-  },
+  loadingText: { fontSize: 15, fontWeight: "600", color: "#6B7280", textAlign: "center", marginTop: 60 },
 });

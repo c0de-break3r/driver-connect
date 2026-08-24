@@ -1,12 +1,10 @@
 import { useState } from "react";
 import {
-  Alert,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,14 +13,13 @@ import { useMutation } from "convex/react";
 import { api } from "@/lib/convexApi";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/contexts/AuthProvider";
-import { createCardStyle, SectionHeader } from "@/components/DesignSystem";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Rating } from "@/components/ui/rating";
 
 const NAVY = "#2C3E5B";
 
-type CategoryRating = {
-  label: string;
-  value: number;
-};
+type CategoryRating = { label: string; value: number };
 
 const CATEGORIES: CategoryRating[] = [
   { label: "Cleanliness", value: 0 },
@@ -40,32 +37,21 @@ export default function RateReviewScreen() {
   const [reviewText, setReviewText] = useState("");
 
   const bookingId = params.bookingId as string | undefined;
-
   const createReview = useMutation(api.jobs.createReview);
 
   const handleSubmit = async () => {
-    if (overallRating === 0) {
-      Alert.alert("Rating required", "Please select an overall rating.");
-      return;
-    }
-
+    if (overallRating === 0) { alert("Please select an overall rating."); return; }
     if (!bookingId) return;
-
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       await createReview({
-        bookingId: bookingId as any,
-        reviewerId: userId!,
-        revieweeId: "",
-        rating: overallRating,
-        comment: reviewText.trim() || undefined,
-        categories: categories,
+        bookingId: bookingId as any, reviewerId: userId!, revieweeId: "",
+        rating: overallRating, comment: reviewText.trim() || undefined, categories,
       });
-      Alert.alert("Thank you!", "Your review has been submitted.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      alert("Thank you! Your review has been submitted.");
+      router.back();
     } catch {
-      Alert.alert("Error", "Unable to submit review. Please try again.");
+      alert("Unable to submit review. Please try again.");
     }
   };
 
@@ -83,61 +69,36 @@ export default function RateReviewScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <SectionHeader title="Rate & Review" subtitle="How was your experience?" />
+        <Text className="text-lg font-extrabold mb-1" style={{ color: NAVY }}>Rate & Review</Text>
+        <Text className="text-sm font-medium text-gray-500 mb-6">How was your experience?</Text>
 
-        <View style={createCardStyle()}>
-          <Text style={styles.fieldLabel}>Overall Rating</Text>
-          <View style={styles.starsRow}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity
-                key={star}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setOverallRating(star);
-                }}
-              >
-                <Ionicons
-                  name={star <= overallRating ? "star" : "star-outline"}
-                  size={40}
-                  color={star <= overallRating ? "#FFB800" : "#D1D5DB"}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        <Card className="bg-gray-50 border-gray-200 mb-4 items-center">
+          <Text className="text-sm font-bold mb-3" style={{ color: NAVY }}>Overall Rating</Text>
+          <Rating value={overallRating} onChange={(val) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setOverallRating(val); }} size="lg" />
+        </Card>
 
-        <View style={createCardStyle({ marginTop: 16 })}>
-          <Text style={styles.fieldLabel}>Rate by Category</Text>
+        <Card className="bg-gray-50 border-gray-200 mb-4">
+          <Text className="text-sm font-bold mb-4" style={{ color: NAVY }}>Rate by Category</Text>
           {categories.map((cat, index) => (
-            <View key={cat.label} style={styles.categoryRow}>
-              <Text style={styles.categoryLabel}>{cat.label}</Text>
-              <View style={styles.categoryStars}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      const updated = [...categories];
-                      updated[index] = { ...cat, value: star };
-                      setCategories(updated);
-                    }}
-                  >
-                    <Ionicons
-                      name={star <= cat.value ? "star" : "star-outline"}
-                      size={24}
-                      color={star <= cat.value ? "#FFB800" : "#D1D5DB"}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
+            <View key={cat.label} className="flex-row items-center justify-between py-2">
+              <Text className="text-sm font-semibold" style={{ color: NAVY }}>{cat.label}</Text>
+              <Rating
+                value={cat.value}
+                onChange={(val) => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  const updated = [...categories];
+                  updated[index] = { ...cat, value: val };
+                  setCategories(updated);
+                }}
+                size="sm"
+              />
             </View>
           ))}
-        </View>
+        </Card>
 
-        <View style={createCardStyle({ marginTop: 16 })}>
-          <Text style={styles.fieldLabel}>Write a Review (optional)</Text>
+        <Card className="bg-gray-50 border-gray-200 mb-6">
+          <Text className="text-sm font-bold mb-3" style={{ color: NAVY }}>Write a Review (optional)</Text>
           <TextInput
-            style={styles.reviewInput}
             placeholder="Share your experience..."
             placeholderTextColor="#9CA3AF"
             value={reviewText}
@@ -145,12 +106,13 @@ export default function RateReviewScreen() {
             multiline
             numberOfLines={5}
             textAlignVertical="top"
+            className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-base flex-1 min-h-[120px]"
           />
-        </View>
+        </Card>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit Review</Text>
-        </TouchableOpacity>
+        <Button onPress={handleSubmit} className="rounded-xl py-4">
+          <Text className="text-sm font-bold text-white">Submit Review</Text>
+        </Button>
       </ScrollView>
     </View>
   );
@@ -164,15 +126,4 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
   },
   errorText: { fontSize: 16, fontWeight: "600", color: "#6B7280", textAlign: "center", marginTop: 60 },
-  fieldLabel: { fontSize: 14, fontWeight: "700", color: NAVY, marginBottom: 12 },
-  starsRow: { flexDirection: "row", justifyContent: "center", gap: 12 },
-  categoryRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 },
-  categoryLabel: { fontSize: 14, fontWeight: "600", color: NAVY },
-  categoryStars: { flexDirection: "row", gap: 4 },
-  reviewInput: {
-    backgroundColor: "#F9FAFB", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
-    fontSize: 15, color: NAVY, borderWidth: 1, borderColor: "#E5E7EB", minHeight: 120,
-  },
-  submitButton: { backgroundColor: NAVY, paddingVertical: 16, borderRadius: 14, alignItems: "center", marginTop: 24 },
-  submitButtonText: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
 });

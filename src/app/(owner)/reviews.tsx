@@ -8,6 +8,9 @@ import {
   Text,
   View,
 } from "react-native";
+import { Card } from "@/components/ui/card";
+import { Rating } from "@/components/ui/rating";
+import { Avatar } from "@/components/ui/avatar";
 import EmptyState from "@/components/EmptyState";
 
 const NAVY = "#2C3E5B";
@@ -29,18 +32,6 @@ export default function OwnerReviewsScreen() {
     const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
     return sum / reviews.length;
   }, [reviews]);
-
-  const renderStars = (rating: number) => {
-    return (
-      <View style={styles.starsRow}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Text key={star} style={[styles.star, star <= rating && styles.starActive]}>
-            {star <= rating ? "★" : "☆"}
-          </Text>
-        ))}
-      </View>
-    );
-  };
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -68,33 +59,33 @@ export default function OwnerReviewsScreen() {
         />
       ) : (
         <>
-          <View style={styles.summaryCard}>
+          <Card className="items-center gap-2 mb-6">
             <Text style={styles.averageRating}>{averageRating.toFixed(1)}</Text>
-            {renderStars(Math.round(averageRating))}
+            <Rating value={Math.round(averageRating)} size="md" readOnly />
             <Text style={styles.totalReviews}>
               {reviews.length} review{reviews.length !== 1 ? "s" : ""}
             </Text>
-          </View>
+          </Card>
 
           <View style={styles.reviewsList}>
             {reviews.map((review) => (
-              <View key={review._id} style={styles.reviewCard}>
+              <Card key={review._id} className="gap-3">
                 <View style={styles.reviewHeader}>
-                  <View style={styles.reviewerAvatar}>
-                    <Text style={styles.reviewerInitial}>
-                      {review.reviewerId[0]?.toUpperCase() ?? "U"}
-                    </Text>
-                  </View>
+                  <Avatar
+                    size="sm"
+                    fallback={review.reviewerId[0]?.toUpperCase() ?? "U"}
+                    className="bg-navy"
+                  />
                   <View style={styles.reviewHeaderText}>
                     <Text style={styles.reviewerName}>Guest</Text>
-                    {renderStars(review.rating)}
+                    <Rating value={review.rating} size="sm" readOnly />
                   </View>
                   <Text style={styles.reviewDate}>{formatDate(review.createdAt)}</Text>
                 </View>
                 {review.comment ? (
                   <Text style={styles.reviewComment}>{review.comment}</Text>
                 ) : null}
-              </View>
+              </Card>
             ))}
           </View>
         </>
@@ -118,31 +109,10 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#111827",
   },
-  summaryCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
   averageRating: {
     fontSize: 48,
     fontWeight: "800",
     color: NAVY,
-  },
-  starsRow: {
-    flexDirection: "row",
-    gap: 4,
-  },
-  star: {
-    fontSize: 18,
-    color: "#D1D5DB",
-  },
-  starActive: {
-    color: "#F59E0B",
   },
   totalReviews: {
     fontSize: 14,
@@ -152,31 +122,10 @@ const styles = StyleSheet.create({
   reviewsList: {
     gap: 12,
   },
-  reviewCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
   reviewHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-  },
-  reviewerAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: NAVY,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  reviewerInitial: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#FFFFFF",
   },
   reviewHeaderText: {
     flex: 1,

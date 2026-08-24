@@ -12,6 +12,10 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -108,21 +112,20 @@ export default function ListingSettingsScreen() {
 
         <Text style={styles.sectionTitle}>Booking Preferences</Text>
 
-        <View style={styles.card}>
+        <Card className="mb-3">
           <View style={styles.rowBetween}>
             <View style={styles.labelWrap}>
               <Text style={styles.label}>Instant Book</Text>
               <Text style={styles.hint}>Allow guests to book without approval</Text>
             </View>
-            <ToggleSwitch value={instantBook} onValueChange={setInstantBook} />
+            <Toggle pressed={instantBook} onPressedChange={setInstantBook} />
           </View>
 
           <View style={styles.divider} />
 
           <Text style={styles.fieldLabel}>Advance Notice (hours)</Text>
           <Text style={styles.hint}>Minimum hours before pickup</Text>
-          <TextInput
-            style={styles.input}
+          <Input
             value={advanceNotice}
             onChangeText={setAdvanceNotice}
             keyboardType="number-pad"
@@ -135,8 +138,7 @@ export default function ListingSettingsScreen() {
           <View style={styles.rowTwoCol}>
             <View style={styles.col}>
               <Text style={styles.fieldLabel}>Min Trip (days)</Text>
-              <TextInput
-                style={styles.input}
+              <Input
                 value={minTripDuration}
                 onChangeText={setMinTripDuration}
                 keyboardType="number-pad"
@@ -146,8 +148,7 @@ export default function ListingSettingsScreen() {
             </View>
             <View style={styles.col}>
               <Text style={styles.fieldLabel}>Max Trip (days)</Text>
-              <TextInput
-                style={styles.input}
+              <Input
                 value={maxTripDuration}
                 onChangeText={setMaxTripDuration}
                 keyboardType="number-pad"
@@ -156,25 +157,24 @@ export default function ListingSettingsScreen() {
               />
             </View>
           </View>
-        </View>
+        </Card>
 
         <Text style={styles.sectionTitle}>Distance & Pickup</Text>
 
-        <View style={styles.card}>
+        <Card className="mb-3">
           <View style={styles.rowBetween}>
             <View style={styles.labelWrap}>
               <Text style={styles.label}>Unlimited Distance</Text>
               <Text style={styles.hint}>Remove daily mileage limit</Text>
             </View>
-            <ToggleSwitch value={unlimitedDistance} onValueChange={setUnlimitedDistance} />
+            <Toggle pressed={unlimitedDistance} onPressedChange={setUnlimitedDistance} />
           </View>
 
           {!unlimitedDistance && (
             <>
               <View style={styles.divider} />
               <Text style={styles.fieldLabel}>Distance Limit (miles/day)</Text>
-              <TextInput
-                style={styles.input}
+              <Input
                 value={distanceLimit}
                 onChangeText={setDistanceLimit}
                 keyboardType="number-pad"
@@ -189,8 +189,7 @@ export default function ListingSettingsScreen() {
           <View style={styles.rowTwoCol}>
             <View style={styles.col}>
               <Text style={styles.fieldLabel}>Pickup Start Hour</Text>
-              <TextInput
-                style={styles.input}
+              <Input
                 value={pickupStartHour}
                 onChangeText={setPickupStartHour}
                 keyboardType="number-pad"
@@ -200,8 +199,7 @@ export default function ListingSettingsScreen() {
             </View>
             <View style={styles.col}>
               <Text style={styles.fieldLabel}>Pickup End Hour</Text>
-              <TextInput
-                style={styles.input}
+              <Input
                 value={pickupEndHour}
                 onChangeText={setPickupEndHour}
                 keyboardType="number-pad"
@@ -210,35 +208,18 @@ export default function ListingSettingsScreen() {
               />
             </View>
           </View>
-        </View>
+        </Card>
 
-        <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+        <Button
+          size="lg"
+          className="mt-6 mb-4"
           onPress={handleSave}
           disabled={saving}
         >
-          <Text style={styles.saveButtonText}>{saving ? "Saving..." : "Save Settings"}</Text>
-        </TouchableOpacity>
+          {saving ? "Saving..." : "Save Settings"}
+        </Button>
       </ScrollView>
     </View>
-  );
-}
-
-function ToggleSwitch({
-  value,
-  onValueChange,
-}: {
-  value: boolean;
-  onValueChange: (v: boolean) => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={[styles.toggleTrack, value && styles.toggleTrackActive]}
-      onPress={() => onValueChange(!value)}
-      activeOpacity={0.8}
-    >
-      <View style={[styles.toggleThumb, value && styles.toggleThumbActive]} />
-    </TouchableOpacity>
   );
 }
 
@@ -288,14 +269,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 8,
   },
-  card: {
-    backgroundColor: BG,
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: BORDER,
-    marginBottom: 8,
-  },
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
@@ -327,63 +300,11 @@ const styles = StyleSheet.create({
     color: "#374151",
     marginBottom: 6,
   },
-  input: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: BORDER,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#111827",
-  },
   rowTwoCol: {
     flexDirection: "row",
     gap: 12,
   },
   col: {
     flex: 1,
-  },
-  toggleTrack: {
-    width: 44,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#D1D5DB",
-    justifyContent: "center",
-    paddingHorizontal: 3,
-  },
-  toggleTrackActive: {
-    backgroundColor: GREEN,
-  },
-  toggleThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  toggleThumbActive: {
-    alignSelf: "flex-end",
-  },
-  saveButton: {
-    backgroundColor: NAVY,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FFFFFF",
   },
 });

@@ -3,6 +3,7 @@ import { useRef, useCallback, memo } from "react";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
+import { Card } from "@/components/ui/card";
 import type { VehicleFavorite } from "@/store/useFavoritesStore";
 
 const NAVY = "#2C3E5B";
@@ -73,41 +74,43 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
       onPressOut={handlePressOut}
     >
       <Animated.View style={[styles.cardInner, { transform: [{ translateX: slideAnim }] }]}>
-        <View style={[styles.imageWrap, list && styles.listImageWrap]}>
-        <Image source={{ uri: vehicle.image }} style={styles.cardImage} contentFit="cover" />
-        <View style={styles.topRightActions}>
-          <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
-            <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-              <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
-                size={22}
-                color={isFavorite ? "#E74C3C" : "#FFFFFF"}
-              />
-            </Animated.View>
-          </Pressable>
-        </View>
-      </View>
-      <View style={[styles.cardBody, list && styles.listCardBody]}>
-        <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
-          {vehicle.title}
-        </Text>
-        <Text style={styles.cardSubtitle} numberOfLines={1}>
-          {vehicle.category} • {vehicle.transmission} • {vehicle.condition}
-        </Text>
-        <Text style={styles.cardMeta}>
-          <Ionicons name="star" size={14} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
-        </Text>
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>{vehicle.price}</Text>
-          <Text style={styles.pricePeriod}>/day</Text>
-          {verified && (
-            <View style={styles.verifiedBadgeInline}>
-               <Ionicons name="checkmark-circle" size={14} color={GREEN} />
-              <Text style={styles.verifiedBadgeText}>Verified</Text>
+        <Card className={`p-0 overflow-hidden ${list ? "flex-row" : ""}`} style={{ width: list ? "100%" : undefined }}>
+          <View style={[styles.imageWrap, list && styles.listImageWrap]}>
+            <Image source={{ uri: vehicle.image }} style={styles.cardImage} contentFit="cover" />
+            <View style={styles.topRightActions}>
+              <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
+                <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                  <Ionicons
+                    name={isFavorite ? "heart" : "heart-outline"}
+                    size={22}
+                    color={isFavorite ? "#E74C3C" : "#FFFFFF"}
+                  />
+                </Animated.View>
+              </Pressable>
             </View>
-          )}
-        </View>
-      </View>
+          </View>
+          <View style={[styles.cardBody, list && styles.listCardBody]}>
+            <Text className="text-sm font-bold text-[#2C3E5B]" numberOfLines={1} ellipsizeMode="tail">
+              {vehicle.title}
+            </Text>
+            <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
+              {vehicle.category} • {vehicle.transmission} • {vehicle.condition}
+            </Text>
+            <Text className="text-xs font-medium text-[#6B7280]">
+              <Ionicons name="star" size={12} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
+            </Text>
+            <View className="flex-row items-center gap-1 mt-1">
+              <Text className="text-base font-bold text-[#10B981]">{vehicle.price}</Text>
+              <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
+              {verified && (
+                <View className="flex-row items-center gap-1 ml-auto px-2 py-0.5 rounded-md bg-emerald-50">
+                  <Ionicons name="checkmark-circle" size={14} color={GREEN} />
+                  <Text className="text-[#10B981] font-bold text-[11px]">Verified</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </Card>
       </Animated.View>
     </Pressable>
   );
@@ -115,7 +118,6 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
 
 const styles = StyleSheet.create({
   card: {
-    width: "47%",
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
@@ -164,53 +166,5 @@ const styles = StyleSheet.create({
   listCardBody: {
     padding: 12,
     justifyContent: "center",
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: NAVY,
-    flexShrink: 1,
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-    marginBottom: 2,
-  },
-  cardMeta: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  priceRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 4,
-    marginTop: 4,
-  },
-  price: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: GREEN,
-  },
-  pricePeriod: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  verifiedBadgeInline: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginLeft: "auto",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    backgroundColor: "#FFF7ED",
-  },
-  verifiedBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#10B981",
   },
 });

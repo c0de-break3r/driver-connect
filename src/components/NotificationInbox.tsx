@@ -87,8 +87,8 @@ export default function NotificationInbox({ visible, onClose }: NotificationInbo
       ]}
       pointerEvents={visible ? "auto" : "none"}
     >
-      <View style={styles.headerRow}>
-        <Text style={styles.headerTitle}>Notifications</Text>
+      <View className="flex-row items-center px-4 pt-3 pb-2 gap-3">
+        <Text className="flex-1 text-lg font-extrabold text-[#2C3E5B]">Notifications</Text>
         <TouchableOpacity onPress={handleClose} hitSlop={8} style={styles.closeButton}>
           <Ionicons name="close" size={22} color={NAVY} />
         </TouchableOpacity>
@@ -148,20 +148,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "#FFFFFF",
     zIndex: 50,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-    gap: 12,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: "800",
-    color: NAVY,
   },
   closeButton: {
     padding: 8,

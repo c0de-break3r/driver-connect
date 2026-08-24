@@ -14,6 +14,11 @@ import {
   Modal,
   TextInput,
 } from "react-native";
+import { Card } from "@/components/ui/card";
+import { Chip } from "@/components/ui/chip";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -251,7 +256,7 @@ export default function AvailabilityCalendarScreen() {
           </View>
         </View>
 
-        <View style={styles.calendarCard}>
+        <Card className="mb-4">
           <View style={styles.monthRow}>
             <TouchableOpacity onPress={handlePrevMonth} hitSlop={8}>
               <Ionicons name="chevron-back" size={22} color={NAVY} />
@@ -322,7 +327,7 @@ export default function AvailabilityCalendarScreen() {
               );
             })}
           </View>
-        </View>
+        </Card>
 
         <View style={styles.tipCard}>
           <Ionicons name="information-circle-outline" size={18} color={NAVY} />
@@ -332,141 +337,125 @@ export default function AvailabilityCalendarScreen() {
         </View>
       </ScrollView>
 
-      <Modal
-        visible={showBlockModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowBlockModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Block Date Range</Text>
+      <Dialog open={showBlockModal} onOpenChange={setShowBlockModal}>
+        <DialogContent className="w-80">
+          <DialogHeader>
+            <DialogTitle>Block Date Range</DialogTitle>
             <Text style={styles.modalSubtitle}>
               {blockingRange.start}
               {blockingRange.end !== blockingRange.start ? ` → ${blockingRange.end}` : ""}
             </Text>
             <Text style={styles.modalHint}>Edit the dates below before saving:</Text>
-            <View style={styles.modalInputRow}>
-              <View style={styles.modalCol}>
-                <Text style={styles.modalLabel}>Start</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={blockingRange.start || ""}
-                  onChangeText={(t) => setBlockingRange((r) => ({ ...r, start: t }))}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-              <View style={styles.modalCol}>
-                <Text style={styles.modalLabel}>End</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  value={blockingRange.end || ""}
-                  onChangeText={(t) => setBlockingRange((r) => ({ ...r, end: t }))}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
+          </DialogHeader>
+
+          <View style={styles.modalInputRow}>
+            <View style={styles.modalCol}>
+              <Text style={styles.modalLabel}>Start</Text>
+              <Input
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#9CA3AF"
+                value={blockingRange.start || ""}
+                onChangeText={(t) => setBlockingRange((r) => ({ ...r, start: t }))}
+              />
             </View>
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalCancelButton]}
-                onPress={() => {
-                  setShowBlockModal(false);
-                  setBlockingRange({ start: null, end: null });
-                }}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalSaveButton]}
-                onPress={handleBlockRange}
-              >
-                <Text style={styles.modalSaveText}>Block Dates</Text>
-              </TouchableOpacity>
+            <View style={styles.modalCol}>
+              <Text style={styles.modalLabel}>End</Text>
+              <Input
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#9CA3AF"
+                value={blockingRange.end || ""}
+                onChangeText={(t) => setBlockingRange((r) => ({ ...r, end: t }))}
+              />
             </View>
           </View>
-        </View>
-      </Modal>
 
-      <Modal
-        visible={showDateDetail}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDateDetail(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <DialogFooter>
+            <Button variant="outline" onPress={() => {
+              setShowBlockModal(false);
+              setBlockingRange({ start: null, end: null });
+            }}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </Button>
+            <Button onPress={handleBlockRange}>
+              <Text style={styles.modalSaveText}>Block Dates</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDateDetail} onOpenChange={setShowDateDetail}>
+        <DialogContent className="w-80">
+          <DialogHeader>
             <View style={styles.detailHeaderRow}>
-              <Text style={styles.modalTitle}>{selectedDate}</Text>
+              <DialogTitle>{selectedDate}</DialogTitle>
               <TouchableOpacity onPress={() => setShowDateDetail(false)} hitSlop={8}>
                 <Ionicons name="close" size={22} color={NAVY} />
               </TouchableOpacity>
             </View>
+          </DialogHeader>
 
-            {selectedBlocks.length > 0 && (
-              <View style={styles.detailSection}>
-                <Text style={styles.detailSectionTitle}>Availability Blocks</Text>
-                {selectedBlocks.map((block) => (
-                  <View key={block._id} style={styles.detailItem}>
-                    <View style={styles.detailItemLeft}>
-                      <View style={[styles.statusDot, { backgroundColor: YELLOW }]} />
-                      <View>
-                        <Text style={styles.detailItemTitle}>Blocked</Text>
-                        <Text style={styles.detailItemSub}>
-                          {block.startDate} → {block.endDate}
-                        </Text>
-                        {block.reason && (
-                          <Text style={styles.detailItemReason}>{block.reason}</Text>
-                        )}
-                      </View>
-                    </View>
-                    <TouchableOpacity onPress={() => handleDeleteBlock(block._id)} hitSlop={8}>
-                      <Ionicons name="trash-outline" size={18} color={RED} />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {selectedBookings.length > 0 && (
-              <View style={styles.detailSection}>
-                <Text style={styles.detailSectionTitle}>Bookings</Text>
-                {selectedBookings.map((booking) => (
-                  <View key={booking._id} style={styles.detailItem}>
-                    <View style={styles.detailItemLeft}>
-                      <View
-                        style={[
-                          styles.statusDot,
-                          { backgroundColor: booking.status === "confirmed" ? GREEN : YELLOW },
-                        ]}
-                      />
-                      <View>
-                        <Text style={styles.detailItemTitle}>
-                          {booking.status === "confirmed" ? "Confirmed" : "Pending"} Booking
-                        </Text>
-                        <Text style={styles.detailItemSub}>
-                          {booking.startDate} → {booking.endDate}
-                        </Text>
-                        <Text style={styles.detailItemSub}>
-                          GHS {booking.totalAmount.toLocaleString()}
-                        </Text>
-                      </View>
+          {selectedBlocks.length > 0 && (
+            <View style={styles.detailSection}>
+              <Text style={styles.detailSectionTitle}>Availability Blocks</Text>
+              {selectedBlocks.map((block) => (
+                <View key={block._id} style={styles.detailItem}>
+                  <View style={styles.detailItemLeft}>
+                    <View style={[styles.statusDot, { backgroundColor: YELLOW }]} />
+                    <View>
+                      <Text style={styles.detailItemTitle}>Blocked</Text>
+                      <Text style={styles.detailItemSub}>
+                        {block.startDate} → {block.endDate}
+                      </Text>
+                      {block.reason && (
+                        <Text style={styles.detailItemReason}>{block.reason}</Text>
+                      )}
                     </View>
                   </View>
-                ))}
-              </View>
-            )}
+                  <TouchableOpacity onPress={() => handleDeleteBlock(block._id)} hitSlop={8}>
+                    <Ionicons name="trash-outline" size={18} color={RED} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
 
-            {selectedBlocks.length === 0 && selectedBookings.length === 0 && (
-              <View style={styles.detailEmpty}>
-                <Text style={styles.detailEmptyText}>No events on this date.</Text>
-                <Text style={styles.detailEmptySub}>This date is available.</Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
+          {selectedBookings.length > 0 && (
+            <View style={styles.detailSection}>
+              <Text style={styles.detailSectionTitle}>Bookings</Text>
+              {selectedBookings.map((booking) => (
+                <View key={booking._id} style={styles.detailItem}>
+                  <View style={styles.detailItemLeft}>
+                    <View
+                      style={[
+                        styles.statusDot,
+                        { backgroundColor: booking.status === "confirmed" ? GREEN : YELLOW },
+                      ]}
+                    />
+                    <View>
+                      <Text style={styles.detailItemTitle}>
+                        {booking.status === "confirmed" ? "Confirmed" : "Pending"} Booking
+                      </Text>
+                      <Text style={styles.detailItemSub}>
+                        {booking.startDate} → {booking.endDate}
+                      </Text>
+                      <Text style={styles.detailItemSub}>
+                        GHS {booking.totalAmount.toLocaleString()}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {selectedBlocks.length === 0 && selectedBookings.length === 0 && (
+            <View style={styles.detailEmpty}>
+              <Text style={styles.detailEmptyText}>No events on this date.</Text>
+              <Text style={styles.detailEmptySub}>This date is available.</Text>
+            </View>
+          )}
+        </DialogContent>
+      </Dialog>
     </View>
   );
 }
