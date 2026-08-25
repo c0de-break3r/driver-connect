@@ -17,4 +17,6 @@ config.resolver = {
   sourceExts: [...(config.resolver?.sourceExts || []), "css"],
 };
 
-module.exports = withNativewind(config);
+module.exports = withNativewind(config, {
+  inlineRem: 16,
+});

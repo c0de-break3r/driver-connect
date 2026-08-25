@@ -17,6 +17,9 @@ import { setupOneSignal } from "@/lib/onesignal";
 // navigation or auth flows trigger preallocation of Expo UI views.
 import "@expo/ui";
 
+// Import global styles for NativeWind theme variables and utilities.
+import "../global.css";
+
 function NotificationSetup() {
   useEffect(() => {
     let isCancelled = false;

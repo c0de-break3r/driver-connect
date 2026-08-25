@@ -248,7 +248,7 @@ export default function DriverDashboard() {
         <View style={styles.sectionHeader}>
           <View>
             <Text style={styles.sectionTitle}>Weekly Availability</Text>
-            <Text style={styles.sectionSubtitle}>Toggle days on to let clients know when you're available.</Text>
+            <Text style={styles.sectionSubtitle}>Toggle days on to let clients know when you&apos;re available.</Text>
           </View>
         </View>
 

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar } from "@/components/ui/avatar";
-import { Toast } from "@/components/ui/toast";
+import Toast from "@/components/Toast";
 import { useToast } from "@/hooks/useToast";
 import { useLocationPickerStore } from "@/store/useLocationPickerStore";
 

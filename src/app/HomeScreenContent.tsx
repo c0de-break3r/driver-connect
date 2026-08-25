@@ -1,19 +1,23 @@
-import { useState, useRef, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, TextInput, Animated, RefreshControl, FlatList } from "react-native";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ScrollView, StyleSheet, View, Pressable, Animated, RefreshControl, FlatList, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import { Search, X, SlidersHorizontal, LayoutGrid, List } from "lucide-react-native";
-import { Card } from "@/components/ui/card";
-import { SegmentedControl } from "@/components/ui/segmented-control";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { LayoutGrid, List } from "lucide-react-native";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Text } from "@/components/ui/text";
+import { SearchBar } from "@/components/ui/search-bar";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexApi";
 import VehicleCard from "@/components/VehicleCard";
+import DriverCard from "@/components/DriverCard";
+import HorizontalSection from "@/components/HorizontalSection";
 import Toast from "@/components/Toast";
-import { DRIVERS } from "@/data/drivers";
+import { driversRepository } from "@/data/repositories/driversRepository";
+import { vehiclesRepository } from "@/data/repositories/vehiclesRepository";
+import { Driver, FeaturedVehicle } from "@/types/explore";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
 import { useToast } from "@/hooks/useToast";
 
@@ -21,63 +25,14 @@ const NAVY = "#2C3E5B";
 const ICON_SIZE_BASE = 20;
 const ICON_SIZE_ACTIVE = 24;
 
-const FEATURED_VEHICLES = [
-  {
-    id: "f1",
-    title: "Toyota Hilux 2022",
-    subtitle: "Double Cab · 4x4 · Ashanti",
-    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
-    pricePerDay: 169,
-  },
-  {
-    id: "f2",
-    title: "Mercedes-Benz C300",
-    subtitle: "Luxury sedan · Greater Accra",
-    image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80",
-    pricePerDay: 220,
-  },
-  {
-    id: "f3",
-    title: "Toyota Hiace 2021",
-    subtitle: "14-seater bus · Central Region",
-    image: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&q=80",
-    pricePerDay: 180,
-  },
-  {
-    id: "f4",
-    title: "Yamaha YZF-R3",
-    subtitle: "Sport motorcycle · Accra",
-    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80",
-    pricePerDay: 85,
-  },
-  {
-    id: "f5",
-    title: "Ford Ranger 2023",
-    subtitle: "Pickup · 4x4 · Eastern Region",
-    image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&q=80",
-    pricePerDay: 195,
-  },
-  {
-    id: "f6",
-    title: "Honda Accord 2022",
-    subtitle: "Sedan · Greater Accra",
-    image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
-    pricePerDay: 140,
-  },
-  {
-    id: "f7",
-    title: "Nissan Patrol 2021",
-    subtitle: "SUV · 7 seats · Northern Region",
-    image: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=80",
-    pricePerDay: 210,
-  },
-  {
-    id: "f8",
-    title: "Suzuki GSX-R750",
-    subtitle: "Sport bike · Ashanti",
-    image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&q=80",
-    pricePerDay: 95,
-  },
+const CATEGORY_OPTIONS = [
+  { id: "all", label: "All", icon: "apps-outline" as const },
+  { id: "drivers", label: "Drivers", icon: "person-outline" as const },
+  { id: "airports", label: "Airports", icon: "airplane-outline" as const },
+  { id: "monthly", label: "Monthly", icon: "calendar-outline" as const },
+  { id: "nearby", label: "Nearby", icon: "location-outline" as const },
+  { id: "delivered", label: "Delivered", icon: "checkmark-done-outline" as const },
+  { id: "cities", label: "Cities", icon: "business-outline" as const },
 ];
 
 type HomeScreenContentProps = {
@@ -86,34 +41,40 @@ type HomeScreenContentProps = {
 
 type SortOption = "recommended" | "price_asc" | "price_desc" | "rating";
 
-const SORT_OPTIONS: { id: SortOption; label: string }[] = [
-  { id: "recommended", label: "Recommended" },
-  { id: "price_asc", label: "Price: Low to High" },
-  { id: "price_desc", label: "Price: High to Low" },
-  { id: "rating", label: "Highest Rated" },
-];
-
-const CATEGORY_OPTIONS = [
-  { id: "all", label: "All" },
-  { id: "drivers", label: "Drivers" },
-  { id: "airports", label: "Airports" },
-  { id: "monthly", label: "Monthly" },
-  { id: "nearby", label: "Nearby" },
-  { id: "delivered", label: "Delivered" },
-  { id: "cities", label: "Cities" },
-];
-
 export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedResult, setSelectedResult] = useState<any | null>(null);
   const [focused, setFocused] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [placesResults, setPlacesResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showAllVehicles, setShowAllVehicles] = useState(false);
+
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [driversLoading, setDriversLoading] = useState(true);
+  const [featuredVehicles, setFeaturedVehicles] = useState<FeaturedVehicle[]>([]);
+  const [vehiclesLoading, setVehiclesLoading] = useState(true);
+
+  const categoryScrollRef = useRef<ScrollView>(null);
+  const chipMeasurements = useRef<{ [key: string]: { x: number; width: number } }>({}).current;
+
+  const handleCategoryPress = (id: string) => {
+    setSelectedCategory(id);
+    const measurement = chipMeasurements[id];
+    if (measurement && categoryScrollRef.current) {
+      const screenWidth = Dimensions.get("window").width;
+      const targetX = measurement.x - screenWidth / 2 + measurement.width / 2;
+      categoryScrollRef.current.scrollTo({ x: Math.max(0, targetX), animated: true });
+    }
+  };
+
+  const handleChipLayout = (id: string, event: any) => {
+    const { x, width } = event.nativeEvent.layout;
+    chipMeasurements[id] = { x, width };
+  };
 
   const convexVehicles = useQuery(api.jobs.listVehicles, {});
   const vehicles = (convexVehicles ?? []).map((v: any) => ({
@@ -138,9 +99,6 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     pricePerDay: v.pricePerDay,
   }));
 
-  const sectionAnims = useRef<Animated.Value[]>(
-    Array.from({ length: 6 }, () => new Animated.Value(1))
-  ).current;
   const { signedIn, email } = useAuth();
   const savedItems = useFavoritesStore((state) => state.savedItems);
   const loadFavoritesForUser = useFavoritesStore((state) => state.loadForUser);
@@ -149,6 +107,20 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   useEffect(() => {
     loadFavoritesForUser(email);
   }, [email, loadFavoritesForUser]);
+
+  useEffect(() => {
+    driversRepository.getTopRated().then((data) => {
+      setDrivers(data);
+      setDriversLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    vehiclesRepository.getFeatured().then((data) => {
+      setFeaturedVehicles(data);
+      setVehiclesLoading(false);
+    });
+  }, []);
 
   const iconAnim = useRef(new Animated.Value(ICON_SIZE_BASE)).current;
   const heartAnims = useRef<Map<string, Animated.Value>>(new Map()).current;
@@ -197,10 +169,6 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     router.push(`/favorites/save-to-favorites?vehicle=${encodeURIComponent(JSON.stringify({
       id, title, image, price, location, rating,
     }))}` as any);
-  };
-
-  const handleImageError = (id: string) => {
-    setImageErrors((prev) => ({ ...prev, [id]: true }));
   };
 
   useEffect(() => {
@@ -295,7 +263,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     }
   };
 
-  const sortDrivers = (list: typeof DRIVERS) => {
+  const sortDrivers = (list: Driver[]) => {
     const sorted = [...list];
     switch (sortBy) {
       case "price_asc":
@@ -309,13 +277,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     }
   };
 
+  const sortedDrivers = sortDrivers(drivers);
+  const sortedFeaturedVehicles = sortVehicles(featuredVehicles as any[]);
   const displayedVehicles = sortVehicles(vehicles);
-  const sortedFeaturedVehicles = sortVehicles(FEATURED_VEHICLES);
-  const sortedDrivers = sortDrivers(DRIVERS);
-
-  const handleSort = (option: SortOption) => {
-    setSortBy(option);
-  };
 
   const iconScale = iconAnim.interpolate({
     inputRange: [ICON_SIZE_BASE, ICON_SIZE_ACTIVE],
@@ -354,43 +318,78 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     return results;
   })();
 
+  const renderDriverCard = useCallback((driver: Driver) => {
+    const heartScale = getHeartAnim(driver.id);
+    return (
+      <DriverCard
+        driver={driver}
+        isFavorite={savedItems.some((item) => item.id === driver.id)}
+        onPress={() => handleDriverPress(driver.id)}
+        onFavoritePress={() => handleFavoritePress(driver.id, driver.name, driver.image, driver.hourlyRate, driver.location, driver.rating)}
+      />
+    );
+  }, [savedItems, handleDriverPress, handleFavoritePress]);
+
+  const renderVehicleCard = useCallback((vehicle: FeaturedVehicle) => {
+    const heartScale = getHeartAnim(vehicle.id);
+    return (
+      <Pressable onPress={() => handleVehiclePress(vehicle.id)}>
+        <VehicleCard
+          vehicle={{
+            id: vehicle.id,
+            title: vehicle.title,
+            category: vehicle.subtitle.split("·")[0]?.trim() || "",
+            location: vehicle.subtitle.split("·").pop()?.trim() || "",
+            region: "",
+            price: `GH₵ ${vehicle.pricePerDay}`,
+            originalPrice: "",
+            period: "per day",
+            rating: 0,
+            image: vehicle.image,
+            ownerName: "",
+            ownerAvatar: "",
+            isVerified: false,
+            condition: "Listed",
+            transmission: "Automatic",
+            yearsOnPlatform: "New",
+          }}
+          isFavorite={savedItems.some((item) => item.id === vehicle.id)}
+          onPress={() => handleVehiclePress(vehicle.id)}
+          onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, `GH₵ ${vehicle.pricePerDay}`, vehicle.subtitle, 0)}
+        />
+      </Pressable>
+    );
+  }, [savedItems, handleVehiclePress, handleFavoritePress]);
+
   return (
     <View className="flex-1 bg-white">
       {/* Fixed header */}
       <View className="bg-white pt-4 pb-3">
         {/* Unified search */}
         <View className="mx-5 relative z-20">
-          <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-3.5 py-2.5 gap-2.5">
-            {selectedResult ? (
-              <Pressable onPress={clearSearch}>
-                <Ionicons name="arrow-back" size={ICON_SIZE_BASE} color={NAVY} />
-              </Pressable>
-            ) : (
-              <Animated.View style={{ transform: [{ scale: iconScale }] }}>
-                <Search size={ICON_SIZE_BASE} color={NAVY} />
-              </Animated.View>
-            )}
-            <TextInput
-              className="flex-1 text-base text-[#2C3E5B]"
-              placeholder="Search places or people"
-              placeholderTextColor="#9CA3AF"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-            />
-            {searchQuery.length > 0 && (
-              <Pressable onPress={clearSearch}>
-                <X size={ICON_SIZE_BASE} color="#9CA3AF" />
-              </Pressable>
-            )}
-          </View>
+          <SearchBar
+            size="md"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onClear={clearSearch}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            placeholder="Search places or people"
+            icon={
+              selectedResult ? (
+                <Pressable onPress={clearSearch}>
+                  <Ionicons name="arrow-back" size={ICON_SIZE_BASE} color={NAVY} />
+                </Pressable>
+              ) : undefined
+            }
+            className="rounded-[20px] border-[1.5px] border-[#E5E7EB] bg-white"
+          />
 
           {focused && (searchQuery.trim().length > 0 || isSearching) && (
             <View className="mt-1 bg-white rounded-xl border border-gray-200 overflow-hidden" style={{ height: 180, zIndex: 30, elevation: 30 }}>
               {isSearching ? (
-                <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-                  <Text className="text-sm text-gray-500">Searching...</Text>
+                <View className="px-4 py-3">
+                  <Skeleton className="h-4 w-32 rounded-full" />
                 </View>
               ) : combinedResults.length > 0 ? (
                 <FlatList
@@ -439,32 +438,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           )}
         </View>
 
-        {/* Active chips + count + sort + view toggle */}
+        {/* Active chips + count + view toggle */}
         <View className="flex-row items-center justify-between px-5 mt-3 gap-2">
-          <Text className="text-xs font-semibold text-gray-400">Found {displayedVehicles.length} ads</Text>
+          <Text variant="small" className="text-gray-400 h-9 flex items-center">Found {vehicles.length} ads</Text>
           <View className="flex-row items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                <Pressable className="flex-row items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-gray-200">
-                  <SlidersHorizontal size={14} color={NAVY} />
-                  <Text className="text-xs font-semibold text-[#2C3E5B]">Sort</Text>
-                  <Ionicons name="chevron-down" size={12} color={NAVY} />
-                </Pressable>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="bottom" align="end" className="min-w-[200px]">
-                {SORT_OPTIONS.map((option) => (
-                  <DropdownMenuItem key={option.id} onPress={() => handleSort(option.id)}>
-                    <Text className={sortBy === option.id ? "text-sm font-bold text-[#2C3E5B]" : "text-sm text-[#2C3E5B]"}>
-                      {option.label}
-                    </Text>
-                    {sortBy === option.id && (
-                      <Ionicons name="checkmark" size={16} color={NAVY} className="ml-auto" />
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <Pressable
               className="w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center"
               onPress={handleViewModeToggle}
@@ -480,15 +457,32 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
 
         {/* Category filter chips */}
         <View className="mt-3">
-          <SegmentedControl
-            options={CATEGORY_OPTIONS.map(opt => opt.label)}
-            value={CATEGORY_OPTIONS.find(opt => opt.id === selectedCategory)?.label || "All"}
-            onValueChange={(label) => {
-              const found = CATEGORY_OPTIONS.find(opt => opt.label === label);
-              if (found) setSelectedCategory(found.id);
-            }}
-            size="sm"
-          />
+          <ScrollView
+            ref={categoryScrollRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 10, paddingHorizontal: 20 }}
+          >
+            {CATEGORY_OPTIONS.map((chip) => (
+              <Pressable
+                key={chip.id}
+                onLayout={(e) => handleChipLayout(chip.id, e)}
+                className={`flex-row items-center gap-1.5 px-[18px] py-[10px] rounded-full border ${selectedCategory === chip.id ? "bg-[#2C3E5B] border-[#2C3E5B]" : "bg-white border-gray-200"}`}
+                onPress={() => handleCategoryPress(chip.id)}
+              >
+                <Ionicons
+                  name={chip.icon}
+                  size={14}
+                  color={selectedCategory === chip.id ? "#FFFFFF" : "#6B7280"}
+                />
+                <Text
+                  className={`text-xs font-semibold ${selectedCategory === chip.id ? "text-white" : "text-gray-500"}`}
+                >
+                  {chip.label}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
       </View>
 
@@ -514,22 +508,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               </View>
             </View>
 
-            <Animated.View
-              style={[
-                viewMode === "list" ? styles.list : styles.grid,
-                {
-                  opacity: sectionAnims[0],
-                  transform: [
-                    {
-                      scale: sectionAnims[0].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.96, 1],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
+            <View style={viewMode === "list" ? styles.list : styles.grid}>
               {displayedVehicles.filter((v) => {
                 const query = searchQuery.toLowerCase();
                 return (
@@ -539,184 +518,105 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
                 );
               }).map((vehicle) => {
                 return (
-                <VehicleCard
-                  key={vehicle.id}
-                  vehicle={vehicle as any}
-                  isFavorite={savedItems.some((item) => item.id === vehicle.id)}
-                  onPress={() => handleVehiclePress(vehicle.id)}
-                  onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, vehicle.price, vehicle.location, vehicle.rating)}
-                  list={viewMode === "list"}
-                  style={viewMode === "list" ? styles.listCard : undefined}
-                />
+                  <VehicleCard
+                    key={vehicle.id}
+                    vehicle={vehicle as any}
+                    isFavorite={savedItems.some((item) => item.id === vehicle.id)}
+                    onPress={() => handleVehiclePress(vehicle.id)}
+                    onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, vehicle.price, vehicle.location, vehicle.rating)}
+                    list={viewMode === "list"}
+                    style={viewMode === "list" ? styles.listCard : undefined}
+                  />
                 );
               })}
-            </Animated.View>
+            </View>
           </>
         ) : (
           <>
-            {/* Top Rated Drivers */}
-            <View className="flex-row items-center justify-between mt-2">
-              <Text className="text-lg font-extrabold text-white">Top Rated Drivers</Text>
-            </View>
-            <Animated.View
-              style={[
-                viewMode === "list" ? styles.list : styles.grid,
-                {
-                  opacity: sectionAnims[1],
-                  transform: [
-                    {
-                      scale: sectionAnims[1].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.96, 1],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-               {sortedDrivers.map((driver) => {
-                const heartScale = getHeartAnim(driver.id);
-                const triggerHeartBeat = () => {
-                  heartScale.setValue(1);
-                  Animated.sequence([
-                    Animated.timing(heartScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
-                    Animated.timing(heartScale, { toValue: 0.85, duration: 120, useNativeDriver: true }),
-                    Animated.timing(heartScale, { toValue: 1.15, duration: 120, useNativeDriver: true }),
-                    Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
-                  ]).start();
-                };
-                return (
-                <Pressable key={driver.id} style={[styles.card, viewMode === "list" ? styles.listCard : undefined]} onPress={() => handleDriverPress(driver.id)}>
-                  <Card className={`p-0 overflow-hidden ${viewMode === "list" ? "flex-row" : ""}`}>
-                    <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
-                      <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
-                        <Pressable style={styles.favoriteBadge} onPress={() => {
-                          triggerHeartBeat();
-                          handleFavoritePress(driver.id, driver.name, driver.image, driver.hourlyRate, driver.location, driver.rating);
-                        }}>
-                          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                            <Ionicons
-                              name={savedItems.some((item) => item.id === driver.id) ? "heart" : "heart-outline"}
-                              size={22}
-                              color={savedItems.some((item) => item.id === driver.id) ? "#E74C3C" : "#FFFFFF"}
-                            />
-                          </Animated.View>
-                        </Pressable>
-                    </View>
-                    <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
-                      <Text style={styles.cardTitle} numberOfLines={1}>
-                        {driver.name}
-                      </Text>
-                      <Text style={styles.cardSubtitle}>{driver.location}</Text>
-                      <View style={styles.ratingRow}>
-                        <Ionicons name="star" size={12} color="#FFB800" />
-                        <Text style={styles.ratingText}>{driver.rating}</Text>
-                        <Text style={styles.tripsText}>({driver.trips} trips)</Text>
-                      </View>
-                      <View style={styles.rateRow}>
-                        <Text style={styles.rateText}>{driver.hourlyRate}/hr</Text>
-                        {driver.isVerified && (
-                          <View className="flex-row items-center gap-1 ml-auto px-2 py-0.5 rounded-md bg-emerald-50">
-                            <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                            <Text className="text-[#10B981] font-bold text-[11px]">Verified</Text>
-                          </View>
-                        )}
-                      </View>
-                      <View style={styles.metaRow}>
-                        <Text style={styles.yearsText}>{driver.yearsOnPlatform}</Text>
-                        <Text style={styles.vehicleTypeText}>{driver.vehicleType}</Text>
-                      </View>
-                    </View>
-                  </Card>
-                </Pressable>
-              );
-            })}
-            </Animated.View>
+            {/* Top Rated Drivers Section */}
+            <HorizontalSection<Driver>
+              title="Top Rated Drivers"
+              data={sortedDrivers}
+              loading={driversLoading}
+              emptyTitle="No drivers found"
+              emptySubtitle="Check back later for verified drivers"
+              seeAllRoute="/drivers"
+              seeAllLabel="See All"
+              renderItem={renderDriverCard}
+              cardWidth={160}
+              keyExtractor={(driver) => driver.id}
+            />
 
-            {/* Featured Vehicles */}
-            <View className="flex-row items-center justify-between mt-2">
-              <Text className="text-lg font-extrabold text-white">Featured Vehicles</Text>
-            </View>
+            {/* Featured Vehicles Section */}
+            <HorizontalSection<FeaturedVehicle>
+              title="Featured Vehicles"
+              data={sortedFeaturedVehicles}
+              loading={vehiclesLoading}
+              emptyTitle="No featured vehicles"
+              emptySubtitle="Check back later for new listings"
+              seeAllRoute="/vehicles"
+              seeAllLabel="See All"
+              renderItem={renderVehicleCard}
+              cardWidth={160}
+              keyExtractor={(vehicle) => vehicle.id}
+            />
 
-            <Animated.View
-              style={[
-                viewMode === "list" ? styles.list : styles.grid,
-                {
-                  opacity: sectionAnims[2],
-                  transform: [
-                    {
-                      scale: sectionAnims[2].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.96, 1],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              {sortedFeaturedVehicles.map((vehicle) => {
-                const heartScale = getHeartAnim(vehicle.id);
-                const triggerHeartBeat = () => {
-                  heartScale.setValue(1);
-                  Animated.sequence([
-                    Animated.timing(heartScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
-                    Animated.timing(heartScale, { toValue: 0.85, duration: 120, useNativeDriver: true }),
-                    Animated.timing(heartScale, { toValue: 1.15, duration: 120, useNativeDriver: true }),
-                    Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
-                  ]).start();
-                };
-                return (
-                <Pressable key={vehicle.id} style={[styles.featuredCard, viewMode === "list" ? styles.listCard : undefined]} onPress={() => handleVehiclePress(vehicle.id)}>
-                  <Card className={`p-0 overflow-hidden ${viewMode === "list" ? "flex-row" : ""}`}>
-                    <View style={[styles.imageWrap, viewMode === "list" && styles.listImageWrap]}>
-                      <Image
-                        source={{ uri: vehicle.image }}
-                        style={styles.cardImage}
-                        contentFit="cover"
-                        onError={() => handleImageError(vehicle.id)}
-                      />
-                      {imageErrors[vehicle.id] && (
-                        <View style={styles.imageFallback}>
-                          <Ionicons name="image-outline" size={24} color="#9CA3AF" />
-                        </View>
-                      )}
-                      <View style={styles.topRightActions}>
-                        <Pressable style={styles.favoriteBadge} onPress={() => {
-                          triggerHeartBeat();
-                          handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, `GH₵ ${vehicle.pricePerDay}`, vehicle.location, vehicle.rating);
-                        }}>
-                          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                            <Ionicons
-                              name={savedItems.some((item) => item.id === vehicle.id) ? "heart" : "heart-outline"}
-                              size={22}
-                              color={savedItems.some((item) => item.id === vehicle.id) ? "#E74C3C" : "#FFFFFF"}
-                            />
-                          </Animated.View>
-                        </Pressable>
-                      </View>
-                    </View>
-                    <View style={[styles.cardBody, viewMode === "list" && styles.listCardBody]}>
-                      <Text style={styles.cardTitle} numberOfLines={1}>
-                        {vehicle.title}
-                      </Text>
-                      <Text style={styles.cardSubtitle}>{vehicle.subtitle}</Text>
-                    </View>
-                  </Card>
-                </Pressable>
-              );
-            })}
-            </Animated.View>
+            {/* All Vehicles Section */}
+            {!showAllVehicles ? (
+              <HorizontalSection<any>
+                title="All Vehicles"
+                data={vehicles.slice(0, 8)}
+                loading={convexVehicles === undefined}
+                emptyTitle="No vehicles found"
+                emptySubtitle="Check back later for new listings"
+                seeAllLabel="See All"
+                renderItem={(vehicle) => (
+                  <VehicleCard
+                    key={vehicle.id}
+                    vehicle={vehicle as any}
+                    isFavorite={savedItems.some((item) => item.id === vehicle.id)}
+                    onPress={() => handleVehiclePress(vehicle.id)}
+                    onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, vehicle.price, vehicle.location, vehicle.rating)}
+                    list={false}
+                  />
+                )}
+                cardWidth={160}
+                onSeeAll={() => setShowAllVehicles(true)}
+                keyExtractor={(vehicle) => vehicle.id}
+              />
+            ) : (
+              <View className="mt-2">
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-lg font-extrabold text-[#2C3E5B]">All Vehicles</Text>
+                  <Pressable onPress={() => setShowAllVehicles(false)}>
+                    <Text className="text-xs font-bold text-gray-400">Show Less</Text>
+                  </Pressable>
+                </View>
+                <View style={viewMode === "list" ? styles.list : styles.grid}>
+                  {vehicles.map((vehicle) => (
+                    <VehicleCard
+                      key={vehicle.id}
+                      vehicle={vehicle as any}
+                      isFavorite={savedItems.some((item) => item.id === vehicle.id)}
+                      onPress={() => handleVehiclePress(vehicle.id)}
+                      onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, vehicle.price, vehicle.location, vehicle.rating)}
+                      list={viewMode === "list"}
+                      style={viewMode === "list" ? styles.listCard : undefined}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
           </>
         )}
       </ScrollView>
 
-        <Toast
-          visible={toast.visible}
-          message={toast.message}
-          type={toast.type}
-          onHide={hideToast}
-        />
-
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </View>
   );
 }
@@ -735,120 +635,5 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-  },
-  card: {
-    width: "47%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  featuredCard: {
-    width: "47%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  imageWrap: {
-    position: "relative",
-    width: "100%",
-    height: 120,
-  },
-  cardImage: {
-    width: "100%",
-    height: "100%",
-  },
-  favoriteBadge: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topRightActions: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    flexDirection: "row",
-    gap: 8,
-  },
-  imageFallback: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F3F4F6",
-  },
-  cardBody: {
-    padding: 10,
-    gap: 4,
-    flex: 1,
-  },
-  listCardBody: {
-    padding: 12,
-    justifyContent: "center",
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 4,
-  },
-  rateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  tripsText: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  rateText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#10B981",
-    marginTop: 4,
-  },
-  vehicleTypeText: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: "#9CA3AF",
-  },
-  yearsText: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: "#9CA3AF",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  listImageWrap: {
-    width: 140,
-    aspectRatio: 1.5,
-    flexShrink: 1,
   },
 });

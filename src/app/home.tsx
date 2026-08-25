@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Animated, StyleSheet, Text, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Heart, Calendar, MessageCircle, User, LogIn } from "lucide-react-native";
-import { EmptyState } from "@/components/ui/empty-state";
 
 import { HomeScreenContent } from "./HomeScreenContent";
 import WelcomeAuthScreen from "@/components/WelcomeAuthScreen";
@@ -15,6 +13,7 @@ import { useAppStateStore } from "@/store/useAppStateStore";
 import FavoritesScreen from "@/components/FavoritesScreen";
 import RoleSwitchTransition from "@/components/RoleSwitchTransition";
 import TripsScreen from "@/components/TripsScreen";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const NAVY = "#2C3E5B";
 
@@ -50,16 +49,12 @@ export default function HomeScreen() {
   const handleAuthDismiss = () => {
     setHasSeenWelcome(true);
     setWelcomeVisible(false);
-    if (!signedIn) {
-      setActiveTab("explore");
-      return;
-    }
     setActiveTab("explore");
   };
 
   const renderContent = () => {
     if (!isLoaded) {
-      return <View className="flex-1 bg-white" />;
+      return <View className="flex-1 items-center justify-center bg-white" />;
     }
 
     if (welcomeVisible) {
@@ -73,7 +68,11 @@ export default function HomeScreen() {
       if (activeTab === "favorites") {
         return (
           <EmptyState
-            icon={<Heart size={48} color={NAVY} />}
+            icon={
+              <View className="w-24 h-24 rounded-full bg-gray-100 items-center justify-center">
+                <Ionicons name="heart-outline" size={48} color={NAVY} />
+              </View>
+            }
             title="No favorites"
             description="Log in to view your favorites. You can save, view, or edit favorites once you've logged in."
             action={{ label: "Log in", onPress: openAuth }}
@@ -86,7 +85,11 @@ export default function HomeScreen() {
       if (activeTab === "messages") {
         return (
           <EmptyState
-            icon={<MessageCircle size={48} color={NAVY} />}
+            icon={
+              <View className="w-24 h-24 rounded-full bg-gray-100 items-center justify-center">
+                <Ionicons name="chatbubble-ellipses-outline" size={48} color={NAVY} />
+              </View>
+            }
             title="No messages"
             description="Log in to view and send messages to hosts and drivers."
             action={{ label: "Log in", onPress: openAuth }}
@@ -129,14 +132,6 @@ export default function HomeScreen() {
     return <HomeScreenContent onLoginPress={() => {}} />;
   };
 
-  const navItems = [
-    { icon: CompassIcon, label: "Explore", tab: "explore" as const },
-    { icon: HeartIcon, label: "Favorites", tab: "favorites" as const },
-    { icon: CalendarIcon, label: "Trips", tab: "trips" as const },
-    { icon: MessageCircleIcon, label: "Messages", tab: "messages" as const },
-    { icon: signedIn ? UserIcon : LogInIcon, label: signedIn ? "Profile" : "Log In", tab: "profile" as const },
-  ];
-
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View className="flex-1 bg-white">
@@ -149,21 +144,42 @@ export default function HomeScreen() {
         >
           {renderContent()}
         </Animated.View>
-      </View>
 
-      {!welcomeVisible && !isSwitchingRole && !switchingRole ? (
-        <View className="absolute left-0 right-0 bottom-0 flex-row items-center justify-around bg-white border-t border-gray-200 pt-2.5 pb-4 px-3 z-10">
-          {navItems.map((item) => (
+        {!welcomeVisible && !isSwitchingRole && !switchingRole ? (
+          <View className="flex-row items-center justify-around bg-white border-t border-gray-200 pt-2.5 pb-4 px-3">
             <NavItem
-              key={item.tab}
-              icon={item.icon}
-              label={item.label}
-              active={activeTab === item.tab}
-              onPress={() => setActiveTab(item.tab)}
+              icon="compass-outline"
+              label="Explore"
+              active={activeTab === "explore"}
+              onPress={() => setActiveTab("explore")}
             />
-          ))}
-        </View>
-      ) : null}
+            <NavItem
+              icon="heart-outline"
+              label="Favorites"
+              active={activeTab === "favorites"}
+              onPress={() => setActiveTab("favorites")}
+            />
+            <NavItem
+              icon="calendar-outline"
+              label="Trips"
+              active={activeTab === "trips"}
+              onPress={() => setActiveTab("trips")}
+            />
+            <NavItem
+              icon="chatbubble-ellipses-outline"
+              label="Messages"
+              active={activeTab === "messages"}
+              onPress={() => setActiveTab("messages")}
+            />
+            <NavItem
+              icon={signedIn ? "person-outline" : "log-in-outline"}
+              label={signedIn ? "Profile" : "Log In"}
+              active={activeTab === "profile"}
+              onPress={() => setActiveTab("profile")}
+            />
+          </View>
+        ) : null}
+      </View>
 
       {switchingRole ? (
         <RoleSwitchTransition role={switchingRole} fromRole="client" />
@@ -172,37 +188,13 @@ export default function HomeScreen() {
   );
 }
 
-function CompassIcon() {
-  return <Ionicons name="compass-outline" size={22} color="#2C3E5B" />;
-}
-
-function HeartIcon({ active }: { active?: boolean }) {
-  return <Ionicons name="heart-outline" size={22} color={active ? "#2C3E5B" : "#9CA3AF"} />;
-}
-
-function CalendarIcon() {
-  return <Ionicons name="calendar-outline" size={22} color="#2C3E5B" />;
-}
-
-function MessageCircleIcon() {
-  return <Ionicons name="chatbubble-ellipses-outline" size={22} color="#2C3E5B" />;
-}
-
-function UserIcon() {
-  return <Ionicons name="person-outline" size={22} color="#2C3E5B" />;
-}
-
-function LogInIcon() {
-  return <Ionicons name="log-in-outline" size={22} color="#2C3E5B" />;
-}
-
 function NavItem({
-  icon: Icon,
+  icon,
   label,
   active,
   onPress,
 }: {
-  icon: React.ComponentType<{ size?: number; color?: string; active?: boolean }>;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   active?: boolean;
   onPress?: () => void;
@@ -212,12 +204,16 @@ function NavItem({
   return (
     <Pressable className="items-center gap-1 flex-1" onPress={() => { bounce(); onPress?.(); }}>
       <Animated.View style={animatedStyle}>
-        <Icon size={22} color={active ? "#2C3E5B" : "#9CA3AF"} />
+        <Ionicons
+          name={icon}
+          size={22}
+          color={active ? "#2C3E5B" : "#9CA3AF"}
+        />
       </Animated.View>
       <Text
         className={[
           "text-[11px] font-semibold",
-          active ? "text-[#2C3E5B]" : "text-[#9CA3AF]",
+          active ? "text-foreground" : "text-gray-400",
         ].join(" ")}
       >
         {label}

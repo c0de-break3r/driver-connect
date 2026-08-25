@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { ProgressSteps, ProgressStep } from "@/components/ui/progress-steps";
+import { Textarea } from "@/components/ui/textarea";
 
 const NAVY = "#2C3E5B";
 

@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Rating } from "@/components/ui/rating";
 import { Separator } from "@/components/ui/separator";
-import { Toast } from "@/components/ui/toast";
+import Toast from "@/components/Toast";
 import { useToast } from "@/hooks/useToast";
 import { DRIVERS } from "@/data/drivers";
 import CalendarSheet from "@/components/CalendarSheet";
@@ -39,6 +39,15 @@ const LOCATIONS_BY_REGION: Record<string, string[]> = {
 
 let LocationModule: any;
 try { LocationModule = require("expo-location"); } catch { /* location module unavailable */ }
+
+function SectionHeader({ icon, title }: { icon: string; title: string }) {
+  return (
+    <View className="flex-row items-center gap-2.5 mb-3">
+      <Ionicons name={icon as any} size={20} color={NAVY} />
+      <Text className="text-base font-bold" style={{ color: NAVY }}>{title}</Text>
+    </View>
+  );
+}
 
 export default function BookNowScreen() {
   const router = useRouter();
@@ -129,13 +138,6 @@ export default function BookNowScreen() {
       setPickupDate(`${startFormatted} - ${endFormatted}`);
     }
   };
-
-  const SectionHeader = ({ icon, title }: { icon: string; title: string }) => (
-    <View className="flex-row items-center gap-2.5 mb-3">
-      <Ionicons name={icon as any} size={20} color={NAVY} />
-      <Text className="text-base font-bold" style={{ color: NAVY }}>{title}</Text>
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -272,7 +274,7 @@ export default function BookNowScreen() {
         </Button>
 
         <Text className="text-xs font-medium text-gray-500 text-center mt-4">
-          You won't be charged now. Free cancellation up to 2 hours before pickup.
+          You won&apos;t be charged now. Free cancellation up to 2 hours before pickup.
         </Text>
       </ScrollView>
       <CalendarSheet
