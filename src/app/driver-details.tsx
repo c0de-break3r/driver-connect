@@ -327,20 +327,11 @@ export default function DriverDetailsScreen() {
     setFullscreenIndex(index);
   };
 
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
   return (
     <View key={driverId} style={styles.safeArea}>
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
-        scrollEventThrottle={16}
       >
         {/* Hero Image */}
         <View style={styles.imageWrap}>
@@ -367,15 +358,13 @@ export default function DriverDetailsScreen() {
             </Text>
           </View>
 
-          <Animated.View style={{ opacity: headerOpacity }}>
-            <DetailsImageHeader
-              onBack={() => router.back()}
-              onShare={() => {}}
-              onFavorite={protectedFavorite}
-              isFavorite={isFavorite}
-              heartScale={heartScale}
-            />
-          </Animated.View>
+          <DetailsImageHeader
+            onBack={() => router.back()}
+            onShare={() => {}}
+            onFavorite={protectedFavorite}
+            isFavorite={isFavorite}
+            heartScale={heartScale}
+          />
 
           {/* Expand hint */}
           <View style={styles.expandHint}>

@@ -210,20 +210,11 @@ export default function VehicleDetailsScreen() {
   const closeFullscreenImage = () => { setShowFullscreenImage(false); };
   const handleFullscreenMomentum = (e: any) => { const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH); setFullscreenIndex(index); };
 
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
   return (
     <Animated.View key={vehicleId} style={[styles.safeArea, { transform: [{ translateY: swipeY }] }]} {...panResponder.panHandlers}>
       <ScrollView
         style={styles.contentScroll}
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
-        scrollEventThrottle={16}
       >
         <View style={styles.imageWrap}>
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} ref={scrollRef} onMomentumScrollEnd={(e) => { const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH); setCurrentImageIndex(index); }}>
@@ -238,15 +229,13 @@ export default function VehicleDetailsScreen() {
             <Text style={styles.imageCounterText}>{currentImageIndex + 1} / {vehicle.images.length}</Text>
           </View>
 
-          <Animated.View style={{ opacity: headerOpacity }}>
-            <DetailsImageHeader
-              onBack={() => router.back()}
-              onShare={() => {}}
-              onFavorite={handleFavorite}
-              isFavorite={isFavorited}
-              heartScale={heartScale}
-            />
-          </Animated.View>
+          <DetailsImageHeader
+            onBack={() => router.back()}
+            onShare={() => {}}
+            onFavorite={handleFavorite}
+            isFavorite={isFavorited}
+            heartScale={heartScale}
+          />
 
           <View style={styles.expandHint}>
             <Ionicons name="expand-outline" size={18} color="#FFFFFF" />

@@ -40,7 +40,7 @@ export const SearchBar = React.forwardRef<
 ) {
   const iconSize = iconSizes[size ?? "md"];
   const dark = useColorScheme() === "dark";
-  const caret = dark ? "#fafafa" : "#18181b";
+  const caret = "#9CA3AF";
 
   return (
     <View className="flex-row items-center gap-2">
