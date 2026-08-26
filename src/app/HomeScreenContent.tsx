@@ -20,6 +20,7 @@ import { vehiclesRepository } from "@/data/repositories/vehiclesRepository";
 import { Driver, FeaturedVehicle } from "@/types/explore";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
 import { useToast } from "@/hooks/useToast";
+import { getUserRegion } from "@/lib/userLocation";
 
 const NAVY = "#2C3E5B";
 const ICON_SIZE_BASE = 20;
@@ -52,6 +53,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showAllVehicles, setShowAllVehicles] = useState(false);
+  const [userRegion, setUserRegion] = useState<string | null>(null);
 
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [driversLoading, setDriversLoading] = useState(true);
@@ -109,18 +111,24 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   }, [email, loadFavoritesForUser]);
 
   useEffect(() => {
-    driversRepository.getTopRated().then((data) => {
-      setDrivers(data);
-      setDriversLoading(false);
+    getUserRegion().then((region) => {
+      setUserRegion(region);
     });
   }, []);
 
   useEffect(() => {
-    vehiclesRepository.getFeatured().then((data) => {
+    driversRepository.getTopRated(userRegion ?? undefined).then((data) => {
+      setDrivers(data);
+      setDriversLoading(false);
+    });
+  }, [userRegion]);
+
+  useEffect(() => {
+    vehiclesRepository.getFeatured(userRegion ?? undefined).then((data) => {
       setFeaturedVehicles(data);
       setVehiclesLoading(false);
     });
-  }, []);
+  }, [userRegion]);
 
   const iconAnim = useRef(new Animated.Value(ICON_SIZE_BASE)).current;
   const heartAnims = useRef<Map<string, Animated.Value>>(new Map()).current;
@@ -137,8 +145,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     setVehiclesLoading(true);
     try {
       const [driversData, vehiclesData] = await Promise.all([
-        driversRepository.getTopRated(),
-        vehiclesRepository.getFeatured(),
+        driversRepository.getTopRated(userRegion ?? undefined),
+        vehiclesRepository.getFeatured(userRegion ?? undefined),
       ]);
       setDrivers(driversData);
       setFeaturedVehicles(vehiclesData);
@@ -556,7 +564,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           <>
             {/* Top Rated Drivers Section */}
             <HorizontalSection<Driver>
-              title="Top Rated Drivers"
+              title="Top Rated"
+              subtitle="Drivers"
               data={sortedDrivers}
               loading={driversLoading}
               emptyTitle="No drivers found"
@@ -570,7 +579,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
 
             {/* Featured Vehicles Section */}
             <HorizontalSection<FeaturedVehicle>
-              title="Featured Vehicles"
+              title="Popular"
+              subtitle="Vehicles"
               data={sortedFeaturedVehicles}
               loading={vehiclesLoading}
               emptyTitle="No featured vehicles"
@@ -585,7 +595,8 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
             {/* All Vehicles Section */}
             {!showAllVehicles ? (
               <HorizontalSection<any>
-                title="All Vehicles"
+                title="All"
+                subtitle="Vehicles"
                 data={vehicles.slice(0, 8)}
                 loading={convexVehicles === undefined}
                 emptyTitle="No vehicles found"

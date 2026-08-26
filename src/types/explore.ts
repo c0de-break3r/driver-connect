@@ -20,6 +20,7 @@ export type FeaturedVehicle = {
   subtitle: string;
   image: string;
   pricePerDay: number;
+  location: string;
 };
 
 export type SectionConfig<T> = {

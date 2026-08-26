@@ -7,6 +7,7 @@ import { router } from "expo-router";
 
 type HorizontalSectionProps<T> = {
   title: string;
+  subtitle?: string;
   data: T[];
   loading: boolean;
   emptyTitle?: string;
@@ -23,6 +24,7 @@ type HorizontalSectionProps<T> = {
 
 export default function HorizontalSection<T>({
   title,
+  subtitle,
   data,
   loading,
   emptyTitle = "No items found",
@@ -49,7 +51,12 @@ export default function HorizontalSection<T>({
   return (
     <View className="mt-5">
       <View className="flex-row items-center justify-between mb-3">
-        <Text className="text-lg font-extrabold text-white">{title}</Text>
+        <View className="flex-row items-center gap-2">
+          <Text className="text-lg font-extrabold text-white">{title}</Text>
+          {subtitle ? (
+            <Text className="text-xs font-semibold text-gray-400">{subtitle}</Text>
+          ) : null}
+        </View>
         {!showEmpty && (
           <Pressable onPress={handleSeeAll}>
             <Text className="text-xs font-bold text-gray-400">{seeAllLabel}</Text>
@@ -71,7 +78,6 @@ export default function HorizontalSection<T>({
             </View>
           )}
           contentContainerStyle={{ paddingHorizontal: 20 }}
-          ListFooterComponent={<View style={{ width: 20 }} />}
         />
       ) : showEmpty ? (
         <View className="mx-5">
@@ -94,7 +100,6 @@ export default function HorizontalSection<T>({
             </View>
           )}
           contentContainerStyle={{ paddingHorizontal: 20 }}
-          ListFooterComponent={<View style={{ width: 20 }} />}
         />
       )}
     </View>
