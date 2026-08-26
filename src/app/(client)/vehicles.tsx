@@ -52,14 +52,8 @@ export default function VehiclesListScreen() {
         }
         contentContainerStyle={{ padding: 20, gap: 14 }}
         ListEmptyComponent={
-          <View className="items-center justify-center py-16">
-            <Text className="text-lg font-extrabold text-[#2C3E5B]">No vehicles found</Text>
-            <Text className="text-sm text-gray-500 mt-1">Check back later for new listings</Text>
-          </View>
-        }
-        ListFooterComponent={
           loading ? (
-            <View className="gap-3">
+            <View className="gap-3 px-5">
               {Array.from({ length: 3 }).map((_, i) => (
                 <View key={i} className="gap-2">
                   <Skeleton className="h-[120px] w-full rounded-2xl" />
@@ -68,8 +62,14 @@ export default function VehiclesListScreen() {
                 </View>
               ))}
             </View>
-          ) : null
+          ) : (
+            <View className="items-center justify-center py-16">
+              <Text className="text-lg font-extrabold text-[#2C3E5B]">No vehicles found</Text>
+              <Text className="text-sm text-gray-500 mt-1">Check back later for new listings</Text>
+            </View>
+          )
         }
+        ListFooterComponent={null}
       />
     </View>
   );

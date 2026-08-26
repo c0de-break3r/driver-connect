@@ -131,9 +131,22 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
     searchQuery.trim().length > 0 ? { searchTerm: searchQuery.trim() } : "skip"
   );
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 2000);
+    setDriversLoading(true);
+    setVehiclesLoading(true);
+    try {
+      const [driversData, vehiclesData] = await Promise.all([
+        driversRepository.getTopRated(),
+        vehiclesRepository.getFeatured(),
+      ]);
+      setDrivers(driversData);
+      setFeaturedVehicles(vehiclesData);
+    } finally {
+      setDriversLoading(false);
+      setVehiclesLoading(false);
+      setRefreshing(false);
+    }
   };
 
   const getHeartAnim = (id: string) => {

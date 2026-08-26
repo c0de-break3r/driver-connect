@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Chip } from "@/components/ui/chip";
 import { Rating } from "@/components/ui/rating";
 import { Avatar } from "@/components/ui/avatar";
+import DetailsImageHeader from "@/components/DetailsImageHeader";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -209,9 +210,21 @@ export default function VehicleDetailsScreen() {
   const closeFullscreenImage = () => { setShowFullscreenImage(false); };
   const handleFullscreenMomentum = (e: any) => { const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH); setFullscreenIndex(index); };
 
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
   return (
     <Animated.View key={vehicleId} style={[styles.safeArea, { transform: [{ translateY: swipeY }] }]} {...panResponder.panHandlers}>
-      <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.contentScroll}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        scrollEventThrottle={16}
+      >
         <View style={styles.imageWrap}>
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} ref={scrollRef} onMomentumScrollEnd={(e) => { const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH); setCurrentImageIndex(index); }}>
             {vehicle.images.map((image: string, index: number) => (
@@ -225,21 +238,15 @@ export default function VehicleDetailsScreen() {
             <Text style={styles.imageCounterText}>{currentImageIndex + 1} / {vehicle.images.length}</Text>
           </View>
 
-          <View style={styles.topActions}>
-            <Button variant="ghost" size="icon" onPress={() => router.back()} className="w-10 h-10 rounded-full bg-black/30 border border-white/20">
-              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-            </Button>
-            <View style={styles.topRightActions}>
-              <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full bg-black/30 border border-white/20">
-                <Ionicons name="share-outline" size={22} color="#FFFFFF" />
-              </Button>
-              <Button variant="ghost" size="icon" onPress={handleFavorite} className="w-10 h-10 rounded-full bg-black/30 border border-white/20">
-                <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                  <Ionicons name={isFavorited ? "heart" : "heart-outline"} size={22} color={isFavorited ? "#E74C3C" : "#FFFFFF"} />
-                </Animated.View>
-              </Button>
-            </View>
-          </View>
+          <Animated.View style={{ opacity: headerOpacity }}>
+            <DetailsImageHeader
+              onBack={() => router.back()}
+              onShare={() => {}}
+              onFavorite={handleFavorite}
+              isFavorite={isFavorited}
+              heartScale={heartScale}
+            />
+          </Animated.View>
 
           <View style={styles.expandHint}>
             <Ionicons name="expand-outline" size={18} color="#FFFFFF" />

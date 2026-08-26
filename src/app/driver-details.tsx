@@ -20,6 +20,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import DetailsImageHeader from "@/components/DetailsImageHeader";
 
 const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
@@ -326,9 +327,21 @@ export default function DriverDetailsScreen() {
     setFullscreenIndex(index);
   };
 
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
   return (
     <View key={driverId} style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        scrollEventThrottle={16}
+      >
         {/* Hero Image */}
         <View style={styles.imageWrap}>
           <ScrollView
@@ -354,26 +367,15 @@ export default function DriverDetailsScreen() {
             </Text>
           </View>
 
-          {/* Top actions */}
-          <View style={styles.topActions}>
-            <Pressable style={styles.iconButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-            </Pressable>
-            <View style={styles.topRightActions}>
-              <Pressable style={styles.iconButton}>
-                <Ionicons name="share-outline" size={22} color="#FFFFFF" />
-              </Pressable>
-              <Pressable style={styles.iconButton} onPress={protectedFavorite}>
-                <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                  <Ionicons
-                    name={isFavorite ? "heart" : "heart-outline"}
-                    size={22}
-                    color={isFavorite ? "#E74C3C" : "#FFFFFF"}
-                  />
-                </Animated.View>
-              </Pressable>
-            </View>
-          </View>
+          <Animated.View style={{ opacity: headerOpacity }}>
+            <DetailsImageHeader
+              onBack={() => router.back()}
+              onShare={() => {}}
+              onFavorite={protectedFavorite}
+              isFavorite={isFavorite}
+              heartScale={heartScale}
+            />
+          </Animated.View>
 
           {/* Expand hint */}
           <View style={styles.expandHint}>

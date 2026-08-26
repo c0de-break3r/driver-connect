@@ -1,10 +1,9 @@
-import { useRef, useCallback } from "react";
-import { StyleSheet, View, Pressable } from "react-native";
+import { useRef, useCallback, memo } from "react";
+import { StyleSheet, Text, View, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
 import { Card } from "@/components/ui/card";
-import { Text } from "@/components/ui/text";
 import { Driver } from "@/types/explore";
 
 const NAVY = "#2C3E5B";
@@ -17,10 +16,12 @@ type DriverCardProps = {
   list?: boolean;
 };
 
-export default function DriverCard({ driver, isFavorite = false, onPress, onFavoritePress, list = false }: DriverCardProps) {
+export default memo(function DriverCard({ driver, isFavorite = false, onPress, onFavoritePress, list = false }: DriverCardProps) {
   const heartScale = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const isNavigatingRef = useRef(false);
 
-  const triggerHeartBeat = useCallback(() => {
+  const triggerHeartBeat = () => {
     heartScale.setValue(1);
     Animated.sequence([
       Animated.timing(heartScale, { toValue: 1.35, duration: 120, useNativeDriver: true }),
@@ -28,52 +29,88 @@ export default function DriverCard({ driver, isFavorite = false, onPress, onFavo
       Animated.timing(heartScale, { toValue: 1.15, duration: 120, useNativeDriver: true }),
       Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, tension: 180, friction: 3 }),
     ]).start();
-  }, [heartScale]);
+  };
 
   const handleFavoritePress = () => {
     triggerHeartBeat();
     onFavoritePress?.();
   };
 
+  const handlePress = useCallback(() => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 600);
+    onPress?.();
+  }, [onPress]);
+
+  const handlePressIn = () => {
+    Animated.spring(slideAnim, {
+      toValue: -10,
+      useNativeDriver: true,
+      tension: 180,
+      friction: 8,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 180,
+      friction: 8,
+    }).start();
+  };
+
   return (
     <Pressable
-      style={[styles.card, list ? styles.listCard : undefined]}
-      onPress={onPress}
+      style={[styles.card, list && styles.listCard]}
+      onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
     >
-      <Card className={`p-0 overflow-hidden ${list ? "flex-row" : ""}`}>
-        <View style={[styles.imageWrap, list && styles.listImageWrap]}>
-          <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
-          <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
-            <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-              <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
-                size={22}
-                color={isFavorite ? "#E74C3C" : "#FFFFFF"}
-              />
-            </Animated.View>
-          </Pressable>
-        </View>
-        <View style={[styles.cardBody, list && styles.listCardBody]}>
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {driver.name}
-          </Text>
-          <Text style={styles.cardSubtitle}>{driver.location}</Text>
-          <View style={styles.ratingRow}>
-            <Ionicons name="star" size={12} color="#FFB800" />
-            <Text style={styles.ratingText}>{driver.rating}</Text>
-            <Text style={styles.tripsText}>({driver.trips} trips)</Text>
+      <Animated.View style={[styles.cardInner, { transform: [{ translateX: slideAnim }] }]}>
+        <Card className={`p-0 overflow-hidden ${list ? "flex-row" : ""}`} style={{ width: list ? "100%" : undefined }}>
+          <View style={[styles.imageWrap, list && styles.listImageWrap]}>
+            <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
+            <View style={styles.topRightActions}>
+              <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
+                <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                  <Ionicons
+                    name={isFavorite ? "heart" : "heart-outline"}
+                    size={22}
+                    color={isFavorite ? "#E74C3C" : "#FFFFFF"}
+                  />
+                </Animated.View>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </Card>
+          <View style={[styles.cardBody, list && styles.listCardBody]}>
+            <Text className="text-sm font-bold text-[#2C3E5B]" numberOfLines={1} ellipsizeMode="tail">
+              {driver.name}
+            </Text>
+            <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
+              {driver.location}
+            </Text>
+            <Text className="text-xs font-medium text-[#6B7280]">
+              <Ionicons name="star" size={12} color="#FFB800" /> {driver.rating} ({driver.trips} trips)
+            </Text>
+          </View>
+        </Card>
+      </Animated.View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     overflow: "hidden",
+  },
+  cardInner: {
+    flex: 1,
   },
   listCard: {
     width: "100%",
@@ -83,7 +120,12 @@ const styles = StyleSheet.create({
   imageWrap: {
     position: "relative",
     width: "100%",
-    height: 120,
+    aspectRatio: 1.5,
+  },
+  listImageWrap: {
+    width: 140,
+    aspectRatio: 1.5,
+    flexShrink: 1,
   },
   cardImage: {
     width: "100%",
@@ -96,10 +138,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  listImageWrap: {
-    width: 140,
-    aspectRatio: 1.5,
-    flexShrink: 1,
+  topRightActions: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    gap: 8,
   },
   cardBody: {
     padding: 10,
@@ -109,31 +153,5 @@ const styles = StyleSheet.create({
   listCardBody: {
     padding: 12,
     justifyContent: "center",
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 4,
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: NAVY,
-  },
-  tripsText: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#6B7280",
   },
 });
