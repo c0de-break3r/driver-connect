@@ -20,6 +20,7 @@ type HorizontalSectionProps<T> = {
   loadingCount?: number;
   cardWidth?: number;
   keyExtractor?: (item: T, index: number) => string | number;
+  reverseHeader?: boolean;
 };
 
 export default function HorizontalSection<T>({
@@ -37,6 +38,7 @@ export default function HorizontalSection<T>({
   loadingCount = 4,
   cardWidth = 160,
   keyExtractor,
+  reverseHeader = false,
 }: HorizontalSectionProps<T>) {
   const showEmpty = !loading && data.length === 0;
 
@@ -48,19 +50,34 @@ export default function HorizontalSection<T>({
     }
   };
 
+  const headerContent = (
+    <View className="flex-row items-center gap-2">
+      <Text className="text-lg font-extrabold text-white">{title}</Text>
+      {subtitle ? (
+        <Text className="text-xs font-semibold text-gray-400">{subtitle}</Text>
+      ) : null}
+    </View>
+  );
+
+  const seeAllContent = !showEmpty ? (
+    <Pressable onPress={handleSeeAll}>
+      <Text className="text-xs font-bold text-gray-400">{seeAllLabel}</Text>
+    </Pressable>
+  ) : null;
+
   return (
     <View className="mt-5">
       <View className="flex-row items-center justify-between mb-3">
-        <View className="flex-row items-center gap-2">
-          <Text className="text-lg font-extrabold text-white">{title}</Text>
-          {subtitle ? (
-            <Text className="text-xs font-semibold text-gray-400">{subtitle}</Text>
-          ) : null}
-        </View>
-        {!showEmpty && (
-          <Pressable onPress={handleSeeAll}>
-            <Text className="text-xs font-bold text-gray-400">{seeAllLabel}</Text>
-          </Pressable>
+        {reverseHeader ? (
+          <>
+            {seeAllContent}
+            {headerContent}
+          </>
+        ) : (
+          <>
+            {headerContent}
+            {seeAllContent}
+          </>
         )}
       </View>
 

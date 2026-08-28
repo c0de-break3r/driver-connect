@@ -564,8 +564,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
           <>
             {/* Top Rated Drivers Section */}
             <HorizontalSection<Driver>
-              title="Top Rated"
-              subtitle="Drivers"
+              title="Top Rated Drivers"
               data={sortedDrivers}
               loading={driversLoading}
               emptyTitle="No drivers found"
@@ -577,10 +576,9 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               keyExtractor={(driver) => driver.id}
             />
 
-            {/* Featured Vehicles Section */}
+            {/* Top Rated Vehicles Section */}
             <HorizontalSection<FeaturedVehicle>
-              title="Popular"
-              subtitle="Vehicles"
+              title="Top Rated Vehicles"
               data={sortedFeaturedVehicles}
               loading={vehiclesLoading}
               emptyTitle="No featured vehicles"
