@@ -250,9 +250,9 @@ export default function VehicleDetailsScreen() {
               <Text className="text-xs font-bold text-amber-700">{vehicle.rating}</Text>
             </Badge>
             <Text style={styles.tripsText}>({vehicle.trips} trips)</Text>
-            <Badge variant="secondary" className="flex-row items-center gap-1 bg-emerald-50 border-emerald-200">
-              <Ionicons name="checkmark-circle" size={12} color="#10B981" />
-              <Text className="text-xs font-bold text-emerald-600">Verified</Text>
+            <Badge variant="primary" className="flex-row items-center gap-1.5">
+              <Ionicons name="checkmark-circle-outline" size={14} color="#FFFFFF" />
+              <Text className="text-white font-semibold text-xs">Verified</Text>
             </Badge>
           </View>
 
@@ -451,7 +451,7 @@ export default function VehicleDetailsScreen() {
 
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} ref={fullscreenScrollRef} onMomentumScrollEnd={handleFullscreenMomentum}>
             {vehicle.images.map((image: string, index: number) => (
-              <Image key={index} source={{ uri: image }} style={styles.fullscreenImage} contentFit="cover" />
+              <Image key={index} source={{ uri: image }} style={styles.fullscreenImage} contentFit="contain" />
             ))}
           </ScrollView>
 
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   titleWrap: { flex: 1 },
   title: { fontSize: 24, fontWeight: "800", color: NAVY, marginBottom: 4 },
   subtitle: { fontSize: 14, fontWeight: "500", color: "#6B7280" },
-  priceBadge: { backgroundColor: "#F0FDF4", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: "#D1FAE5", alignItems: "center" },
+  priceBadge: { flexDirection: "row", alignItems: "center", gap: 4 },
   priceBadgeText: { fontSize: 16, fontWeight: "800", color: "#10B981" },
   priceBadgeSub: { fontSize: 11, fontWeight: "600", color: "#6B7280" },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 },
@@ -518,8 +518,8 @@ const styles = StyleSheet.create({
   bottomRatingValue: { fontSize: 16, fontWeight: "700", color: NAVY },
   bottomRatingLabel: { fontSize: 13, fontWeight: "500", color: "#6B7280" },
   fullscreenOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#FFFFFF", zIndex: 1000, justifyContent: "center", alignItems: "center" },
-  fullscreenCloseButton: { position: "absolute", top: 48, right: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.05)", alignItems: "center", justifyContent: "center", zIndex: 1001 },
-  fullscreenImage: { width: SCREEN_WIDTH * 0.92, height: SCREEN_HEIGHT * 0.88, borderRadius: 20 },
+  fullscreenCloseButton: { position: "absolute", top: 48, right: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", zIndex: 1001, borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(0,0,0,0.1)" },
+  fullscreenImage: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },
   fullscreenCounter: { position: "absolute", bottom: 32, left: 0, right: 0, alignItems: "center" },
   fullscreenCounterPill: { backgroundColor: "rgba(0,0,0,0.05)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(0,0,0,0.08)" },
   fullscreenCounterText: { color: NAVY, fontSize: 14, fontWeight: "600" },

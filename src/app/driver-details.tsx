@@ -369,9 +369,9 @@ export default function DriverDetailsScreen() {
             </View>
             <Text style={styles.tripsText}>({driver.trips} trips)</Text>
             {driver.isVerified && (
-              <Badge variant="success" className="flex-row items-center gap-1">
-                <Ionicons name="checkmark-circle" size={14} color={GREEN} />
-                <Text style={styles.verifiedBadgeText}>Verified</Text>
+              <Badge variant="primary" className="flex-row items-center gap-1.5">
+                <Ionicons name="checkmark-circle-outline" size={16} color="#FFFFFF" />
+                <Text className="text-white font-semibold text-xs">Verified</Text>
               </Badge>
             )}
           </View>
@@ -635,7 +635,7 @@ export default function DriverDetailsScreen() {
             <Image
               source={{ uri: driver.image }}
               style={styles.fullscreenImage}
-              contentFit="cover"
+              contentFit="contain"
             />
           </ScrollView>
 
@@ -757,13 +757,9 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   rateBadge: {
-    backgroundColor: "#F0FDF4",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#D1FAE5",
+    flexDirection: "row",
     alignItems: "center",
+    gap: 4,
   },
   rateBadgeValue: {
     fontSize: 16,
@@ -991,15 +987,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.05)",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1001,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(0,0,0,0.1)",
   },
   fullscreenImage: {
-    width: SCREEN_WIDTH * 0.92,
-    height: SCREEN_HEIGHT * 0.88,
-    borderRadius: 20,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
   },
   fullscreenCounter: {
     position: "absolute",

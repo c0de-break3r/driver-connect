@@ -53,7 +53,7 @@ export default function DriversListScreen() {
         }
         contentContainerStyle={{ padding: 20, paddingTop: 72, gap: 14 }}
         ListEmptyComponent={
-          loading ? (
+          loading || refreshing ? (
             <View className="gap-3 px-5">
               {Array.from({ length: 3 }).map((_, i) => (
                 <View key={i} className="gap-2">

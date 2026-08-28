@@ -4,9 +4,9 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Animated } from "react-native";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { VehicleFavorite } from "@/store/useFavoritesStore";
 
-const NAVY = "#2C3E5B";
 const GREEN = "#10B981";
 
 type VehicleCardProps = {
@@ -99,6 +99,16 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
                  <Text className="text-sm font-bold text-[#10B981]">{vehicle.price}</Text>
                  <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
                </View>
+             ) : list ? (
+               <>
+                 <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
+                   {vehicle.location}
+                 </Text>
+                 <View className="flex-row items-center gap-1 mt-1">
+                   <Text className="text-base font-bold text-[#10B981]">{vehicle.price}</Text>
+                   <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
+                 </View>
+               </>
              ) : (
                <>
                  <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
@@ -110,15 +120,15 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
                  <View className="flex-row items-center gap-1 mt-1">
                    <Text className="text-base font-bold text-[#10B981]">{vehicle.price}</Text>
                    <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
-                  {verified && (
-                    <View className="flex-row items-center gap-1 ml-auto px-2 py-0.5 rounded-md bg-emerald-50">
-                      <Ionicons name="checkmark-circle" size={14} color={GREEN} />
-                      <Text className="text-[#10B981] font-bold text-[11px]">Verified</Text>
-                    </View>
-                  )}
-                </View>
-              </>
-            )}
+                    {verified && (
+                      <Badge variant="primary" className="ml-auto flex-row items-center gap-1">
+                        <Ionicons name="checkmark-circle-outline" size={12} color="#FFFFFF" />
+                        <Text className="text-white font-semibold text-[11px]">Verified</Text>
+                      </Badge>
+                    )}
+                 </View>
+               </>
+             )}
           </View>
         </Card>
       </Animated.View>
