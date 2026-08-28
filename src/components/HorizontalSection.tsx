@@ -61,7 +61,7 @@ export default function HorizontalSection<T>({
 
   const seeAllContent = !showEmpty ? (
     <Pressable onPress={handleSeeAll}>
-      <Text className="text-xs font-bold text-gray-400">{seeAllLabel}</Text>
+      <Text className="text-sm font-bold text-gray-400 underline">{seeAllLabel}</Text>
     </Pressable>
   ) : null;
 

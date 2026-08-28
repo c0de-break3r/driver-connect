@@ -92,9 +92,12 @@ export default memo(function DriverCard({ driver, isFavorite = false, onPress, o
             <Text className="text-sm font-bold text-[#2C3E5B]" numberOfLines={1} ellipsizeMode="tail">
               {driver.name}
             </Text>
-            {compact ? (
-              <Text className="text-sm font-bold text-emerald-600">{driver.hourlyRate}/hr</Text>
-            ) : (
+             {compact ? (
+               <View className="flex-row items-center gap-1">
+                 <Text className="text-sm font-bold text-[#10B981]">{driver.hourlyRate}</Text>
+                 <Text className="text-xs font-medium text-[#6B7280]">/hr</Text>
+               </View>
+             ) : (
               <>
                 <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
                   {driver.location}

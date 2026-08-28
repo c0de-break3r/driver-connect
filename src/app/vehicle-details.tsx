@@ -451,7 +451,7 @@ export default function VehicleDetailsScreen() {
 
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} ref={fullscreenScrollRef} onMomentumScrollEnd={handleFullscreenMomentum}>
             {vehicle.images.map((image: string, index: number) => (
-              <Image key={index} source={{ uri: image }} style={styles.fullscreenImage} contentFit="contain" />
+              <Image key={index} source={{ uri: image }} style={styles.fullscreenImage} contentFit="cover" />
             ))}
           </ScrollView>
 
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   bottomRatingLabel: { fontSize: 13, fontWeight: "500", color: "#6B7280" },
   fullscreenOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#FFFFFF", zIndex: 1000, justifyContent: "center", alignItems: "center" },
   fullscreenCloseButton: { position: "absolute", top: 48, right: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.05)", alignItems: "center", justifyContent: "center", zIndex: 1001 },
-  fullscreenImage: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },
+  fullscreenImage: { width: SCREEN_WIDTH * 0.92, height: SCREEN_HEIGHT * 0.88, borderRadius: 20 },
   fullscreenCounter: { position: "absolute", bottom: 32, left: 0, right: 0, alignItems: "center" },
   fullscreenCounterPill: { backgroundColor: "rgba(0,0,0,0.05)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(0,0,0,0.08)" },
   fullscreenCounterText: { color: NAVY, fontSize: 14, fontWeight: "600" },

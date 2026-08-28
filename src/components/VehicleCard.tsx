@@ -94,19 +94,22 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
             <Text className="text-sm font-bold text-[#2C3E5B]" numberOfLines={1} ellipsizeMode="tail">
               {vehicle.title}
             </Text>
-            {compact ? (
-              <Text className="text-sm font-bold text-emerald-600">{vehicle.price}/day</Text>
-            ) : (
-              <>
-                <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
-                  {vehicle.category} • {vehicle.transmission} • {vehicle.condition}
-                </Text>
-                <Text className="text-xs font-medium text-[#6B7280]">
-                  <Ionicons name="star" size={12} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
-                </Text>
-                <View className="flex-row items-center gap-1 mt-1">
-                  <Text className="text-base font-bold text-[#10B981]">{vehicle.price}</Text>
-                  <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
+             {compact ? (
+               <View className="flex-row items-center gap-1">
+                 <Text className="text-sm font-bold text-[#10B981]">{vehicle.price}</Text>
+                 <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
+               </View>
+             ) : (
+               <>
+                 <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
+                   {vehicle.category} • {vehicle.transmission} • {vehicle.condition}
+                 </Text>
+                 <Text className="text-xs font-medium text-[#6B7280]">
+                   <Ionicons name="star" size={12} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
+                 </Text>
+                 <View className="flex-row items-center gap-1 mt-1">
+                   <Text className="text-base font-bold text-[#10B981]">{vehicle.price}</Text>
+                   <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
                   {verified && (
                     <View className="flex-row items-center gap-1 ml-auto px-2 py-0.5 rounded-md bg-emerald-50">
                       <Ionicons name="checkmark-circle" size={14} color={GREEN} />

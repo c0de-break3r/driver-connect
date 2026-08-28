@@ -635,7 +635,7 @@ export default function DriverDetailsScreen() {
             <Image
               source={{ uri: driver.image }}
               style={styles.fullscreenImage}
-              contentFit="contain"
+              contentFit="cover"
             />
           </ScrollView>
 
@@ -997,8 +997,9 @@ const styles = StyleSheet.create({
     zIndex: 1001,
   },
   fullscreenImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    width: SCREEN_WIDTH * 0.92,
+    height: SCREEN_HEIGHT * 0.88,
+    borderRadius: 20,
   },
   fullscreenCounter: {
     position: "absolute",
