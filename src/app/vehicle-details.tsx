@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/useToast";
 import { useAvailabilityStore, DEFAULT_TIME_SLOTS, SlotStatus } from "@/store/useAvailabilityStore";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Chip } from "@/components/ui/chip";
 import { Rating } from "@/components/ui/rating";
@@ -84,7 +84,6 @@ export default function VehicleDetailsScreen() {
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const [expandedReviews, setExpandedReviews] = useState<Record<number, boolean>>({});
   const reviewsScrollRef = useRef<ScrollView>(null);
-  const reviewsAutoSwipeRef = useRef<NodeJS.Timeout | null>(null);
   const swipeY = useRef(new Animated.Value(0)).current;
   const [pickupDate, setPickupDate] = useState("Sat, 26 Sep");
   const [returnDate, setReturnDate] = useState("Tue, 29 Sep");
@@ -132,17 +131,7 @@ export default function VehicleDetailsScreen() {
     if (entry) { availability.leaveWaitlist(entry.id); showToast("Left waitlist.", "info"); }
   };
 
-  useEffect(() => { setCurrentImageIndex(0); scrollRef.current?.scrollTo({ x: 0, animated: false }); }, [vehicleId]);
-
-  useEffect(() => {
-    const reviewCards = 2;
-    if (reviewCards <= 1) return;
-    reviewsAutoSwipeRef.current = setInterval(() => {
-      reviewsScrollRef.current?.scrollTo({ x: 0, animated: true });
-      setTimeout(() => { reviewsScrollRef.current?.scrollTo({ x: SCREEN_WIDTH - 40, animated: true }); }, 300);
-    }, 4000);
-    return () => { if (reviewsAutoSwipeRef.current) clearInterval(reviewsAutoSwipeRef.current); };
-  }, [vehicleId]);
+  useEffect(() => { setCurrentImageIndex(0); scrollRef.current?.scrollTo({ x: 0, animated: false });   }, [vehicleId]);
 
   useEffect(() => {
     if (showFullscreenImage) {
@@ -322,50 +311,6 @@ export default function VehicleDetailsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text className="text-base font-extrabold mb-3" style={{ color: NAVY }}>Available today</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.availableScroll}>
-              {DEFAULT_TIME_SLOTS.map((slot) => {
-                const status = getVehicleSlotStatus(slot.start, slot.end);
-                const waitlistPosition = availability.getWaitlistPosition(today, slot.start, currentUserId, vehicle.id, "vehicle");
-                const onWaitlist = waitlistPosition > 0;
-                const isBooked = status === "booked";
-                const isPartial = status === "partial";
-
-                let slotBg = "bg-gray-100 border-gray-200";
-                let textColor = NAVY;
-                let rangeColor = "#6B7280";
-                let btnColor = "#10B981";
-                let buttonText = "Book";
-                let onPress = () => handleBookVehicleSlot(slot.start, slot.end);
-
-                if (isBooked) {
-                  slotBg = "bg-red-50 border-red-200";
-                  textColor = "#B91C1C";
-                  rangeColor = "#B91C1C";
-                  btnColor = "#B91C1C";
-                  buttonText = onWaitlist ? `Waitlist #${waitlistPosition}` : "Waitlist";
-                  onPress = onWaitlist ? () => handleLeaveVehicleWaitlist(slot.start, slot.end) : () => handleJoinVehicleWaitlist(slot.start, slot.end);
-                } else if (isPartial) {
-                  slotBg = "bg-amber-50 border-amber-200";
-                  textColor = "#D97706";
-                  rangeColor = "#D97706";
-                  btnColor = "#D97706";
-                  buttonText = "Partial";
-                  onPress = () => {};
-                }
-
-                return (
-                  <Pressable key={slot.label} style={[styles.timeSlot, { backgroundColor: slotBg === "bg-gray-100 border-gray-200" ? "#F3F4F6" : isBooked ? "#FEF2F2" : "#FFFBEB" }]} onPress={onPress}>
-                    <Text className="text-xs font-bold" style={{ color: textColor }}>{slot.label}</Text>
-                    <Text className="text-[11px] font-semibold" style={{ color: rangeColor }}>{slot.start} - {slot.end}</Text>
-                    <Text className="text-[11px] font-bold mt-1" style={{ color: btnColor }}>{buttonText}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          <View style={styles.section}>
             <Text className="text-base font-extrabold mb-3" style={{ color: NAVY }}>Vehicle Overview</Text>
             <View style={styles.overviewGrid}>
               <Card className="bg-gray-50 border-gray-200 flex-1 min-w-[45%]">
@@ -421,65 +366,51 @@ export default function VehicleDetailsScreen() {
           </View>
 
           <View style={styles.section}>
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-base font-extrabold" style={{ color: NAVY }}>Reviews</Text>
-              <Button variant="ghost" onPress={() => router.push(`/(driver)/reviews?vehicleId=${vehicle.id}` as any)} className="px-2 py-1">
-                <Text className="text-sm font-bold text-red-500">All</Text>
-              </Button>
+            <View style={styles.reviewsHeader}>
+              <Text style={styles.sectionTitle}>Recent reviews</Text>
+              <Pressable style={styles.reviewsAllLink} onPress={() => router.push(`/(driver)/reviews?vehicleId=${vehicle.id}` as any)}>
+                <Text style={styles.reviewsAllText}>All</Text>
+              </Pressable>
             </View>
-            <View className="flex-row items-center gap-2 mb-4">
-              <Text className="text-2xl font-extrabold" style={{ color: NAVY }}>5.0</Text>
-              <Ionicons name="star" size={16} color="#FFB800" />
-              <Text className="text-sm font-medium text-gray-500">({vehicle.trips} ratings)</Text>
-            </View>
-
-            <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} ref={reviewsScrollRef}>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              ref={reviewsScrollRef}
+              style={styles.reviewsScroll}
+              contentContainerStyle={styles.reviewsScrollContent}
+            >
               {REVIEWS.map((review) => {
                 const isExpanded = !!expandedReviews[review.id];
                 const displayText = isExpanded ? review.text : `${review.text.slice(0, 120)}...`;
                 return (
-                  <Card key={review.id} className="bg-gray-50 border-gray-200 mr-3 w-[SCREEN_WIDTH - 80]">
-                    <View className="flex-row gap-3">
-                      <Avatar source={{ uri: review.avatar }} size="md" />
-                      <View className="flex-1">
-                        <View className="flex-row items-center gap-2 mb-2">
-                          <Text className="text-sm font-bold" style={{ color: NAVY }}>{review.name}</Text>
-                          <View className="flex-row gap-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => <Ionicons key={star} name="star" size={12} color="#FFB800" />)}
+                  <Card key={review.id} style={styles.reviewCard}>
+                    <CardContent>
+                      <View style={styles.reviewContent}>
+                        <View style={styles.reviewHeader}>
+                          <Avatar src={review.avatar} size="sm" />
+                          <View style={styles.reviewHeaderText}>
+                            <Text style={styles.reviewName}>{review.name}</Text>
+                            <View style={styles.reviewStars}>
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Ionicons key={star} name="star" size={14} color="#FFB800" />
+                              ))}
+                            </View>
                           </View>
-                          <Text className="text-xs font-medium text-gray-400 ml-auto">{review.date}</Text>
+                          <Text style={styles.reviewDate}>{review.date}</Text>
                         </View>
-                        <Text className="text-xs font-medium text-gray-500 leading-5">{displayText}</Text>
+                        <Text style={styles.reviewText}>{displayText}</Text>
                         {review.text.length > 120 && (
                           <Button variant="ghost" onPress={() => setExpandedReviews((prev) => ({ ...prev, [review.id]: !prev[review.id] }))} className="px-0 py-2 self-start">
                             <Text className="text-xs font-bold text-emerald-600">{isExpanded ? "Show less" : "Read more"}</Text>
                           </Button>
                         )}
                       </View>
-                    </View>
+                    </CardContent>
                   </Card>
                 );
               })}
             </ScrollView>
-
-            <View style={styles.reviewDots}>
-              {REVIEWS.map((_, index) => (
-                <View key={index} style={[styles.reviewDot, index === 0 && styles.reviewDotActive]} />
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text className="text-base font-extrabold mb-3" style={{ color: NAVY }}>Cancellation Policy</Text>
-            <Card className="bg-gray-50 border-gray-200 flex-row items-center gap-3">
-              <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center border border-gray-300">
-                <Ionicons name="shield-checkmark-outline" size={22} color={NAVY} />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-bold" style={{ color: NAVY }}>Free cancellation</Text>
-                <Text className="text-xs font-medium text-gray-500 mt-1">Full refund within 24 hours of booking.</Text>
-              </View>
-            </Card>
           </View>
 
           <View style={styles.section}>
@@ -514,9 +445,9 @@ export default function VehicleDetailsScreen() {
 
       {showFullscreenImage && (
         <Animated.View style={[styles.fullscreenOverlay, { opacity: fullscreenAnim }]}>
-          <Button variant="ghost" size="icon" onPress={closeFullscreenImage} className="absolute top-12 right-4 w-10 h-10 rounded-full bg-black/5 items-center justify-center z-50">
+          <Pressable style={styles.fullscreenCloseButton} onPress={closeFullscreenImage}>
             <Ionicons name="close" size={24} color={NAVY} />
-          </Button>
+          </Pressable>
 
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} ref={fullscreenScrollRef} onMomentumScrollEnd={handleFullscreenMomentum}>
             {vehicle.images.map((image: string, index: number) => (
@@ -525,7 +456,9 @@ export default function VehicleDetailsScreen() {
           </ScrollView>
 
           <View style={styles.fullscreenCounter}>
-            <Text style={styles.fullscreenCounterText}>{fullscreenIndex + 1} / {vehicle.images.length}</Text>
+            <View style={styles.fullscreenCounterPill}>
+              <Text style={styles.fullscreenCounterText}>{fullscreenIndex + 1} / {vehicle.images.length}</Text>
+            </View>
           </View>
         </Animated.View>
       )}
@@ -558,6 +491,7 @@ const styles = StyleSheet.create({
   tripsText: { fontSize: 14, fontWeight: "500", color: "#6B7280" },
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 },
   section: { marginBottom: 28 },
+  sectionTitle: { fontSize: 18, fontWeight: "800", color: NAVY, marginBottom: 16 },
   contactNumber: { flex: 1, fontSize: 15, fontWeight: "700", color: NAVY, textAlign: "center" },
   availableScroll: { gap: 10, paddingRight: 20 },
   timeSlot: { alignItems: "center", paddingHorizontal: 18, paddingVertical: 14, borderRadius: 20, borderWidth: 1, gap: 4 },
@@ -584,7 +518,22 @@ const styles = StyleSheet.create({
   bottomRatingValue: { fontSize: 16, fontWeight: "700", color: NAVY },
   bottomRatingLabel: { fontSize: 13, fontWeight: "500", color: "#6B7280" },
   fullscreenOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#FFFFFF", zIndex: 1000, justifyContent: "center", alignItems: "center" },
+  fullscreenCloseButton: { position: "absolute", top: 48, right: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.05)", alignItems: "center", justifyContent: "center", zIndex: 1001 },
   fullscreenImage: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT },
   fullscreenCounter: { position: "absolute", bottom: 32, left: 0, right: 0, alignItems: "center" },
+  fullscreenCounterPill: { backgroundColor: "rgba(0,0,0,0.05)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(0,0,0,0.08)" },
   fullscreenCounterText: { color: NAVY, fontSize: 14, fontWeight: "600" },
+  reviewsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 },
+  reviewsAllLink: { paddingVertical: 4, paddingHorizontal: 8 },
+  reviewsAllText: { fontSize: 14, fontWeight: "700", color: "#EF4444", textDecorationLine: "underline" },
+  reviewsScroll: { marginHorizontal: -20, paddingHorizontal: 20 },
+  reviewsScrollContent: { gap: 12 },
+  reviewCard: { width: 280, marginRight: 12 },
+  reviewContent: { flex: 1 },
+  reviewHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
+  reviewHeaderText: { flex: 1, gap: 2 },
+  reviewName: { fontSize: 13, fontWeight: "700", color: NAVY },
+  reviewStars: { flexDirection: "row", gap: 2 },
+  reviewDate: { fontSize: 11, fontWeight: "500", color: "#9CA3AF", marginLeft: "auto" },
+  reviewText: { fontSize: 12, fontWeight: "500", color: "#4B5563", lineHeight: 18 },
 });

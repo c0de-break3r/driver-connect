@@ -17,9 +17,10 @@ type VehicleCardProps = {
   list?: boolean;
   style?: any;
   verified?: boolean;
+  compact?: boolean;
 };
 
-export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style, verified = vehicle.isVerified }: VehicleCardProps) {
+export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress, onFavoritePress, list = false, style, verified = vehicle.isVerified, compact = false }: VehicleCardProps) {
   const heartScale = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const isNavigatingRef = useRef(false);
@@ -68,14 +69,14 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
 
   return (
     <Pressable
-      style={[styles.card, list && styles.listCard, style]}
+      style={[styles.card, list && styles.listCard, compact && styles.compactCard, style]}
       onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
     >
       <Animated.View style={[styles.cardInner, { transform: [{ translateX: slideAnim }] }]}>
-        <Card className={`p-0 overflow-hidden ${list ? "flex-row" : ""}`} style={{ width: list ? "100%" : undefined }}>
-          <View style={[styles.imageWrap, list && styles.listImageWrap]}>
+        <Card className={`p-0 overflow-hidden ${list ? "flex-row" : ""}`} style={{ width: list || compact ? "100%" : undefined }}>
+          <View style={[styles.imageWrap, list && styles.listImageWrap, compact && styles.compactImageWrap]}>
             <Image source={{ uri: vehicle.image }} style={styles.cardImage} contentFit="cover" />
             <View style={styles.topRightActions}>
               <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
@@ -89,26 +90,32 @@ export default memo(function VehicleCard({ vehicle, isFavorite = false, onPress,
               </Pressable>
             </View>
           </View>
-          <View style={[styles.cardBody, list && styles.listCardBody]}>
+          <View style={[styles.cardBody, list && styles.listCardBody, compact && styles.compactCardBody]}>
             <Text className="text-sm font-bold text-[#2C3E5B]" numberOfLines={1} ellipsizeMode="tail">
               {vehicle.title}
             </Text>
-            <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
-              {vehicle.category} • {vehicle.transmission} • {vehicle.condition}
-            </Text>
-            <Text className="text-xs font-medium text-[#6B7280]">
-              <Ionicons name="star" size={12} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
-            </Text>
-            <View className="flex-row items-center gap-1 mt-1">
-              <Text className="text-base font-bold text-[#10B981]">{vehicle.price}</Text>
-              <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
-              {verified && (
-                <View className="flex-row items-center gap-1 ml-auto px-2 py-0.5 rounded-md bg-emerald-50">
-                  <Ionicons name="checkmark-circle" size={14} color={GREEN} />
-                  <Text className="text-[#10B981] font-bold text-[11px]">Verified</Text>
+            {compact ? (
+              <Text className="text-sm font-bold text-emerald-600">{vehicle.price}/day</Text>
+            ) : (
+              <>
+                <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
+                  {vehicle.category} • {vehicle.transmission} • {vehicle.condition}
+                </Text>
+                <Text className="text-xs font-medium text-[#6B7280]">
+                  <Ionicons name="star" size={12} color="#FFB800" /> {vehicle.rating} ({vehicle.yearsOnPlatform})
+                </Text>
+                <View className="flex-row items-center gap-1 mt-1">
+                  <Text className="text-base font-bold text-[#10B981]">{vehicle.price}</Text>
+                  <Text className="text-xs font-medium text-[#6B7280]">/day</Text>
+                  {verified && (
+                    <View className="flex-row items-center gap-1 ml-auto px-2 py-0.5 rounded-md bg-emerald-50">
+                      <Ionicons name="checkmark-circle" size={14} color={GREEN} />
+                      <Text className="text-[#10B981] font-bold text-[11px]">Verified</Text>
+                    </View>
+                  )}
                 </View>
-              )}
-            </View>
+              </>
+            )}
           </View>
         </Card>
       </Animated.View>
@@ -166,5 +173,20 @@ const styles = StyleSheet.create({
   listCardBody: {
     padding: 12,
     justifyContent: "center",
+  },
+  compactCard: {
+    width: 160,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+  },
+  compactImageWrap: {
+    width: "100%",
+    height: 110,
+  },
+  compactCardBody: {
+    padding: 10,
+    gap: 4,
   },
 });

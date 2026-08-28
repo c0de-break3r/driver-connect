@@ -14,9 +14,11 @@ type DriverCardProps = {
   onPress?: () => void;
   onFavoritePress?: () => void;
   list?: boolean;
+  compact?: boolean;
+  style?: any;
 };
 
-export default memo(function DriverCard({ driver, isFavorite = false, onPress, onFavoritePress, list = false }: DriverCardProps) {
+export default memo(function DriverCard({ driver, isFavorite = false, onPress, onFavoritePress, list = false, compact = false, style }: DriverCardProps) {
   const heartScale = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const isNavigatingRef = useRef(false);
@@ -65,14 +67,14 @@ export default memo(function DriverCard({ driver, isFavorite = false, onPress, o
 
   return (
     <Pressable
-      style={[styles.card, list && styles.listCard]}
+      style={[styles.card, list && styles.listCard, compact && styles.compactCard, style]}
       onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
     >
       <Animated.View style={[styles.cardInner, { transform: [{ translateX: slideAnim }] }]}>
-        <Card className={`p-0 overflow-hidden ${list ? "flex-row" : ""}`} style={{ width: list ? "100%" : undefined }}>
-          <View style={[styles.imageWrap, list && styles.listImageWrap]}>
+        <Card className={`p-0 overflow-hidden ${list ? "flex-row" : ""}`} style={{ width: list || compact ? "100%" : undefined }}>
+          <View style={[styles.imageWrap, list && styles.listImageWrap, compact && styles.compactImageWrap]}>
             <Image source={{ uri: driver.image }} style={styles.cardImage} contentFit="cover" />
             <View style={styles.topRightActions}>
               <Pressable style={styles.favoriteBadge} onPress={handleFavoritePress}>
@@ -86,16 +88,22 @@ export default memo(function DriverCard({ driver, isFavorite = false, onPress, o
               </Pressable>
             </View>
           </View>
-          <View style={[styles.cardBody, list && styles.listCardBody]}>
+          <View style={[styles.cardBody, list && styles.listCardBody, compact && styles.compactCardBody]}>
             <Text className="text-sm font-bold text-[#2C3E5B]" numberOfLines={1} ellipsizeMode="tail">
               {driver.name}
             </Text>
-            <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
-              {driver.location}
-            </Text>
-            <Text className="text-xs font-medium text-[#6B7280]">
-              <Ionicons name="star" size={12} color="#FFB800" /> {driver.rating} ({driver.trips} trips)
-            </Text>
+            {compact ? (
+              <Text className="text-sm font-bold text-emerald-600">{driver.hourlyRate}/hr</Text>
+            ) : (
+              <>
+                <Text className="text-xs font-medium text-[#6B7280]" numberOfLines={1}>
+                  {driver.location}
+                </Text>
+                <Text className="text-xs font-medium text-[#6B7280]">
+                  <Ionicons name="star" size={12} color="#FFB800" /> {driver.rating} ({driver.trips} trips)
+                </Text>
+              </>
+            )}
           </View>
         </Card>
       </Animated.View>
@@ -153,5 +161,20 @@ const styles = StyleSheet.create({
   listCardBody: {
     padding: 12,
     justifyContent: "center",
+  },
+  compactCard: {
+    width: 160,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+  },
+  compactImageWrap: {
+    width: "100%",
+    height: 110,
+  },
+  compactCardBody: {
+    padding: 10,
+    gap: 4,
   },
 });

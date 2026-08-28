@@ -52,7 +52,6 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showAllVehicles, setShowAllVehicles] = useState(false);
   const [userRegion, setUserRegion] = useState<string | null>(null);
 
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -340,10 +339,10 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   })();
 
   const renderDriverCard = useCallback((driver: Driver) => {
-    const heartScale = getHeartAnim(driver.id);
     return (
       <DriverCard
         driver={driver}
+        compact
         isFavorite={savedItems.some((item) => item.id === driver.id)}
         onPress={() => handleDriverPress(driver.id)}
         onFavoritePress={() => handleFavoritePress(driver.id, driver.name, driver.image, driver.hourlyRate, driver.location, driver.rating)}
@@ -352,7 +351,6 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
   }, [savedItems, handleDriverPress, handleFavoritePress]);
 
   const renderVehicleCard = useCallback((vehicle: FeaturedVehicle) => {
-    const heartScale = getHeartAnim(vehicle.id);
     return (
       <Pressable onPress={() => handleVehiclePress(vehicle.id)}>
         <VehicleCard
@@ -374,6 +372,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
             transmission: "Automatic",
             yearsOnPlatform: "New",
           }}
+          compact
           isFavorite={savedItems.some((item) => item.id === vehicle.id)}
           onPress={() => handleVehiclePress(vehicle.id)}
           onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, `GH₵ ${vehicle.pricePerDay}`, vehicle.subtitle, 0)}
@@ -590,54 +589,7 @@ export function HomeScreenContent({ onLoginPress }: HomeScreenContentProps = {})
               keyExtractor={(vehicle) => vehicle.id}
             />
 
-            {/* All Vehicles Section */}
-            {!showAllVehicles ? (
-              <HorizontalSection<any>
-                title="All"
-                subtitle="Vehicles"
-                data={vehicles.slice(0, 8)}
-                loading={convexVehicles === undefined}
-                emptyTitle="No vehicles found"
-                emptySubtitle="Check back later for new listings"
-                seeAllLabel="See All"
-                renderItem={(vehicle) => (
-                  <VehicleCard
-                    key={vehicle.id}
-                    vehicle={vehicle as any}
-                    isFavorite={savedItems.some((item) => item.id === vehicle.id)}
-                    onPress={() => handleVehiclePress(vehicle.id)}
-                    onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, vehicle.price, vehicle.location, vehicle.rating)}
-                    list={false}
-                  />
-                )}
-                cardWidth={160}
-                onSeeAll={() => setShowAllVehicles(true)}
-                keyExtractor={(vehicle) => vehicle.id}
-              />
-            ) : (
-              <View className="mt-2">
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-lg font-extrabold text-[#2C3E5B]">All Vehicles</Text>
-                  <Pressable onPress={() => setShowAllVehicles(false)}>
-                    <Text className="text-xs font-bold text-gray-400">Show Less</Text>
-                  </Pressable>
-                </View>
-                <View style={viewMode === "list" ? styles.list : styles.grid}>
-                  {vehicles.map((vehicle) => (
-                    <VehicleCard
-                      key={vehicle.id}
-                      vehicle={vehicle as any}
-                      isFavorite={savedItems.some((item) => item.id === vehicle.id)}
-                      onPress={() => handleVehiclePress(vehicle.id)}
-                      onFavoritePress={() => handleFavoritePress(vehicle.id, vehicle.title, vehicle.image, vehicle.price, vehicle.location, vehicle.rating)}
-                      list={viewMode === "list"}
-                      style={viewMode === "list" ? styles.listCard : undefined}
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-          </>
+            </>
         )}
       </ScrollView>
 

@@ -221,30 +221,6 @@ export default function DriverDetailsScreen() {
     };
   }, [driver.id]);
 
-  useEffect(() => {
-    const reviewCards = 2;
-    if (reviewCards <= 1) return;
-
-    const cardWidth = SCREEN_WIDTH * 0.78;
-    const cardGap = 12;
-    const step = cardWidth + cardGap;
-
-    setTimeout(() => {
-      reviewsAutoSwipeRef.current = setInterval(() => {
-        reviewsScrollRef.current?.scrollTo({ x: 0, animated: true });
-        setTimeout(() => {
-          reviewsScrollRef.current?.scrollTo({ x: step, animated: true });
-        }, 350);
-      }, 5000);
-    }, 2000);
-
-    return () => {
-      if (reviewsAutoSwipeRef.current) {
-        clearInterval(reviewsAutoSwipeRef.current);
-      }
-    };
-  }, [driver.id]);
-
   const handleAddTrips = () => {
     router.push({
       pathname: "/favorites/trip-dates",
@@ -400,38 +376,6 @@ export default function DriverDetailsScreen() {
             )}
           </View>
 
-          {/* Driver Stats */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Driver Stats</Text>
-            <View style={styles.statsGrid}>
-              <Card className="flex-1">
-                <CardContent>
-                  <Text style={styles.statCardLabel}>Trips completed</Text>
-                  <Text style={styles.statCardValue}>{driver.trips}</Text>
-                  <Text style={styles.statCardSub}>+12% from last month</Text>
-                  <View style={styles.miniChart}>
-                    {[40, 55, 45, 70, 60, 80, driver.trips > 400 ? 90 : 65].map((height, index) => (
-                      <View key={index} style={[styles.miniBar, { height: `${height}%` }]} />
-                    ))}
-                  </View>
-                </CardContent>
-              </Card>
-              <Card className="flex-1">
-                <CardContent>
-                  <Text style={styles.statCardLabel}>Driver rating</Text>
-                  <View style={styles.ratingGaugeRow}>
-                    <Text style={styles.statCardValue}>{driver.rating}</Text>
-                    <Text style={styles.ratingOutOf}>/5</Text>
-                  </View>
-                  <Text style={styles.statCardSub}>Top 5% of drivers</Text>
-                  <View style={styles.ratingGauge}>
-                    <View style={[styles.ratingGaugeFill, { width: `${(driver.rating / 5) * 100}%` }]} />
-                  </View>
-                </CardContent>
-              </Card>
-            </View>
-          </View>
-
           {/* Details */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Details</Text>
@@ -460,55 +404,6 @@ export default function DriverDetailsScreen() {
                 </View>
               </CardContent>
             </Card>
-          </View>
-
-          {/* Available Today */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Available today</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.availableScroll}>
-              {DEFAULT_TIME_SLOTS.map((slot) => {
-                const status = getSlotStatus(slot.start, slot.end);
-                const waitlistPosition = availability.getWaitlistPosition(
-                  today,
-                  slot.start,
-                  currentUserId,
-                  driver.id,
-                  "driver"
-                );
-                const onWaitlist = waitlistPosition > 0;
-                const isBooked = status === "booked";
-                const isPartial = status === "partial";
-
-                let slotStyle = styles.timeSlot;
-                let textStyle = styles.timeSlotText;
-                let buttonText = "Book";
-                let onPress = () => handleBookSlot(slot.start, slot.end);
-
-                if (isBooked) {
-                  slotStyle = styles.timeSlotBooked;
-                  textStyle = styles.timeSlotTextBooked;
-                  buttonText = onWaitlist ? `Waitlist #${waitlistPosition}` : "Waitlist";
-                  onPress = onWaitlist
-                    ? () => handleLeaveWaitlist(slot.start, slot.end)
-                    : () => handleJoinWaitlist(slot.start, slot.end);
-                } else if (isPartial) {
-                  slotStyle = styles.timeSlotPartial;
-                  textStyle = styles.timeSlotTextPartial;
-                  buttonText = "Partial";
-                  onPress = () => {};
-                }
-
-                return (
-                  <Pressable key={slot.label} style={slotStyle} onPress={onPress}>
-                    <Text style={textStyle}>{slot.label}</Text>
-                    <Text style={styles.timeSlotRange}>{slot.start} - {slot.end}</Text>
-                    <Text style={[styles.timeSlotButton, isBooked && styles.timeSlotButtonBooked]}>
-                      {buttonText}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
           </View>
 
           {pendingAssignments.length > 0 && (
@@ -596,38 +491,6 @@ export default function DriverDetailsScreen() {
             <Text style={styles.aboutText}>{driver.about}</Text>
           </View>
 
-          {/* Driver Stats */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Driver Stats</Text>
-            <View style={styles.statsGrid}>
-              <Card className="flex-1">
-                <CardContent>
-                  <Text style={styles.statCardLabel}>Trips completed</Text>
-                  <Text style={styles.statCardValue}>{driver.trips}</Text>
-                  <Text style={styles.statCardSub}>+12% from last month</Text>
-                  <View style={styles.miniChart}>
-                    {[40, 55, 45, 70, 60, 80, driver.trips > 400 ? 90 : 65].map((height, index) => (
-                      <View key={index} style={[styles.miniBar, { height: `${height}%` }]} />
-                    ))}
-                  </View>
-                </CardContent>
-              </Card>
-              <Card className="flex-1">
-                <CardContent>
-                  <Text style={styles.statCardLabel}>Driver rating</Text>
-                  <View style={styles.ratingGaugeRow}>
-                    <Text style={styles.statCardValue}>{driver.rating}</Text>
-                    <Text style={styles.ratingOutOf}>/5</Text>
-                  </View>
-                  <Text style={styles.statCardSub}>Top 5% of drivers</Text>
-                  <View style={styles.ratingGauge}>
-                    <View style={[styles.ratingGaugeFill, { width: `${(driver.rating / 5) * 100}%` }]} />
-                  </View>
-                </CardContent>
-              </Card>
-            </View>
-          </View>
-
           {/* Recent reviews */}
           <View style={styles.section}>
             <View style={styles.reviewsHeader}>
@@ -654,7 +517,7 @@ export default function DriverDetailsScreen() {
                       <Avatar
                         src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80"
                         fallback="C"
-                        size="md"
+                        size="sm"
                       />
                       <View style={styles.reviewHeaderText}>
                         <Text style={styles.reviewName}>Client</Text>
@@ -679,7 +542,7 @@ export default function DriverDetailsScreen() {
                       <Avatar
                         src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80"
                         fallback="C"
-                        size="md"
+                        size="sm"
                       />
                       <View style={styles.reviewHeaderText}>
                         <Text style={styles.reviewName}>Client</Text>
@@ -698,26 +561,6 @@ export default function DriverDetailsScreen() {
                 </CardContent>
               </Card>
             </ScrollView>
-          </View>
-
-          {/* Cancellation Policy */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cancellation Policy</Text>
-            <Card>
-              <CardContent>
-                <View style={styles.cancellationRow}>
-                  <View style={styles.cancellationIcon}>
-                    <Ionicons name="shield-checkmark-outline" size={22} color={NAVY} />
-                  </View>
-                  <View style={styles.cancellationInfo}>
-                    <Text style={styles.cancellationTitle}>Free cancellation</Text>
-                    <Text style={styles.cancellationSubtitle}>
-                      Full refund if cancelled up to 24 hours before the trip.
-                    </Text>
-                  </View>
-                </View>
-              </CardContent>
-            </Card>
           </View>
 
           {/* Other Drivers */}
@@ -763,8 +606,8 @@ export default function DriverDetailsScreen() {
           <Text style={styles.bottomRatingValue}>{driver.rating}</Text>
           <Text style={styles.bottomRatingLabel}>Avg rating</Text>
         </View>
-        <Button onPress={protectedHire} className="px-8">
-          <Text style={styles.hireButtonText}>Hire</Text>
+        <Button onPress={protectedHire} className="rounded-xl px-8 py-3">
+          <Text className="text-sm font-bold text-white">Hire</Text>
         </Button>
       </View>
 
@@ -977,61 +820,6 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     lineHeight: 20,
   },
-  statsGrid: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  statCardLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6B7280",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  statCardValue: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: NAVY,
-  },
-  statCardSub: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-    marginBottom: 8,
-  },
-  miniChart: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 6,
-    height: 60,
-  },
-  miniBar: {
-    flex: 1,
-    borderRadius: 4,
-    backgroundColor: NAVY,
-    minHeight: 8,
-  },
-  ratingGaugeRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 4,
-  },
-  ratingOutOf: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  ratingGauge: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#E5E7EB",
-    overflow: "hidden",
-  },
-  ratingGaugeFill: {
-    height: "100%",
-    borderRadius: 4,
-    backgroundColor: NAVY,
-  },
   reviewsHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1056,7 +844,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   reviewCard: {
-    width: SCREEN_WIDTH * 0.78,
+    width: 280,
     marginRight: 12,
   },
   reviewContent: {
@@ -1073,7 +861,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   reviewName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: NAVY,
   },
@@ -1082,13 +870,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   reviewDate: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
     color: "#9CA3AF",
     marginLeft: "auto",
   },
   reviewText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "500",
     color: "#4B5563",
     lineHeight: 18,
@@ -1184,11 +972,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#6B7280",
-  },
-  hireButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FFFFFF",
   },
   fullscreenOverlay: {
     position: "absolute",
