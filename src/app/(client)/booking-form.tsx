@@ -31,7 +31,7 @@ type PaymentMethod = "mobile_money" | "card" | "wallet";
 export default function BookingFormScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ vehicleId?: string }>();
-  const { userId, signedIn } = useAuth();
+  const { signedIn } = useAuth();
   const [step, setStep] = useState<BookingStep>("details");
   const [bookWithDriver, setBookWithDriver] = useState(false);
   const [method, setMethod] = useState<PaymentMethod | null>(null);
@@ -46,9 +46,9 @@ export default function BookingFormScreen() {
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const vehicleId = params.vehicleId;
-  const convexUser = useQuery(api.users.getByUserId, userId ? { userId } : "skip");
   const vehicle = useQuery(api.jobs.getVehicle, vehicleId ? { id: vehicleId as any } : "skip");
   const createBooking = useMutation(api.jobs.createBooking);
+  const confirmPayment = useMutation(api.jobs.confirmPayment);
 
   const today = new Date();
   const minDate = new Date(today.getTime() + 24 * 60 * 60 * 1000);
@@ -104,23 +104,24 @@ export default function BookingFormScreen() {
   }, [startDate, endDate, pickupLocation, dropoffLocation, pickupTime, returnTime, signedIn]);
 
   const handlePayNow = useCallback(async () => {
-    if (!convexUser?._id || !vehicleId || !startDate || !endDate) return;
+    if (!vehicleId || !startDate || !endDate) return;
     const startDateStr = startDate.toISOString().split("T")[0];
     const endDateStr = endDate.toISOString().split("T")[0];
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       const bookingId = await createBooking({
-        vehicleId: vehicleId as any, renterId: convexUser._id,
+        vehicleId: vehicleId as any,
         startDate: startDateStr, endDate: endDateStr,
         pickupLocation: pickupLocation.trim(), dropoffLocation: dropoffLocation.trim(),
         subtotal, driverFee, serviceFee, securityDeposit, totalAmount,
         currency: "GHS", instantBook: vehicle?.instantBook ?? false,
       });
+      await confirmPayment({ bookingId });
       router.replace(`/(client)/booking-confirmation?bookingId=${bookingId}`);
     } catch {
       alert("Unable to complete booking. Please try again.");
     }
-  }, [convexUser?._id, vehicleId, startDate, endDate, pickupLocation, dropoffLocation, subtotal, driverFee, serviceFee, securityDeposit, totalAmount, vehicle?.instantBook, createBooking, router]);
+  }, [vehicleId, startDate, endDate, pickupLocation, dropoffLocation, subtotal, driverFee, serviceFee, securityDeposit, totalAmount, vehicle?.instantBook, createBooking, confirmPayment, router]);
 
   if (!vehicle && vehicleId) {
     return (

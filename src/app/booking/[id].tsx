@@ -1,4 +1,5 @@
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +10,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/lib/convexApi";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@/contexts/AuthProvider";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,10 +41,16 @@ export default function BookingDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const bookingId = params.id;
 
+  const { userId } = useAuth();
+  const convexUser = useQuery(api.users.getByUserId, userId ? { userId } : "skip");
   const booking = useQuery(api.jobs.getBooking, bookingId ? { bookingId: bookingId as any } : "skip");
+  const vehicle = useQuery(api.jobs.getVehicle, booking ? { id: booking.vehicleId } : "skip");
   const changeRequests = useQuery(api.jobs.getBookingChangeRequests, bookingId ? { bookingId: bookingId as any } : "skip");
   const approveChange = useMutation(api.jobs.approveTripChangeRequest);
   const declineChange = useMutation(api.jobs.declineTripChangeRequest);
+  const acceptBooking = useMutation(api.jobs.acceptBooking);
+  const declineBooking = useMutation(api.jobs.declineBooking);
+  const completeBooking = useMutation(api.jobs.completeBooking);
 
   const pendingRequests = changeRequests?.filter((req) => req.status === "pending") ?? [];
 
@@ -56,6 +64,39 @@ export default function BookingDetailScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try { await declineChange({ requestId: requestId as any }); alert("Declined", "The change request has been declined."); }
     catch { alert("Error", "Unable to decline request. Please try again."); }
+  };
+
+  const handleAcceptBooking = async () => {
+    if (!booking) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await acceptBooking({ bookingId: booking._id });
+      Alert.alert("Accepted", "This booking is now confirmed.");
+    } catch {
+      Alert.alert("Error", "Unable to accept this booking.");
+    }
+  };
+
+  const handleDeclineBooking = async () => {
+    if (!booking) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await declineBooking({ bookingId: booking._id });
+      Alert.alert("Declined", "This booking has been declined.");
+    } catch {
+      Alert.alert("Error", "Unable to decline this booking.");
+    }
+  };
+
+  const handleCompleteBooking = async () => {
+    if (!booking) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await completeBooking({ bookingId: booking._id });
+      Alert.alert("Completed", "This trip has been marked complete.");
+    } catch {
+      Alert.alert("Error", "Unable to complete this booking.");
+    }
   };
 
   if (!bookingId) {
@@ -75,6 +116,17 @@ export default function BookingDetailScreen() {
   }
 
   const color = statusColor(booking.status);
+  const isRenter =
+    !!convexUser &&
+    (booking.renterId === convexUser._id || booking.renterId === userId);
+  const isOwner =
+    !!convexUser &&
+    !!vehicle &&
+    (vehicle.ownerId === convexUser._id || vehicle.ownerId === userId);
+  const canAccept =
+    isOwner && booking.status === "pending" && !booking.instantBook;
+  const canComplete =
+    (isOwner || isRenter) && booking.status === "confirmed";
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -150,6 +202,24 @@ export default function BookingDetailScreen() {
           <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" />
           <Text className="text-sm font-bold text-white">Message</Text>
         </Button>
+        {canAccept && (
+          <Button onPress={handleAcceptBooking} className="flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-5 bg-emerald-600">
+            <Ionicons name="checkmark-outline" size={18} color="#FFFFFF" />
+            <Text className="text-sm font-bold text-white">Accept booking</Text>
+          </Button>
+        )}
+        {canAccept && (
+          <Button variant="outline" onPress={handleDeclineBooking} className="flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-5 border-gray-200">
+            <Ionicons name="close-outline" size={18} color="#EF4444" />
+            <Text className="text-sm font-bold text-red-500">Decline booking</Text>
+          </Button>
+        )}
+        {canComplete && (
+          <Button onPress={handleCompleteBooking} className="flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-5">
+            <Ionicons name="flag-outline" size={18} color="#FFFFFF" />
+            <Text className="text-sm font-bold text-white">Mark completed</Text>
+          </Button>
+        )}
         {booking.status === "completed" && !booking.reviewPrompted && (
           <Button onPress={() => router.push({ pathname: "/(client)/rate-review", params: { bookingId: booking._id } } as any)} className="flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-5 bg-amber-500">
             <Ionicons name="star-outline" size={18} color="#FFFFFF" />
