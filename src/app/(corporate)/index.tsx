@@ -65,8 +65,8 @@ export default function CorporateDashboard() {
   );
 
   const corporateBookings = useQuery(
-    api.jobs.getOwnerBookings,
-    convexUser?._id ? { ownerId: convexUser._id } : "skip"
+    api.jobs.getRenterBookings,
+    convexUser?._id ? { renterId: convexUser._id } : "skip"
   );
 
   const availableDrivers = useQuery(

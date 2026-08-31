@@ -1,5 +1,25 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { assertCallerId, findUserByActorId, requireAppUser } from "./model/auth";
+import {
+  assertCanViewBooking,
+  assertRenterRole,
+  attachVehicleSummaries,
+  bookingDocValidator,
+  bookingFieldsValidator,
+  bookingVehicleSummaryValidator,
+  hasDateConflict,
+  isAssignedDriver,
+  isRenter,
+  isVehicleOwner,
+  listDriverBookings,
+  listOwnedVehicles,
+  listRenterBookings,
+  loadBooking,
+  loadVehicle,
+  resolveBookingDriverId,
+  toBookingFields,
+} from "./model/bookings";
 
 export const listVehicles = query({
   args: {},
@@ -173,7 +193,6 @@ export const getVehicle = query({
 export const createBooking = mutation({
   args: {
     vehicleId: v.id("vehicles"),
-    renterId: v.string(),
     startDate: v.string(),
     endDate: v.string(),
     pickupLocation: v.string(),
@@ -185,13 +204,44 @@ export const createBooking = mutation({
     totalAmount: v.number(),
     currency: v.string(),
     instantBook: v.optional(v.boolean()),
+    driverId: v.optional(v.string()),
+    includeDriver: v.optional(v.boolean()),
   },
   returns: v.id("bookings"),
   handler: async (ctx, args) => {
+    const user = await requireAppUser(ctx);
+    assertRenterRole(user);
+
+    const vehicle = await loadVehicle(ctx, args.vehicleId);
+    if (vehicle.status !== "active") {
+      throw new Error("Vehicle is not available for booking");
+    }
+    if (isVehicleOwner(user, vehicle)) {
+      throw new Error("You cannot book your own vehicle");
+    }
+    if (args.startDate > args.endDate) {
+      throw new Error("Return date must be on or after pickup date");
+    }
+    if (await hasDateConflict(ctx, args.vehicleId, args.startDate, args.endDate)) {
+      throw new Error("Vehicle is not available for these dates");
+    }
+
+    const driverId = await resolveBookingDriverId(
+      ctx,
+      {
+        driverId: args.driverId,
+        driverFee: args.driverFee,
+        includeDriver: args.includeDriver,
+      },
+      vehicle,
+      user.clerkUserId,
+    );
+
     const now = Date.now();
     return await ctx.db.insert("bookings", {
       vehicleId: args.vehicleId,
-      renterId: args.renterId,
+      renterId: user.clerkUserId,
+      driverId,
       startDate: args.startDate,
       endDate: args.endDate,
       pickupLocation: args.pickupLocation,
@@ -204,28 +254,162 @@ export const createBooking = mutation({
       securityDeposit: args.securityDeposit,
       totalAmount: args.totalAmount,
       currency: args.currency,
-      instantBook: args.instantBook ?? false,
+      instantBook: vehicle.instantBook,
       createdAt: now,
       updatedAt: now,
     });
   },
 });
 
-export const updateBookingStatus = mutation({
+export const confirmPayment = mutation({
   args: {
     bookingId: v.id("bookings"),
-    status: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const patch: Record<string, unknown> = {
-      status: args.status,
-      updatedAt: Date.now(),
-    };
-    if (args.status === "completed") {
-      patch.reviewPrompted = true;
+    const user = await requireAppUser(ctx);
+    const booking = await loadBooking(ctx, args.bookingId);
+    if (!isRenter(user, booking)) {
+      throw new Error("Only the renter can record payment for this booking");
     }
-    await ctx.db.patch(args.bookingId, patch);
+    if (booking.status === "cancelled" || booking.status === "completed") {
+      throw new Error("This booking can no longer be paid");
+    }
+    if (booking.status !== "pending") {
+      throw new Error("Only pending bookings can be paid");
+    }
+    if (booking.paymentStatus === "paid") {
+      throw new Error("Payment has already been recorded");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(args.bookingId, {
+      paymentStatus: "paid",
+      status: booking.instantBook ? "confirmed" : "pending",
+      updatedAt: now,
+    });
+    return null;
+  },
+});
+
+export const acceptBooking = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireAppUser(ctx);
+    const booking = await loadBooking(ctx, args.bookingId);
+    const vehicle = await loadVehicle(ctx, booking.vehicleId);
+    if (!isVehicleOwner(user, vehicle)) {
+      throw new Error("Only the vehicle owner can accept this booking");
+    }
+    if (booking.instantBook) {
+      throw new Error("Instant-book listings do not require owner acceptance");
+    }
+    if (booking.status !== "pending") {
+      throw new Error("Only pending bookings can be accepted");
+    }
+    if (booking.paymentStatus !== "paid") {
+      throw new Error("Booking cannot be accepted until payment is recorded");
+    }
+
+    await ctx.db.patch(args.bookingId, {
+      status: "confirmed",
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const declineBooking = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireAppUser(ctx);
+    const booking = await loadBooking(ctx, args.bookingId);
+    const vehicle = await loadVehicle(ctx, booking.vehicleId);
+    if (!isVehicleOwner(user, vehicle)) {
+      throw new Error("Only the vehicle owner can decline this booking");
+    }
+    if (booking.instantBook) {
+      throw new Error("Instant-book listings do not require owner decline");
+    }
+    if (booking.status !== "pending") {
+      throw new Error("Only pending bookings can be declined");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(args.bookingId, {
+      status: "cancelled",
+      cancelledBy: user.clerkUserId,
+      cancelledAt: now,
+      updatedAt: now,
+    });
+    return null;
+  },
+});
+
+export const attachDriver = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+    driverUserId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireAppUser(ctx);
+    const booking = await loadBooking(ctx, args.bookingId);
+    const vehicle = await loadVehicle(ctx, booking.vehicleId);
+    if (!isRenter(user, booking) && !isVehicleOwner(user, vehicle)) {
+      throw new Error("Only the renter or vehicle owner can attach a driver");
+    }
+    if (booking.status !== "pending" && booking.status !== "confirmed") {
+      throw new Error("A driver can only be attached to an active booking");
+    }
+
+    const driver = await findUserByActorId(ctx, args.driverUserId);
+    if (!driver || driver.role !== "driver") {
+      throw new Error("Driver not found");
+    }
+
+    await ctx.db.patch(args.bookingId, {
+      driverId: driver.clerkUserId,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const completeBooking = mutation({
+  args: {
+    bookingId: v.id("bookings"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await requireAppUser(ctx);
+    const booking = await loadBooking(ctx, args.bookingId);
+    const vehicle = await loadVehicle(ctx, booking.vehicleId);
+
+    if (isAssignedDriver(user, booking) && !isRenter(user, booking) && !isVehicleOwner(user, vehicle)) {
+      throw new Error("Drivers cannot complete someone else's trip");
+    }
+    if (!isRenter(user, booking) && !isVehicleOwner(user, vehicle)) {
+      throw new Error("Only the renter or vehicle owner can complete this booking");
+    }
+    if (booking.status !== "confirmed") {
+      throw new Error("Only confirmed bookings can be completed");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(args.bookingId, {
+      status: "completed",
+      paymentStatus: "paid",
+      reviewPrompted: true,
+      actualReturnTime: now,
+      updatedAt: now,
+    });
     return null;
   },
 });
@@ -734,50 +918,26 @@ export const getOwnerVehicles = query({
 
 export const getOwnerBookings = query({
   args: { ownerId: v.string() },
-  returns: v.array(
-    v.object({
-      _id: v.id("bookings"),
-      _creationTime: v.number(),
-      vehicleId: v.id("vehicles"),
-      renterId: v.string(),
-      driverId: v.optional(v.string()),
-      startDate: v.string(),
-      endDate: v.string(),
-      pickupLocation: v.string(),
-      dropoffLocation: v.string(),
-      status: v.string(),
-      paymentStatus: v.string(),
-      subtotal: v.number(),
-      driverFee: v.number(),
-      serviceFee: v.number(),
-      securityDeposit: v.number(),
-      totalAmount: v.number(),
-      currency: v.string(),
-      specialRequests: v.optional(v.string()),
-      cancellationReason: v.optional(v.string()),
-      cancelledBy: v.optional(v.string()),
-      cancelledAt: v.optional(v.number()),
-      pickupTime: v.optional(v.string()),
-      returnTime: v.optional(v.string()),
-      actualPickupTime: v.optional(v.number()),
-      actualReturnTime: v.optional(v.number()),
-      createdAt: v.number(),
-      updatedAt: v.number(),
-    })
-  ),
+  returns: v.array(bookingDocValidator),
   handler: async (ctx, args) => {
-    const vehicles = await ctx.db
-      .query("vehicles")
-      .withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId))
-      .collect();
+    const user = await requireAppUser(ctx);
+    assertCallerId(user, args.ownerId);
 
-    const vehicleIds = vehicles.map((v) => v._id);
-    if (vehicleIds.length === 0) {
+    const vehicles = await listOwnedVehicles(ctx, user);
+    if (vehicles.length === 0) {
       return [];
     }
 
-    const allBookings = await ctx.db.query("bookings").collect();
-    return allBookings.filter((b) => vehicleIds.includes(b.vehicleId));
+    const bookingsByVehicle = await Promise.all(
+      vehicles.map((vehicle) =>
+        ctx.db
+          .query("bookings")
+          .withIndex("by_vehicle", (q) => q.eq("vehicleId", vehicle._id))
+          .take(100),
+      ),
+    );
+
+    return bookingsByVehicle.flat().map(toBookingFields);
   },
 });
 
@@ -785,80 +945,15 @@ export const getDriverBookings = query({
   args: { driverId: v.string() },
   returns: v.array(
     v.object({
-      _id: v.id("bookings"),
-      _creationTime: v.number(),
-      vehicleId: v.id("vehicles"),
-      renterId: v.string(),
-      driverId: v.optional(v.string()),
-      startDate: v.string(),
-      endDate: v.string(),
-      pickupLocation: v.string(),
-      dropoffLocation: v.string(),
-      status: v.string(),
-      paymentStatus: v.string(),
-      subtotal: v.number(),
-      driverFee: v.number(),
-      serviceFee: v.number(),
-      securityDeposit: v.number(),
-      totalAmount: v.number(),
-      currency: v.string(),
-      specialRequests: v.optional(v.string()),
-      cancellationReason: v.optional(v.string()),
-      cancelledBy: v.optional(v.string()),
-      cancelledAt: v.optional(v.number()),
-      pickupTime: v.optional(v.string()),
-      returnTime: v.optional(v.string()),
-      actualPickupTime: v.optional(v.number()),
-      actualReturnTime: v.optional(v.number()),
-      instantBook: v.boolean(),
-      reviewPrompted: v.optional(v.boolean()),
-      createdAt: v.number(),
-      updatedAt: v.number(),
-      vehicle: v.object({
-        _id: v.id("vehicles"),
-        title: v.string(),
-        images: v.array(v.string()),
-        category: v.string(),
-        city: v.string(),
-        region: v.string(),
-        pricePerDay: v.number(),
-        rating: v.number(),
-        reviewCount: v.number(),
-        ownerId: v.string(),
-      }),
-    })
+      ...bookingFieldsValidator,
+      vehicle: bookingVehicleSummaryValidator,
+    }),
   ),
   handler: async (ctx, args) => {
-    const bookings = await ctx.db
-      .query("bookings")
-      .withIndex("by_driver", (q) => q.eq("driverId", args.driverId))
-      .collect();
-
-    const bookingsWithVehicle = await Promise.all(
-      bookings.map(async (booking) => {
-        const vehicle = await ctx.db.get(booking.vehicleId);
-        if (!vehicle) return null;
-        return {
-          ...booking,
-          vehicle: {
-            _id: vehicle._id,
-            title: vehicle.title,
-            images: vehicle.images,
-            category: vehicle.category,
-            city: vehicle.city,
-            region: vehicle.region,
-            pricePerDay: vehicle.pricePerDay,
-            rating: vehicle.rating,
-            reviewCount: vehicle.reviewCount,
-            ownerId: vehicle.ownerId,
-          },
-        };
-      })
-    );
-
-    return bookingsWithVehicle.filter(
-      (b): b is NonNullable<typeof b> => b !== null
-    );
+    const user = await requireAppUser(ctx);
+    assertCallerId(user, args.driverId);
+    const bookings = await listDriverBookings(ctx, user);
+    return await attachVehicleSummaries(ctx, bookings);
   },
 });
 
@@ -975,30 +1070,7 @@ export const checkVehicleAvailability = query({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const { vehicleId, startDate, endDate } = args;
-
-    const blocks = await ctx.db
-      .query("availabilityBlocks")
-      .withIndex("by_vehicle", (q) => q.eq("vehicleId", vehicleId))
-      .collect();
-
-    const blocked = blocks.some(
-      (b) =>
-        b.startDate <= endDate && b.endDate >= startDate
-    );
-
-    if (blocked) return false;
-
-    const allBookings = await ctx.db.query("bookings").collect();
-
-    const overlappingBooking = allBookings.some(
-      (booking) =>
-        booking.vehicleId === vehicleId &&
-        (booking.status === "confirmed" || booking.status === "pending") &&
-        booking.startDate <= endDate &&
-        booking.endDate >= startDate
-    );
-
-    return !overlappingBooking;
+    return !(await hasDateConflict(ctx, vehicleId, startDate, endDate));
   },
 });
 
@@ -1006,121 +1078,33 @@ export const getRenterBookings = query({
   args: { renterId: v.string() },
   returns: v.array(
     v.object({
-      _id: v.id("bookings"),
-      _creationTime: v.number(),
-      vehicleId: v.id("vehicles"),
-      renterId: v.string(),
-      driverId: v.optional(v.string()),
-      startDate: v.string(),
-      endDate: v.string(),
-      pickupLocation: v.string(),
-      dropoffLocation: v.string(),
-      status: v.string(),
-      paymentStatus: v.string(),
-      subtotal: v.number(),
-      driverFee: v.number(),
-      serviceFee: v.number(),
-      securityDeposit: v.number(),
-      totalAmount: v.number(),
-      currency: v.string(),
-      specialRequests: v.optional(v.string()),
-      cancellationReason: v.optional(v.string()),
-      cancelledBy: v.optional(v.string()),
-      cancelledAt: v.optional(v.number()),
-      pickupTime: v.optional(v.string()),
-      returnTime: v.optional(v.string()),
-      actualPickupTime: v.optional(v.number()),
-      actualReturnTime: v.optional(v.number()),
-      instantBook: v.boolean(),
-      reviewPrompted: v.optional(v.boolean()),
-      createdAt: v.number(),
-      updatedAt: v.number(),
-      vehicle: v.object({
-        _id: v.id("vehicles"),
-        title: v.string(),
-        images: v.array(v.string()),
-        category: v.string(),
-        city: v.string(),
-        region: v.string(),
-        pricePerDay: v.number(),
-        rating: v.number(),
-        reviewCount: v.number(),
-        ownerId: v.string(),
-      }),
-    })
+      ...bookingFieldsValidator,
+      vehicle: bookingVehicleSummaryValidator,
+    }),
   ),
   handler: async (ctx, args) => {
-    const bookings = await ctx.db
-      .query("bookings")
-      .withIndex("by_renter", (q) => q.eq("renterId", args.renterId))
-      .collect();
-
-    const bookingsWithVehicle = await Promise.all(
-      bookings.map(async (booking) => {
-        const vehicle = await ctx.db.get(booking.vehicleId);
-        if (!vehicle) return null;
-        return {
-          ...booking,
-          vehicle: {
-            _id: vehicle._id,
-            title: vehicle.title,
-            images: vehicle.images,
-            category: vehicle.category,
-            city: vehicle.city,
-            region: vehicle.region,
-            pricePerDay: vehicle.pricePerDay,
-            rating: vehicle.rating,
-            reviewCount: vehicle.reviewCount,
-            ownerId: vehicle.ownerId,
-          },
-        };
-      })
-    );
-
-    return bookingsWithVehicle.filter(
-      (b): b is NonNullable<typeof b> => b !== null
-    );
+    const user = await requireAppUser(ctx);
+    assertCallerId(user, args.renterId);
+    const bookings = await listRenterBookings(ctx, user);
+    return await attachVehicleSummaries(ctx, bookings);
   },
 });
 
 export const getBooking = query({
   args: { bookingId: v.id("bookings") },
-  returns: v.union(
-    v.object({
-      _id: v.id("bookings"),
-      _creationTime: v.number(),
-      vehicleId: v.id("vehicles"),
-      renterId: v.string(),
-      driverId: v.optional(v.string()),
-      startDate: v.string(),
-      endDate: v.string(),
-      pickupLocation: v.string(),
-      dropoffLocation: v.string(),
-      status: v.string(),
-      paymentStatus: v.string(),
-      subtotal: v.number(),
-      driverFee: v.number(),
-      serviceFee: v.number(),
-      securityDeposit: v.number(),
-      totalAmount: v.number(),
-      currency: v.string(),
-      specialRequests: v.optional(v.string()),
-      cancellationReason: v.optional(v.string()),
-      cancelledBy: v.optional(v.string()),
-      cancelledAt: v.optional(v.number()),
-      pickupTime: v.optional(v.string()),
-      returnTime: v.optional(v.string()),
-      actualPickupTime: v.optional(v.number()),
-      actualReturnTime: v.optional(v.number()),
-      instantBook: v.boolean(),
-      reviewPrompted: v.optional(v.boolean()),
-      createdAt: v.number(),
-      updatedAt: v.number(),
-    }),
-    v.null()
-  ),
+  returns: v.union(bookingDocValidator, v.null()),
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.bookingId);
+    const user = await requireAppUser(ctx);
+    const booking = await ctx.db.get(args.bookingId);
+    if (!booking) {
+      return null;
+    }
+    const vehicle = await ctx.db.get(booking.vehicleId);
+    if (!vehicle) {
+      return null;
+    }
+    assertCanViewBooking(user, booking, vehicle);
+    return toBookingFields(booking);
   },
 });
 
@@ -1244,10 +1228,20 @@ export const getBookingChangeRequests = query({
     })
   ),
   handler: async (ctx, args) => {
+    const user = await requireAppUser(ctx);
+    const booking = await ctx.db.get(args.bookingId);
+    if (!booking) {
+      return [];
+    }
+    const vehicle = await ctx.db.get(booking.vehicleId);
+    if (!vehicle) {
+      return [];
+    }
+    assertCanViewBooking(user, booking, vehicle);
     return await ctx.db
       .query("tripChangeRequests")
       .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))
-      .collect();
+      .take(50);
   },
 });
 

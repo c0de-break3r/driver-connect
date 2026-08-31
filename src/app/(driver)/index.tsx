@@ -67,14 +67,10 @@ export default function DriverDashboard() {
   });
 
   const { userId } = useAuth();
-  const convexUser = useQuery(
-    api.users.getByUserId,
-    userId ? { userId } : "skip"
-  );
 
   const driverBookings = useQuery(
     api.jobs.getDriverBookings,
-    convexUser?._id ? { driverId: convexUser._id } : "skip"
+    userId ? { driverId: userId } : "skip"
   );
 
   const renderJobsContent = () => {

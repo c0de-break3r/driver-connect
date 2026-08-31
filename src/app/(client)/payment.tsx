@@ -33,7 +33,7 @@ export default function PaymentScreen() {
   const [cardName, setCardName] = useState("");
 
   const booking = useQuery(api.jobs.getBooking, params.bookingId ? { bookingId: params.bookingId as any } : "skip");
-  const updateBookingStatus = useMutation(api.jobs.updateBookingStatus);
+  const confirmPayment = useMutation(api.jobs.confirmPayment);
 
   const handlePay = async () => {
     if (!method) { Alert.alert("Select method", "Please choose a payment method."); return; }
@@ -46,7 +46,7 @@ export default function PaymentScreen() {
     if (!params.bookingId) return;
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      await updateBookingStatus({ bookingId: params.bookingId as any, status: "confirmed" });
+      await confirmPayment({ bookingId: params.bookingId as any });
       router.replace(`/(client)/booking-confirmation?bookingId=${params.bookingId}`);
     } catch {
       Alert.alert("Payment failed", "Unable to process payment. Please try again.");
