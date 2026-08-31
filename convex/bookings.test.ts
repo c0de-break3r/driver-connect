@@ -46,6 +46,7 @@ async function seedVehicle(
   t: ReturnType<typeof convexTest>,
   ownerId: string,
   instantBook: boolean,
+  extras?: { driverIncluded?: boolean; driverRate?: number },
 ) {
   return await t.run(async (ctx) => {
     return await ctx.db.insert("vehicles", {
@@ -71,6 +72,8 @@ async function seedVehicle(
       totalBookings: 0,
       instantBook,
       unlimitedDistance: false,
+      driverIncluded: extras?.driverIncluded,
+      driverRate: extras?.driverRate,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -357,4 +360,113 @@ test("createBooking stores the signed-in user, not a client-supplied renter", as
   const booking = await asClient.query(api.jobs.getBooking, { bookingId });
   expect(booking?.renterId).toBe(CLIENT);
   expect(booking?.renterId).not.toBe(OTHER_CLIENT);
+});
+
+test("vehicle-only rental leaves driverId unset", async () => {
+  const { t, vehicleId } = await setupInstantBook();
+  const asClient = t.withIdentity(identity(CLIENT));
+  const asDriver = t.withIdentity(identity(DRIVER));
+
+  const bookingId = await asClient.mutation(api.jobs.createBooking, bookingArgs(vehicleId));
+  const booking = await asClient.query(api.jobs.getBooking, { bookingId });
+  expect(booking?.driverId).toBeUndefined();
+
+  const driverJobs = await asDriver.query(api.jobs.getDriverBookings, {
+    driverId: DRIVER,
+  });
+  expect(driverJobs).toEqual([]);
+});
+
+test("createBooking persists a client-picked driver as the Clerk subject", async () => {
+  const { t, vehicleId } = await setupInstantBook();
+  const asClient = t.withIdentity(identity(CLIENT));
+  const asDriver = t.withIdentity(identity(DRIVER));
+  const asOtherDriver = t.withIdentity(identity(OTHER_DRIVER));
+
+  const bookingId = await asClient.mutation(api.jobs.createBooking, {
+    ...bookingArgs(vehicleId),
+    driverId: DRIVER,
+    driverFee: 80,
+    totalAmount: 1000,
+  });
+
+  const booking = await asClient.query(api.jobs.getBooking, { bookingId });
+  expect(booking?.driverId).toBe(DRIVER);
+
+  await asClient.mutation(api.jobs.confirmPayment, { bookingId });
+  const paid = await asClient.query(api.jobs.getBooking, { bookingId });
+  expect(paid).toMatchObject({
+    status: "confirmed",
+    paymentStatus: "paid",
+    driverId: DRIVER,
+  });
+
+  const driverJobs = await asDriver.query(api.jobs.getDriverBookings, {
+    driverId: DRIVER,
+  });
+  expect(driverJobs.map((row) => row._id)).toEqual([bookingId]);
+
+  const otherDriverJobs = await asOtherDriver.query(api.jobs.getDriverBookings, {
+    driverId: OTHER_DRIVER,
+  });
+  expect(otherDriverJobs).toEqual([]);
+});
+
+test("createBooking rejects a non-driver as driverId", async () => {
+  const { t, vehicleId } = await setupInstantBook();
+  const asClient = t.withIdentity(identity(CLIENT));
+  await expect(
+    asClient.mutation(api.jobs.createBooking, {
+      ...bookingArgs(vehicleId),
+      driverId: OTHER_CLIENT,
+    }),
+  ).rejects.toThrow(/Driver not found/);
+});
+
+test("includeDriver or driverFee auto-assigns an available driver", async () => {
+  const { t, vehicleId } = await setupInstantBook();
+  const asClient = t.withIdentity(identity(CLIENT));
+
+  const bookingId = await asClient.mutation(api.jobs.createBooking, {
+    ...bookingArgs(vehicleId),
+    includeDriver: true,
+    driverFee: 80,
+    totalAmount: 1000,
+  });
+
+  const booking = await asClient.query(api.jobs.getBooking, { bookingId });
+  expect(booking?.driverId).toBeTruthy();
+  expect([DRIVER, OTHER_DRIVER]).toContain(booking?.driverId);
+
+  const asAssignedDriver = t.withIdentity(identity(booking!.driverId!));
+  const driverJobs = await asAssignedDriver.query(api.jobs.getDriverBookings, {
+    driverId: booking!.driverId!,
+  });
+  expect(driverJobs.map((row) => row._id)).toEqual([bookingId]);
+
+  const otherSubject = booking!.driverId === DRIVER ? OTHER_DRIVER : DRIVER;
+  const otherDriverJobs = await t
+    .withIdentity(identity(otherSubject))
+    .query(api.jobs.getDriverBookings, { driverId: otherSubject });
+  expect(otherDriverJobs).toEqual([]);
+});
+
+test("vehicle.driverIncluded auto-assigns a driver", async () => {
+  const t = convexTest(schema, modules);
+  await seedUser(t, CLIENT, "client");
+  await seedUser(t, OWNER, "owner");
+  await seedUser(t, DRIVER, "driver");
+  const vehicleId = await seedVehicle(t, OWNER, true, { driverIncluded: true, driverRate: 80 });
+  const asClient = t.withIdentity(identity(CLIENT));
+  const asDriver = t.withIdentity(identity(DRIVER));
+
+  const bookingId = await asClient.mutation(api.jobs.createBooking, bookingArgs(vehicleId));
+  const booking = await asClient.query(api.jobs.getBooking, { bookingId });
+  expect(booking?.driverId).toBe(DRIVER);
+
+  const driverJobs = await asDriver.query(api.jobs.getDriverBookings, {
+    driverId: DRIVER,
+  });
+  expect(driverJobs).toHaveLength(1);
+  expect(driverJobs[0].driverId).toBe(DRIVER);
 });

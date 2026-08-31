@@ -30,7 +30,7 @@ type PaymentMethod = "mobile_money" | "card" | "wallet";
 
 export default function BookingFormScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ vehicleId?: string }>();
+  const params = useLocalSearchParams<{ vehicleId?: string; driverId?: string }>();
   const { signedIn } = useAuth();
   const [step, setStep] = useState<BookingStep>("details");
   const [bookWithDriver, setBookWithDriver] = useState(false);
@@ -46,6 +46,7 @@ export default function BookingFormScreen() {
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const vehicleId = params.vehicleId;
+  const selectedDriverId = params.driverId;
   const vehicle = useQuery(api.jobs.getVehicle, vehicleId ? { id: vehicleId as any } : "skip");
   const createBooking = useMutation(api.jobs.createBooking);
   const confirmPayment = useMutation(api.jobs.confirmPayment);
@@ -115,13 +116,15 @@ export default function BookingFormScreen() {
         pickupLocation: pickupLocation.trim(), dropoffLocation: dropoffLocation.trim(),
         subtotal, driverFee, serviceFee, securityDeposit, totalAmount,
         currency: "GHS", instantBook: vehicle?.instantBook ?? false,
+        driverId: selectedDriverId,
+        includeDriver: bookWithDriver,
       });
       await confirmPayment({ bookingId });
       router.replace(`/(client)/booking-confirmation?bookingId=${bookingId}`);
     } catch {
       alert("Unable to complete booking. Please try again.");
     }
-  }, [vehicleId, startDate, endDate, pickupLocation, dropoffLocation, subtotal, driverFee, serviceFee, securityDeposit, totalAmount, vehicle?.instantBook, createBooking, confirmPayment, router]);
+  }, [vehicleId, selectedDriverId, bookWithDriver, startDate, endDate, pickupLocation, dropoffLocation, subtotal, driverFee, serviceFee, securityDeposit, totalAmount, vehicle?.instantBook, createBooking, confirmPayment, router]);
 
   if (!vehicle && vehicleId) {
     return (

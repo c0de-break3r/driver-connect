@@ -17,6 +17,7 @@ import {
   listRenterBookings,
   loadBooking,
   loadVehicle,
+  resolveBookingDriverId,
   toBookingFields,
 } from "./model/bookings";
 
@@ -203,6 +204,8 @@ export const createBooking = mutation({
     totalAmount: v.number(),
     currency: v.string(),
     instantBook: v.optional(v.boolean()),
+    driverId: v.optional(v.string()),
+    includeDriver: v.optional(v.boolean()),
   },
   returns: v.id("bookings"),
   handler: async (ctx, args) => {
@@ -223,10 +226,22 @@ export const createBooking = mutation({
       throw new Error("Vehicle is not available for these dates");
     }
 
+    const driverId = await resolveBookingDriverId(
+      ctx,
+      {
+        driverId: args.driverId,
+        driverFee: args.driverFee,
+        includeDriver: args.includeDriver,
+      },
+      vehicle,
+      user.clerkUserId,
+    );
+
     const now = Date.now();
     return await ctx.db.insert("bookings", {
       vehicleId: args.vehicleId,
       renterId: user.clerkUserId,
+      driverId,
       startDate: args.startDate,
       endDate: args.endDate,
       pickupLocation: args.pickupLocation,

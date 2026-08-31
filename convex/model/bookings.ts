@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { isSameActor } from "./auth";
+import { findUserByActorId, isSameActor } from "./auth";
 
 type DbCtx = QueryCtx | MutationCtx;
 
@@ -349,4 +349,83 @@ export function assertRenterRole(user: Doc<"users">) {
       throw new Error(`Unhandled role: ${exhaustive}`);
     }
   }
+}
+
+export function bookingIncludesDriver(
+  args: { driverId?: string; driverFee: number; includeDriver?: boolean },
+  vehicle: Doc<"vehicles">,
+): boolean {
+  return (
+    Boolean(args.driverId) ||
+    args.includeDriver === true ||
+    args.driverFee > 0 ||
+    vehicle.driverIncluded === true
+  );
+}
+
+export async function resolveBookingDriverId(
+  ctx: DbCtx,
+  args: { driverId?: string; driverFee: number; includeDriver?: boolean },
+  vehicle: Doc<"vehicles">,
+  renterClerkUserId: string,
+): Promise<string | undefined> {
+  if (!bookingIncludesDriver(args, vehicle)) {
+    return undefined;
+  }
+
+  if (args.driverId) {
+    const driver = await findUserByActorId(ctx, args.driverId);
+    if (!driver || driver.role !== "driver") {
+      throw new Error("Driver not found");
+    }
+    if (driver.clerkUserId === renterClerkUserId) {
+      throw new Error("You cannot assign yourself as the driver");
+    }
+    return driver.clerkUserId;
+  }
+
+  const assigned = await pickAvailableDriver(ctx, renterClerkUserId);
+  if (!assigned) {
+    throw new Error("No driver available for this booking");
+  }
+  return assigned;
+}
+
+async function pickAvailableDriver(
+  ctx: DbCtx,
+  excludeClerkUserId: string,
+): Promise<string | undefined> {
+  const drivers = await ctx.db
+    .query("users")
+    .withIndex("by_role", (q) => q.eq("role", "driver"))
+    .take(50);
+
+  const candidates = drivers.filter(
+    (driver) => driver.clerkUserId !== excludeClerkUserId,
+  );
+  if (candidates.length === 0) {
+    return undefined;
+  }
+
+  let fallback: string | undefined;
+  for (const driver of candidates) {
+    if (!fallback) {
+      fallback = driver.clerkUserId;
+    }
+    const byDoc = await ctx.db
+      .query("driverProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", driver._id))
+      .unique();
+    const byClerk =
+      byDoc ??
+      (await ctx.db
+        .query("driverProfiles")
+        .withIndex("by_user", (q) => q.eq("userId", driver.clerkUserId))
+        .unique());
+    if (byClerk?.availableForHire) {
+      return driver.clerkUserId;
+    }
+  }
+
+  return fallback;
 }
