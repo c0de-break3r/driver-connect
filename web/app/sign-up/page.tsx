@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
+import { MessageCircle, Phone, Mail } from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -32,7 +34,13 @@ export default function SignUpPage() {
           <h1 className="text-3xl font-bold text-foreground mb-2">Create an account</h1>
           <p className="text-secondary">Join Africana Mobility Service today</p>
         </div>
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          onSubmit={handleSubmit}
+          className="bg-white rounded-2xl shadow-xl p-8 space-y-6"
+        >
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
@@ -96,7 +104,21 @@ export default function SignUpPage() {
               Sign in
             </Link>
           </p>
-        </form>
+        </motion.form>
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="flex items-center justify-center gap-2 text-xs text-secondary bg-white rounded-xl border border-border p-3">
+            <Phone className="h-4 w-4 text-primary" />
+            <span>Call</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-xs text-secondary bg-white rounded-xl border border-border p-3">
+            <MessageCircle className="h-4 w-4 text-green-600" />
+            <span>WhatsApp</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-xs text-secondary bg-white rounded-xl border border-border p-3">
+            <Mail className="h-4 w-4 text-primary" />
+            <span>Email</span>
+          </div>
+        </div>
       </div>
     </div>
   );

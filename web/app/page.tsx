@@ -4,6 +4,7 @@ import { ServicesSection } from "@/components/how-it-works";
 import { FeaturedVehicles } from "@/components/featured-vehicles";
 import { Testimonials } from "@/components/testimonials";
 import { CTASection } from "@/components/cta-section";
+import { ContactStrip } from "@/components/contact-strip";
 import { TrustSignals } from "@/components/trust-signals";
 
 export default function HomePage() {
@@ -15,6 +16,7 @@ export default function HomePage() {
       <FeaturedVehicles />
       <Testimonials />
       <CTASection />
+      <ContactStrip />
       <TrustSignals />
     </main>
   );

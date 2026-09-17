@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
@@ -34,10 +36,10 @@ export function TrustSignals() {
             transition={{ duration: 0.7 }}
           >
             <h2 className="text-3xl font-bold md:text-4xl mb-4">
-              Trusted by thousands across Africa
+              Trusted by thousands across Ghana
             </h2>
             <p className="text-white/80 text-lg leading-relaxed mb-10">
-              Africana Mobility Service is the most trusted transport marketplace in Africa, connecting you with verified professionals.
+              Africana Mobility Service is the most trusted transport marketplace in Ghana, connecting you with verified professionals.
             </p>
             <div className="grid grid-cols-2 gap-4">
               {STATS.map((stat, index) => (
