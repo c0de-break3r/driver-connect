@@ -3,6 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "types": ["node"],
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"
@@ -13,8 +15,23 @@
       "@/components/ui/*": [
         "./src/components/ui/*"
       ],
+      "@driverconnect/shared-types": [
+        "../../packages/shared-types"
+      ],
+      "@driverconnect/shared-types/*": [
+        "../../packages/shared-types/*"
+      ],
+      "@driverconnect/shared-constants": [
+        "../../packages/shared-constants"
+      ],
+      "@driverconnect/shared-constants/*": [
+        "../../packages/shared-constants/*"
+      ],
       "convex/_generated/*": [
-        "./convex/_generated/*"
+        "../../convex/_generated/*"
+      ],
+      "convex/_generated/api": [
+        "../../convex/_generated/api"
       ]
     }
   },

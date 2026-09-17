@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" fill="none">
+  <defs>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Bird silhouette -->
+  <path d="M60 30 C45 35 35 45 30 55 C25 45 15 40 5 42 C15 48 25 55 30 65 C28 75 30 85 35 90 C40 85 50 80 60 75 C70 80 80 85 85 90 C90 85 92 75 90 65 C95 55 105 48 115 42 C105 40 95 45 90 55 C85 45 75 35 60 30Z" 
+        fill="#0F172A" 
+        stroke="url(#goldGrad)" 
+        stroke-width="2"/>
+  
+  <!-- Road element -->
+  <path d="M25 95 Q50 85 75 95 T125 90" 
+        stroke="url(#goldGrad)" 
+        stroke-width="4" 
+        fill="none" 
+        stroke-linecap="round"/>
+  
+  <path d="M45 95 L45 90 M65 93 L65 88 M85 95 L85 90" 
+        stroke="white" 
+        stroke-width="2" 
+        stroke-linecap="round"/>
+  
+  <!-- Text -->
+  <text x="130" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="36" font-weight="800" fill="#0F172A" letter-spacing="1">AFRICANA</text>
+  <text x="130" y="85" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#F59E0B" letter-spacing="3">MOBILITY SERVICE</text>
+</svg>

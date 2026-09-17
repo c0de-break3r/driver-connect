@@ -1,0 +1,27 @@
+{
+  "name": "driver-connect",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "web",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:mobile": "bun run --cwd mobile start",
+    "dev:web": "bun run --cwd web dev",
+    "dev": "bun run dev:mobile",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "design:search": "21st search \"$1\" --api-key \"$API_KEY_21ST\" --limit 10",
+    "design:get": "21st get \"$1\" --api-key \"$API_KEY_21ST\""
+  },
+  "devDependencies": {
+    "@21st-dev/cli": "^1.17.1",
+    "turbo": "^2.0.0",
+    "typescript": "~6.0.3"
+  },
+  "packageManager": "bun@1.1.0"
+}

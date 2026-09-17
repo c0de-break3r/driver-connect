@@ -41,6 +41,12 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
+# monorepo
+web/.next/
+web/.vercel/
+packages/*/node_modules/
+mobile/.expo/
+
 example
 
 # generated native folders

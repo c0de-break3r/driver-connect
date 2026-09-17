@@ -1,4 +1,6 @@
 // Re-export the Convex-generated API from a single stable app path.
-// This avoids deeply nested relative imports and gives Metro one clear alias to resolve.
+// Uses a relative import to avoid Metro's package-exports guard on `convex/_generated/*`.
 
-export * from "convex/_generated/api";
+import { api, internal } from "../../../convex/_generated/api";
+
+export { api, internal };

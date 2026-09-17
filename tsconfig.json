@@ -1,0 +1,8 @@
+{
+  "references": [
+    { "path": "./mobile" },
+    { "path": "./web" },
+    { "path": "./packages/shared-types" },
+    { "path": "./packages/shared-constants" }
+  ]
+}
