@@ -35,9 +35,9 @@ export default function BookingConfirmationScreen() {
           <View style={styles.successCircle}>
             <Ionicons name="checkmark" size={48} color="#FFFFFF" />
           </View>
-          <Text style={styles.successTitle}>Booking Confirmed!</Text>
+          <Text style={styles.successTitle}>{booking.status === "confirmed" ? "Booking Confirmed" : "Booking Request Saved"}</Text>
           <Text style={styles.successSubtitle}>
-            Your booking has been confirmed. You&apos;ll receive updates as your trip approaches.
+            {booking.status === "confirmed" ? "Your booking is confirmed. Check your trip details below." : "Your request has been saved. Check the current booking and payment status below; a request is not a confirmed trip."}
           </Text>
         </View>
 

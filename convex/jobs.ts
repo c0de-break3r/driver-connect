@@ -1,5 +1,9 @@
+import { ConvexError } from "convex/values";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { bookingFields, serviceValidator } from "./lib/bookingFields";
+import { assertTransition, parseDate, validateDates } from "./lib/bookingRules";
+import { isAvailable, quoteBooking, requireUser, requireOwner, requireBookingMember } from "./lib/bookingService";
 
 export const listVehicles = query({
   args: {},
@@ -104,6 +108,15 @@ export const getVehicle = query({
       make: v.string(),
       model: v.string(),
       year: v.number(),
+      securityDeposit: v.number(),
+      minimumRentDays: v.number(),
+      color: v.optional(v.string()),
+      licensePlate: v.optional(v.string()),
+      doors: v.optional(v.number()),
+      isFeatured: v.boolean(),
+      totalBookings: v.number(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
       pricePerDay: v.number(),
       pricePerWeek: v.optional(v.number()),
       pricePerMonth: v.optional(v.number()),
@@ -170,62 +183,79 @@ export const getVehicle = query({
   },
 });
 
+export const getBookingQuote = query({
+  args: { vehicleId: v.id("vehicles"), startDate: v.string(), endDate: v.string(), serviceType: serviceValidator, pickupTime: v.optional(v.string()), returnTime: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    try {
+      const { price } = await quoteBooking(ctx, args);
+      return { available: true as const, price, error: null };
+    } catch (error) {
+      return { available: false as const, price: null, error: error instanceof ConvexError ? String(error.data) : "Unable to calculate a quote." };
+    }
+  },
+});
+
 export const createBooking = mutation({
   args: {
-    vehicleId: v.id("vehicles"),
-    renterId: v.string(),
-    startDate: v.string(),
-    endDate: v.string(),
-    pickupLocation: v.string(),
-    dropoffLocation: v.string(),
-    subtotal: v.number(),
-    driverFee: v.number(),
-    serviceFee: v.number(),
-    securityDeposit: v.number(),
-    totalAmount: v.number(),
-    currency: v.string(),
-    instantBook: v.optional(v.boolean()),
+    vehicleId: v.id("vehicles"), startDate: v.string(), endDate: v.string(),
+    pickupLocation: v.string(), dropoffLocation: v.string(),
+    ...bookingFields,
+    pickupTime: v.optional(v.string()), returnTime: v.optional(v.string()),
+    specialRequests: v.optional(v.string()),
+    // Legacy mobile arguments remain accepted; identity and price are NEVER taken from them.
+    renterId: v.optional(v.string()), subtotal: v.optional(v.number()),
+    driverFee: v.optional(v.number()), serviceFee: v.optional(v.number()),
+    securityDeposit: v.optional(v.number()), totalAmount: v.optional(v.number()),
+    currency: v.optional(v.string()), instantBook: v.optional(v.boolean()),
+    expectedTotal: v.optional(v.number()),
   },
   returns: v.id("bookings"),
   handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    if (args.renterId && args.renterId !== user._id) throw new ConvexError("You can only book for your own account.");
+    const serviceType = args.serviceType ?? "self_drive";
+    for (const value of [args.pickupLocation, args.dropoffLocation]) {
+      if (!value.trim() || value.length > 500) throw new ConvexError("Enter a pickup and drop-off address (up to 500 characters).");
+    }
+    for (const time of [args.pickupTime, args.returnTime]) {
+      if (time !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new ConvexError("Enter a valid time.");
+    }
+    if (serviceType.startsWith("airport") && !args.flightNumber?.trim()) throw new ConvexError("Enter your flight number.");
+    if ((args.flightNumber?.length ?? 0) > 30 || (args.contactName?.length ?? 0) > 150 || (args.contactPhone?.length ?? 0) > 40 || (args.specialRequests?.length ?? 0) > 2000) throw new ConvexError("One of your details is too long.");
+    if (args.passengers !== undefined && (!Number.isInteger(args.passengers) || args.passengers < 1)) throw new ConvexError("Enter a valid passenger count.");
+    if (args.luggage !== undefined && (!Number.isInteger(args.luggage) || args.luggage < 0 || args.luggage > 30)) throw new ConvexError("Enter a valid luggage count.");
+    const { vehicle, price } = await quoteBooking(ctx, { ...args, serviceType });
+    if (vehicle.ownerId === user._id) throw new ConvexError("You cannot rent your own vehicle.");
+    if (args.passengers && vehicle.seats && args.passengers > vehicle.seats) throw new ConvexError("This vehicle cannot accommodate your passengers.");
+    const expected = args.expectedTotal ?? args.totalAmount;
+    if (expected !== undefined && expected !== price.totalAmount) throw new ConvexError("The price has changed. Review your quote before booking.");
     const now = Date.now();
+    const { days: _days, ...amounts } = price;
     return await ctx.db.insert("bookings", {
-      vehicleId: args.vehicleId,
-      renterId: args.renterId,
-      startDate: args.startDate,
-      endDate: args.endDate,
-      pickupLocation: args.pickupLocation,
-      dropoffLocation: args.dropoffLocation,
-      status: "pending",
-      paymentStatus: "pending",
-      subtotal: args.subtotal,
-      driverFee: args.driverFee,
-      serviceFee: args.serviceFee,
-      securityDeposit: args.securityDeposit,
-      totalAmount: args.totalAmount,
-      currency: args.currency,
-      instantBook: args.instantBook ?? false,
-      createdAt: now,
-      updatedAt: now,
+      vehicleId: vehicle._id, renterId: user._id, serviceType,
+      startDate: args.startDate, endDate: args.endDate,
+      pickupLocation: args.pickupLocation.trim(), dropoffLocation: args.dropoffLocation.trim(),
+      pickupTime: args.pickupTime, returnTime: args.returnTime,
+      flightNumber: args.flightNumber?.trim(), passengers: args.passengers, luggage: args.luggage,
+      contactName: args.contactName?.trim(), contactPhone: args.contactPhone?.trim(), specialRequests: args.specialRequests?.trim(),
+      ...amounts, status: "pending", paymentStatus: "pending",
+      instantBook: vehicle.instantBook, createdAt: now, updatedAt: now,
     });
   },
 });
 
 export const updateBookingStatus = mutation({
-  args: {
-    bookingId: v.id("bookings"),
-    status: v.string(),
-  },
+  args: { bookingId: v.id("bookings"), status: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const patch: Record<string, unknown> = {
-      status: args.status,
-      updatedAt: Date.now(),
-    };
-    if (args.status === "completed") {
-      patch.reviewPrompted = true;
-    }
-    await ctx.db.patch(args.bookingId, patch);
+    const { user, booking, role } = await requireBookingMember(ctx, args.bookingId);
+    assertTransition(booking.status, args.status, role, booking.paymentStatus === "paid");
+    await ctx.db.patch(booking._id, {
+      status: args.status, updatedAt: Date.now(),
+      ...(args.status === "cancelled" ? { cancelledBy: user._id, cancelledAt: Date.now() } : {}),
+      ...(args.status === "active" ? { actualPickupTime: Date.now() } : {}),
+      ...(args.status === "completed" ? { actualReturnTime: Date.now(), reviewPrompted: true } : {}),
+    });
     return null;
   },
 });
@@ -340,6 +370,7 @@ export const markReviewPrompted = mutation({
   args: { bookingId: v.id("bookings") },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await requireBookingMember(ctx, args.bookingId);
     await ctx.db.patch(args.bookingId, {
       reviewPrompted: true,
       updatedAt: Date.now(),
@@ -417,6 +448,8 @@ export const createVehicle = mutation({
   },
   returns: v.id("vehicles"),
   handler: async (ctx, args) => {
+    const currentUser = await requireUser(ctx);
+    if (args.ownerId !== currentUser._id) throw new ConvexError("You can only list vehicles for your own account.");
     const now = Date.now();
     return await ctx.db.insert("vehicles", {
       ownerId: args.ownerId,
@@ -547,6 +580,7 @@ export const updateVehicle = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await requireOwner(ctx, args.vehicleId);
     const { vehicleId, ...updates } = args;
     const { vehicleId: _, ...patch } = updates as any;
     await ctx.db.patch(vehicleId, {
@@ -621,6 +655,9 @@ export const deleteVehicle = mutation({
   args: { vehicleId: v.id("vehicles") },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await requireOwner(ctx, args.vehicleId);
+    const reservations = await ctx.db.query("bookings").withIndex("by_vehicle", q => q.eq("vehicleId", args.vehicleId)).first();
+    if (reservations) throw new ConvexError("Vehicles with bookings must be paused, not deleted.");
     await ctx.db.delete(args.vehicleId);
     return null;
   },
@@ -633,6 +670,7 @@ export const toggleVehicleStatus = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await requireOwner(ctx, args.vehicleId);
     await ctx.db.patch(args.vehicleId, {
       status: args.status,
       updatedAt: Date.now(),
@@ -741,6 +779,7 @@ export const getOwnerBookings = query({
       vehicleId: v.id("vehicles"),
       renterId: v.string(),
       driverId: v.optional(v.string()),
+      ...bookingFields,
       startDate: v.string(),
       endDate: v.string(),
       pickupLocation: v.string(),
@@ -761,11 +800,15 @@ export const getOwnerBookings = query({
       returnTime: v.optional(v.string()),
       actualPickupTime: v.optional(v.number()),
       actualReturnTime: v.optional(v.number()),
+      instantBook: v.boolean(),
+      reviewPrompted: v.optional(v.boolean()),
       createdAt: v.number(),
       updatedAt: v.number(),
     })
   ),
   handler: async (ctx, args) => {
+    const currentUser = await requireUser(ctx);
+    if (args.ownerId !== currentUser._id) throw new ConvexError("You cannot access these records.");
     const vehicles = await ctx.db
       .query("vehicles")
       .withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId))
@@ -790,6 +833,7 @@ export const getDriverBookings = query({
       vehicleId: v.id("vehicles"),
       renterId: v.string(),
       driverId: v.optional(v.string()),
+      ...bookingFields,
       startDate: v.string(),
       endDate: v.string(),
       pickupLocation: v.string(),
@@ -829,6 +873,8 @@ export const getDriverBookings = query({
     })
   ),
   handler: async (ctx, args) => {
+    const currentUser = await requireUser(ctx);
+    if (args.driverId !== currentUser._id) throw new ConvexError("You cannot access these records.");
     const bookings = await ctx.db
       .query("bookings")
       .withIndex("by_driver", (q) => q.eq("driverId", args.driverId))
@@ -876,6 +922,7 @@ export const updateVehicleSettings = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await requireOwner(ctx, args.vehicleId);
     const { vehicleId, ...updates } = args;
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (updates.instantBook !== undefined) patch.instantBook = updates.instantBook;
@@ -901,10 +948,14 @@ export const createAvailabilityBlock = mutation({
   },
   returns: v.id("availabilityBlocks"),
   handler: async (ctx, args) => {
+    const { user } = await requireOwner(ctx, args.vehicleId);
+    parseDate(args.startDate); parseDate(args.endDate);
+    if (args.endDate < args.startDate) throw new ConvexError("End date cannot precede start date.");
+    if (!(await isAvailable(ctx, args.vehicleId, args.startDate, args.endDate))) throw new ConvexError("These dates overlap a booking or existing block.");
     const now = Date.now();
     return await ctx.db.insert("availabilityBlocks", {
       vehicleId: args.vehicleId,
-      ownerId: args.ownerId,
+      ownerId: user._id,
       startDate: args.startDate,
       endDate: args.endDate,
       reason: args.reason,
@@ -917,6 +968,9 @@ export const deleteAvailabilityBlock = mutation({
   args: { blockId: v.id("availabilityBlocks") },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const block = await ctx.db.get(args.blockId);
+    if (!block) throw new ConvexError("Availability block not found.");
+    await requireOwner(ctx, block.vehicleId);
     await ctx.db.delete(args.blockId);
     return null;
   },
@@ -959,6 +1013,8 @@ export const getOwnerAvailabilityBlocks = query({
     })
   ),
   handler: async (ctx, args) => {
+    const currentUser = await requireUser(ctx);
+    if (args.ownerId !== currentUser._id) throw new ConvexError("You cannot access these records.");
     return await ctx.db
       .query("availabilityBlocks")
       .withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId))
@@ -967,38 +1023,12 @@ export const getOwnerAvailabilityBlocks = query({
 });
 
 export const checkVehicleAvailability = query({
-  args: {
-    vehicleId: v.id("vehicles"),
-    startDate: v.string(),
-    endDate: v.string(),
-  },
+  args: { vehicleId: v.id("vehicles"), startDate: v.string(), endDate: v.string() },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const { vehicleId, startDate, endDate } = args;
-
-    const blocks = await ctx.db
-      .query("availabilityBlocks")
-      .withIndex("by_vehicle", (q) => q.eq("vehicleId", vehicleId))
-      .collect();
-
-    const blocked = blocks.some(
-      (b) =>
-        b.startDate <= endDate && b.endDate >= startDate
-    );
-
-    if (blocked) return false;
-
-    const allBookings = await ctx.db.query("bookings").collect();
-
-    const overlappingBooking = allBookings.some(
-      (booking) =>
-        booking.vehicleId === vehicleId &&
-        (booking.status === "confirmed" || booking.status === "pending") &&
-        booking.startDate <= endDate &&
-        booking.endDate >= startDate
-    );
-
-    return !overlappingBooking;
+    validateDates(args.startDate, args.endDate);
+    const vehicle = await ctx.db.get(args.vehicleId);
+    return !!vehicle && vehicle.status === "active" && await isAvailable(ctx, args.vehicleId, args.startDate, args.endDate);
   },
 });
 
@@ -1011,6 +1041,7 @@ export const getRenterBookings = query({
       vehicleId: v.id("vehicles"),
       renterId: v.string(),
       driverId: v.optional(v.string()),
+      ...bookingFields,
       startDate: v.string(),
       endDate: v.string(),
       pickupLocation: v.string(),
@@ -1050,6 +1081,8 @@ export const getRenterBookings = query({
     })
   ),
   handler: async (ctx, args) => {
+    const currentUser = await requireUser(ctx);
+    if (args.renterId !== currentUser._id) throw new ConvexError("You cannot access these records.");
     const bookings = await ctx.db
       .query("bookings")
       .withIndex("by_renter", (q) => q.eq("renterId", args.renterId))
@@ -1092,6 +1125,7 @@ export const getBooking = query({
       vehicleId: v.id("vehicles"),
       renterId: v.string(),
       driverId: v.optional(v.string()),
+      ...bookingFields,
       startDate: v.string(),
       endDate: v.string(),
       pickupLocation: v.string(),
@@ -1120,7 +1154,7 @@ export const getBooking = query({
     v.null()
   ),
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.bookingId);
+    return (await requireBookingMember(ctx, args.bookingId)).booking;
   },
 });
 
@@ -1143,6 +1177,8 @@ export const createTripChangeRequest = mutation({
   },
   returns: v.id("tripChangeRequests"),
   handler: async (ctx, args) => {
+    const { user, booking } = await requireBookingMember(ctx, args.bookingId);
+    if (args.requesterId !== user._id || !["pending", "accepted", "confirmed"].includes(booking.status)) throw new ConvexError("This change cannot be requested.");
     const now = Date.now();
     return await ctx.db.insert("tripChangeRequests", {
       bookingId: args.bookingId,
@@ -1168,9 +1204,13 @@ export const approveTripChangeRequest = mutation({
   handler: async (ctx, args) => {
     const request = await ctx.db.get(args.requestId);
     if (!request) {
-      throw new Error("Change request not found");
+      throw new ConvexError("Change request not found");
     }
 
+    const { role, booking } = await requireBookingMember(ctx, request.bookingId);
+    if (role !== "owner" || request.status !== "pending" || !["pending", "accepted", "confirmed"].includes(booking.status)) throw new ConvexError("This change cannot be approved.");
+    if (request.type !== "change_pickup" && request.type !== "change_dropoff") throw new ConvexError("Date and driver changes require a new quote. Cancel and rebook for now.");
+    if (request.requestedStartDate !== undefined || request.requestedEndDate !== undefined || request.additionalDriverId !== undefined) throw new ConvexError("This change requires a new quote.");
     const now = Date.now();
     await ctx.db.patch(args.requestId, {
       status: "approved",
@@ -1207,6 +1247,10 @@ export const declineTripChangeRequest = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const request = await ctx.db.get(args.requestId);
+    if (!request) throw new ConvexError("Change request not found.");
+    const { role } = await requireBookingMember(ctx, request.bookingId);
+    if (role !== "owner" || request.status !== "pending") throw new ConvexError("This change cannot be declined.");
     const now = Date.now();
     await ctx.db.patch(args.requestId, {
       status: "declined",
@@ -1244,6 +1288,7 @@ export const getBookingChangeRequests = query({
     })
   ),
   handler: async (ctx, args) => {
+    await requireBookingMember(ctx, args.bookingId);
     return await ctx.db
       .query("tripChangeRequests")
       .withIndex("by_booking", (q) => q.eq("bookingId", args.bookingId))

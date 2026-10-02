@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { bookingFields } from "./lib/bookingFields";
 
 export default defineSchema({
   users: defineTable({
@@ -187,6 +188,7 @@ export default defineSchema({
     .index("by_owner", ["ownerId"]),
 
   bookings: defineTable({
+    ...bookingFields,
     vehicleId: v.id("vehicles"),
     renterId: v.string(),
     driverId: v.optional(v.string()),

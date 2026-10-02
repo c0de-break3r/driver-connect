@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useConvexAuth } from "convex/react";
 import { useRoleStore } from "@/store/useRoleStore";
 import { api } from "@/lib/convexApi";
 
@@ -16,6 +16,7 @@ export function useConvexRoleSync({
   isSignedIn,
   userId,
 }: UseConvexRoleSyncParams) {
+  const { isAuthenticated } = useConvexAuth();
   const setRole = useRoleStore((s) => s.setRole);
 
   const convexUser = useQuery(
@@ -27,7 +28,7 @@ export function useConvexRoleSync({
   const syncedUserId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !userId) {
+    if (!isAuthenticated || !isLoaded || !isSignedIn || !userId) {
       return;
     }
 
@@ -56,5 +57,5 @@ export function useConvexRoleSync({
         // non-blocking: Convex may not be reachable yet during local dev setup
       });
     }
-  }, [isLoaded, isSignedIn, userId, convexUser, setRole, upsertUser]);
+  }, [isAuthenticated, isLoaded, isSignedIn, userId, convexUser, setRole, upsertUser]);
 }
