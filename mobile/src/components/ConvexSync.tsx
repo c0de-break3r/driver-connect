@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useRoleStore } from "@/store/useRoleStore";
 import { useAppStateStore, getEffectiveAvatarUri, getEffectiveProfileSetupComplete } from "@/store/useAppStateStore";
@@ -7,6 +7,7 @@ import { api } from "@/lib/convexApi";
 import { getOneSignalPlayerId } from "@/lib/onesignal";
 
 export function ConvexSync() {
+  const { isAuthenticated } = useConvexAuth();
   const { userId, email, firstName, isLoaded, signedIn } = useAuth();
   const role = useRoleStore((state) => state.role);
   const setRole = useRoleStore((state) => state.setRole);
@@ -27,7 +28,7 @@ export function ConvexSync() {
   const upsertUser = useMutation((api.users as any).upsert);
 
   const syncToConvex = useCallback(async () => {
-    if (!isLoaded || !signedIn || !userId || !email) return;
+    if (!isAuthenticated || !isLoaded || !signedIn || !userId || !email) return;
 
     try {
       const onesignalPlayerId = await getOneSignalPlayerId();
@@ -48,7 +49,7 @@ export function ConvexSync() {
     } catch (error) {
       console.error("Failed to sync user to Convex:", error);
     }
-  }, [isLoaded, signedIn, userId, email, role, firstName, onboardingComplete, notificationsEnabled, upsertUser]);
+  }, [isAuthenticated, isLoaded, signedIn, userId, email, role, firstName, onboardingComplete, notificationsEnabled, upsertUser]);
 
   useEffect(() => {
     if (!isLoaded) return;

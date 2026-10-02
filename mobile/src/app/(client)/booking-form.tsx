@@ -12,13 +12,13 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/lib/convexApi";
+import type { Id } from "../../../../convex/_generated/dataModel";
 import * as Haptics from "expo-haptics";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { ProgressSteps, ProgressStep } from "@/components/ui/progress-steps";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,7 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 const NAVY = "#2C3E5B";
 
 type BookingStep = "details" | "payment" | "confirmation";
-type PaymentMethod = "mobile_money" | "card" | "wallet";
 
 export default function BookingFormScreen() {
   const router = useRouter();
@@ -34,7 +33,6 @@ export default function BookingFormScreen() {
   const { userId, signedIn } = useAuth();
   const [step, setStep] = useState<BookingStep>("details");
   const [bookWithDriver, setBookWithDriver] = useState(false);
-  const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [pickupTime, setPickupTime] = useState("");
@@ -47,7 +45,7 @@ export default function BookingFormScreen() {
 
   const vehicleId = params.vehicleId;
   const convexUser = useQuery(api.users.getByUserId, userId ? { userId } : "skip");
-  const vehicle = useQuery(api.jobs.getVehicle, vehicleId ? { id: vehicleId as any } : "skip");
+  const vehicle = useQuery(api.jobs.getVehicle, vehicleId ? { id: vehicleId as Id<"vehicles"> } : "skip");
   const createBooking = useMutation(api.jobs.createBooking);
 
   const today = new Date();
@@ -76,18 +74,17 @@ export default function BookingFormScreen() {
     }
   };
 
-  const calculateDays = useCallback(() => {
-    if (!startDate || !endDate) return 1;
-    const diff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(diff, 1);
-  }, [startDate, endDate]);
-
-  const days = calculateDays();
-  const subtotal = vehicle ? vehicle.pricePerDay * days : 0;
-  const driverFee = bookWithDriver && vehicle?.driverRate ? vehicle.driverRate * days : 0;
-  const serviceFee = Math.round(subtotal * 0.05);
-  const securityDeposit = vehicle?.securityDeposit ?? 0;
-  const totalAmount = subtotal + driverFee + serviceFee + securityDeposit;
+  const quote = useQuery(api.jobs.getBookingQuote, vehicleId && startDate && endDate && pickupTime && returnTime ? {
+    vehicleId: vehicleId as Id<"vehicles">,
+    startDate: startDate.toISOString().split("T")[0], endDate: endDate.toISOString().split("T")[0],
+    pickupTime, returnTime, serviceType: bookWithDriver ? "with_driver" : "self_drive",
+  } : "skip");
+  const days = quote?.price?.days ?? 0;
+  const subtotal = quote?.price?.subtotal ?? 0;
+  const driverFee = quote?.price?.driverFee ?? 0;
+  const serviceFee = quote?.price?.serviceFee ?? 0;
+  const securityDeposit = quote?.price?.securityDeposit ?? 0;
+  const totalAmount = quote?.price?.totalAmount ?? 0;
 
   const formatDateDisplay = (date: Date | null) => {
     if (!date) return "Select date";
@@ -99,28 +96,31 @@ export default function BookingFormScreen() {
     if (!pickupLocation.trim() || !dropoffLocation.trim()) { alert("Please enter pickup and dropoff locations."); return; }
     if (!pickupTime.trim() || !returnTime.trim()) { alert("Please enter pickup and return times."); return; }
     if (!signedIn) { alert("Please sign in to complete your booking."); return; }
+    if (!quote?.available) { alert(quote?.error ?? "Please wait for your price and availability check."); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setStep("payment");
-  }, [startDate, endDate, pickupLocation, dropoffLocation, pickupTime, returnTime, signedIn]);
+  }, [startDate, endDate, pickupLocation, dropoffLocation, pickupTime, returnTime, signedIn, quote]);
 
   const handlePayNow = useCallback(async () => {
-    if (!convexUser?._id || !vehicleId || !startDate || !endDate) return;
+    if (!convexUser?._id || !vehicleId || !startDate || !endDate || !quote?.available) return;
     const startDateStr = startDate.toISOString().split("T")[0];
     const endDateStr = endDate.toISOString().split("T")[0];
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       const bookingId = await createBooking({
-        vehicleId: vehicleId as any, renterId: convexUser._id,
+        vehicleId: vehicleId as Id<"vehicles">, renterId: convexUser._id,
         startDate: startDateStr, endDate: endDateStr,
         pickupLocation: pickupLocation.trim(), dropoffLocation: dropoffLocation.trim(),
         subtotal, driverFee, serviceFee, securityDeposit, totalAmount,
+        serviceType: bookWithDriver ? "with_driver" : "self_drive",
+        pickupTime, returnTime, specialRequests,
         currency: "GHS", instantBook: vehicle?.instantBook ?? false,
       });
       router.replace(`/(client)/booking-confirmation?bookingId=${bookingId}`);
     } catch {
       alert("Unable to complete booking. Please try again.");
     }
-  }, [convexUser?._id, vehicleId, startDate, endDate, pickupLocation, dropoffLocation, subtotal, driverFee, serviceFee, securityDeposit, totalAmount, vehicle?.instantBook, createBooking, router]);
+  }, [convexUser?._id, vehicleId, startDate, endDate, pickupLocation, dropoffLocation, subtotal, driverFee, serviceFee, securityDeposit, totalAmount, vehicle?.instantBook, bookWithDriver, pickupTime, returnTime, specialRequests, quote?.available, createBooking, router]);
 
   if (!vehicle && vehicleId) {
     return (
@@ -141,7 +141,7 @@ export default function BookingFormScreen() {
       >
         <ProgressSteps current={stepIndex}>
           <ProgressStep label="Details" />
-          <ProgressStep label="Payment" />
+          <ProgressStep label="Review" />
           <ProgressStep label="Confirmation" />
         </ProgressSteps>
 
@@ -272,27 +272,9 @@ export default function BookingFormScreen() {
 
         {step === "payment" && (
           <View style={styles.stepContent}>
-            <Text className="text-lg font-extrabold mb-1" style={{ color: NAVY }}>Payment</Text>
-            <Text className="text-sm font-medium text-gray-500 mb-4">Choose your payment method</Text>
-            <Card className="mb-4 bg-gray-50 border-gray-200">
-              <Text className="text-sm font-bold mb-3" style={{ color: NAVY }}>Payment Method</Text>
-              <RadioGroup value={method || ""} onValueChange={(val) => setMethod(val as PaymentMethod)}>
-                {[
-                  { id: "mobile_money", label: "Mobile Money", desc: "M-Pesa / MTN", icon: "phone-portrait-outline" },
-                  { id: "card", label: "Credit / Debit Card", desc: "Visa, Mastercard", icon: "card-outline" },
-                  { id: "wallet", label: "Wallet", desc: "In-app balance", icon: "wallet-outline" },
-                ].map((m) => (
-                  <RadioGroupItem key={m.id} value={m.id} label={m.label} className="flex-row items-center gap-3 py-3 border border-gray-200 rounded-xl px-4 bg-white mb-2">
-                    <Ionicons name={m.icon as any} size={22} color={NAVY} />
-                    <View className="flex-1">
-                      <Text className="text-sm font-semibold" style={{ color: NAVY }}>{m.label}</Text>
-                      <Text className="text-xs font-medium text-gray-500">{m.desc}</Text>
-                    </View>
-                  </RadioGroupItem>
-                ))}
-              </RadioGroup>
-            </Card>
-
+            <Text className="text-lg font-extrabold mb-1" style={{ color: NAVY }}>Review request</Text>
+            <Text className="text-sm font-medium text-gray-500 mb-4">Review your trip before sending a request.</Text>
+            {quote?.error && <Text className="text-sm text-red-600">{quote.error}</Text>}
             <Card className="bg-gray-50 border-gray-200">
               <Text className="text-sm font-bold mb-3" style={{ color: NAVY }}>Booking Summary</Text>
               {vehicle && (
@@ -318,7 +300,7 @@ export default function BookingFormScreen() {
                 <Text className="text-base font-bold" style={{ color: NAVY }}>Total</Text>
                 <Text className="text-lg font-extrabold" style={{ color: NAVY }}>GHS {totalAmount.toLocaleString()}</Text>
               </View>
-              <Text className="text-xs font-medium text-gray-500 text-center mt-3 italic">Payment will be held securely and released after your trip.</Text>
+              <Text className="text-xs font-medium text-gray-500 text-center mt-3 italic">No payment is collected at this stage. The owner must respond before the trip is confirmed.</Text>
             </Card>
           </View>
         )}
@@ -358,7 +340,7 @@ export default function BookingFormScreen() {
               </View>
               <View style={styles.divider} />
               <View className="flex-row items-center justify-between py-2">
-                <Text className="text-sm font-medium text-gray-500">Payment</Text>
+                <Text className="text-sm font-medium text-gray-500">Review request</Text>
                 <Text className="text-base font-bold" style={{ color: NAVY }}>GHS {totalAmount.toLocaleString()}</Text>
               </View>
             </Card>
@@ -370,7 +352,7 @@ export default function BookingFormScreen() {
         <View style={styles.bottomBar}>
           {step === "details" && (
             <Button onPress={handleContinueToPayment} className="rounded-xl py-4 flex-row items-center justify-center gap-2">
-              <Text className="text-sm font-bold text-white">Continue to Payment</Text>
+              <Text className="text-sm font-bold text-white">Review Request</Text>
               <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
             </Button>
           )}
@@ -379,8 +361,8 @@ export default function BookingFormScreen() {
               <Button variant="outline" onPress={() => setStep("details")} className="flex-1 rounded-xl py-4 border-gray-200">
                 <Text className="text-sm font-bold" style={{ color: NAVY }}>Back</Text>
               </Button>
-              <Button onPress={handlePayNow} className="flex-1 rounded-xl py-4">
-                <Text className="text-sm font-bold text-white">Pay GHS {totalAmount.toLocaleString()}</Text>
+              <Button disabled={!quote?.available} onPress={handlePayNow} className="flex-1 rounded-xl py-4">
+                <Text className="text-sm font-bold text-white">Request Booking</Text>
               </Button>
             </View>
           )}

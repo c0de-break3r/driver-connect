@@ -47,7 +47,7 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   className?: string;
   textClassName?: string;
-  children?: string;
+  children?: React.ReactNode;
   icon?: React.ReactNode;
   iconAfter?: React.ReactNode;
   loading?: boolean;
@@ -68,9 +68,9 @@ export function Button({ variant, size, className, textClassName, children, icon
       {loading ? (
         <ActivityIndicator size="small" color={light ? "#fafafa" : "#18181b"} />
       ) : icon ?? null}
-      {children ? (
+      {typeof children === "string" || typeof children === "number" ? (
         <Text className={cn(buttonTextVariants({ variant, size }), textClassName)}>{children}</Text>
-      ) : null}
+      ) : children ?? null}
       {!loading && iconAfter ? iconAfter : null}
     </Pressable>
   );

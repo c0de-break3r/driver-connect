@@ -16,12 +16,19 @@
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules",
     "design:search": "21st search \"$1\" --api-key \"$API_KEY_21ST\" --limit 10",
-    "design:get": "21st get \"$1\" --api-key \"$API_KEY_21ST\""
+    "design:get": "21st get \"$1\" --api-key \"$API_KEY_21ST\"",
+    "test:bookings": "bun test tests"
   },
   "devDependencies": {
     "@21st-dev/cli": "^1.17.1",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
     "turbo": "^2.0.0",
     "typescript": "~6.0.3"
   },
-  "packageManager": "bun@1.1.0"
+  "packageManager": "bun@1.1.0",
+  "dependencies": {
+    "convex": "^1.42.3"
+  }
 }

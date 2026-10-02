@@ -20,6 +20,8 @@ export const getByUserId = query({
       notificationsEnabled: v.optional(v.boolean()),
       profileSetupComplete: v.optional(v.boolean()),
       avatarUri: v.optional(v.string()),
+      theme: v.optional(v.string()),
+      currency: v.optional(v.string()),
       expoPushToken: v.optional(v.string()),
       onesignalPlayerId: v.optional(v.string()),
       createdAt: v.number(),
@@ -56,6 +58,8 @@ export const getByEmail = query({
       notificationsEnabled: v.optional(v.boolean()),
       profileSetupComplete: v.optional(v.boolean()),
       avatarUri: v.optional(v.string()),
+      theme: v.optional(v.string()),
+      currency: v.optional(v.string()),
       expoPushToken: v.optional(v.string()),
       onesignalPlayerId: v.optional(v.string()),
       createdAt: v.number(),
@@ -93,6 +97,9 @@ export const upsert = mutation({
   },
   returns: v.id("users"),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== args.userId) throw new Error("You can only update your own profile.");
+
     const existing = await ctx.db
       .query("users")
       .withIndex("by_user_id", (q) =>
@@ -434,5 +441,18 @@ export const updateOwnerProfile = mutation({
     });
 
     return null;
+  },
+});
+
+export const ensureCurrentUser = mutation({
+  args: {},
+  returns: v.id("users"),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Please sign in.");
+    const existing = await ctx.db.query("users").withIndex("by_user_id", q => q.eq("clerkUserId", identity.subject)).unique();
+    if (existing) return existing._id;
+    const now = Date.now();
+    return await ctx.db.insert("users", { clerkUserId: identity.subject, role: "client", firstName: identity.givenName, email: identity.email, onboardingComplete: false, createdAt: now, updatedAt: now });
   },
 });
